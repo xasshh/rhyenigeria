@@ -1,0 +1,20 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"state_code": "LA", "lga_code": "LA-IKJ", "code": "LA-IKJ-01", "name": "Sample Ward A"},
+      "geometry": {"type": "Polygon", "coordinates": [[[3.33, 6.59], [3.35, 6.59], [3.35, 6.61], [3.33, 6.61], [3.33, 6.59]]]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"state_code": "LA", "lga_code": "LA-IKJ", "code": "LA-IKJ-02", "name": "Sample Ward B"},
+      "geometry": {"type": "Polygon", "coordinates": [[[3.35, 6.59], [3.37, 6.59], [3.37, 6.61], [3.35, 6.61], [3.35, 6.59]]]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"state_code": "FC", "lga_code": "FC-AMC", "code": "FC-AMC-01", "name": "Sample Ward C"},
+      "geometry": {"type": "MultiPolygon", "coordinates": [[[[7.48, 9.04], [7.50, 9.04], [7.50, 9.06], [7.48, 9.06], [7.48, 9.04]]]]}
+    }
+  ]
+}

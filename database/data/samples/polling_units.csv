@@ -1,0 +1,5 @@
+state_code,lga_code,ward_code,code,name,latitude,longitude
+LA,LA-IKJ,LA-IKJ-01,LA-IKJ-01-001,Sample Primary School I,6.6005,3.3401
+LA,LA-IKJ,LA-IKJ-01,LA-IKJ-01-002,Sample Town Hall,6.6052,3.3455
+LA,LA-IKJ,LA-IKJ-02,LA-IKJ-02-001,Sample Market Square,6.5990,3.3602
+FC,FC-AMC,FC-AMC-01,FC-AMC-01-001,Sample Health Centre,9.0501,7.4899
