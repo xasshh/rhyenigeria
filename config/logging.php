@@ -62,6 +62,8 @@ return [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
+            // Group-writable: the web server and the deploy user both write here.
+            'permission' => 0664,
             'replace_placeholders' => true,
         ],
 
