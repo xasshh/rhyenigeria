@@ -159,7 +159,7 @@ class SubmissionController extends Controller
 
         $query = $this->filtered($request, $data)
             ->withCoordinates()
-            ->with(['user:id,name', 'form:id,key', 'pollingUnit:id,code,name', 'pollingUnit.ward:id,code,name,lga_id', 'pollingUnit.ward.lga:id,code,name,state_id', 'pollingUnit.ward.lga.state:id,code,name'])
+            ->with(['user:id,name', 'form:id,key', 'pollingUnit:id,code,name,ward_id', 'pollingUnit.ward:id,code,name,lga_id', 'pollingUnit.ward.lga:id,code,name,state_id', 'pollingUnit.ward.lga.state:id,code,name'])
             ->withCount('photos')
             ->orderBy('id')
             ->limit($limit);

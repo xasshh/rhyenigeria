@@ -2,6 +2,7 @@
 
 namespace App\Services\Geo;
 
+use DomainException;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -25,7 +26,10 @@ class GeoImporter
         'polling-unit' => ['table' => 'polling_units', 'parent' => 'ward_id', 'parents' => ['state_code', 'lga_code', 'ward_code']],
     ];
 
-    private const BOUNDARY_SQL = 'ST_Multi(ST_SetSRID(%s, 4326))';
+    // Source boundary files often contain small defects (self-touching rings and
+    // the like), so boundaries are repaired on the way in; anything that is not
+    // a polygon after repair is rejected.
+    private const BOUNDARY_SQL = 'ST_Multi(ST_CollectionExtract(ST_MakeValid(ST_SetSRID(%s, 4326)), 3))';
 
     /** @var array<string, int|null> */
     private array $parentCache = [];
@@ -124,7 +128,17 @@ class GeoImporter
 
         try {
             // A savepoint per row, so one bad geometry does not abort the whole import.
-            $outcome = DB::transaction(fn () => $this->upsert($definition, $parentId, $code, $name, $geometry));
+            $outcome = DB::transaction(function () use ($definition, $parentId, $code, $name, $geometry) {
+                if (isset($geometry['boundary']) && DB::scalar("SELECT ST_IsEmpty({$geometry['boundary'][0]})", $geometry['boundary'][1])) {
+                    throw new DomainException('the boundary is not a usable polygon');
+                }
+
+                return $this->upsert($definition, $parentId, $code, $name, $geometry);
+            });
+        } catch (DomainException $e) {
+            $result->problem($number, 'invalid geometry: '.$e->getMessage());
+
+            return;
         } catch (QueryException $e) {
             $result->problem($number, 'invalid geometry or data: '.$this->shortError($e));
 

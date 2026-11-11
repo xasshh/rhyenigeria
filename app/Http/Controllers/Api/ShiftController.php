@@ -7,6 +7,7 @@ use App\Models\Shift;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Shifts are always started and ended by the agent themselves; there is no
@@ -16,7 +17,7 @@ class ShiftController extends Controller
 {
     public function current(Request $request): JsonResponse
     {
-        $shift = $request->user()->activeShift;
+        $shift = $request->user()->activeShift()->first();
 
         return response()->json(['shift' => $shift ? self::present($shift) : null]);
     }
@@ -27,12 +28,13 @@ class ShiftController extends Controller
 
         abort_unless($user->hasAcceptedTrackingConsent(), 403, 'Accept the tracking consent notice before starting a shift.');
 
-        if ($existing = $user->activeShift) {
+        if ($existing = $user->activeShift()->first()) {
             return response()->json(['message' => 'A shift is already in progress.', 'shift' => self::present($existing)], 409);
         }
 
         try {
-            $shift = $user->shifts()->create(['started_at' => now()]);
+            // In its own (nested) transaction so a lost race leaves the connection usable.
+            $shift = DB::transaction(fn () => $user->shifts()->create(['started_at' => now()]));
         } catch (UniqueConstraintViolationException) {
             // Two start requests raced; the other one won.
             return response()->json(['message' => 'A shift is already in progress.', 'shift' => self::present($user->activeShift()->first())], 409);
@@ -43,7 +45,7 @@ class ShiftController extends Controller
 
     public function end(Request $request): JsonResponse
     {
-        $shift = $request->user()->activeShift;
+        $shift = $request->user()->activeShift()->first();
 
         if (! $shift) {
             return response()->json(['message' => 'No shift is in progress.'], 409);
