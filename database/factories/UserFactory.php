@@ -2,8 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Enums\AreaLevel;
+use App\Enums\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -12,14 +15,9 @@ use Illuminate\Support\Str;
  */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
     protected static ?string $password;
 
     /**
-     * Define the model's default state.
-     *
      * @return array<string, mixed>
      */
     public function definition(): array
@@ -33,13 +31,48 @@ class UserFactory extends Factory
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
-    public function unverified(): static
+    public function role(Role $role): static
     {
-        return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
-        ]);
+        return $this->afterMaking(fn (User $user) => $user->role = $role);
+    }
+
+    public function superAdmin(): static
+    {
+        return $this->role(Role::SuperAdmin);
+    }
+
+    public function coordinator(?Model $area = null): static
+    {
+        return $this->role(Role::Coordinator)->inArea($area);
+    }
+
+    public function agent(?Model $area = null): static
+    {
+        return $this->role(Role::FieldAgent)->inArea($area);
+    }
+
+    /** Scope or assign the user to a State, Lga or Ward model. */
+    public function inArea(?Model $area): static
+    {
+        if ($area === null) {
+            return $this;
+        }
+
+        $level = AreaLevel::from(strtolower(class_basename($area)));
+
+        return $this->afterMaking(fn (User $user) => $user->assignArea($level, $area->getKey()));
+    }
+
+    public function consented(): static
+    {
+        return $this->afterMaking(function (User $user) {
+            $user->tracking_consent_accepted_at = now()->subDay();
+            $user->tracking_consent_version = '1';
+        });
+    }
+
+    public function inactive(): static
+    {
+        return $this->afterMaking(fn (User $user) => $user->is_active = false);
     }
 }
