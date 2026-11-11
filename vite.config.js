@@ -12,6 +12,10 @@ export default defineConfig({
                 bunny('Instrument Sans', {
                     weights: [400, 500, 600],
                 }),
+                // Landing page (from the RHYE-2026 Figma file).
+                bunny('DM Sans', { weights: [400, 500, 700] }),
+                bunny('Lato', { weights: [400] }),
+                bunny('Yellowtail', { weights: [400] }),
             ],
         }),
         tailwindcss(),

@@ -6,4 +6,13 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Landing page */
+    --font-display: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-stat: 'Lato', ui-sans-serif, system-ui, sans-serif;
+    --font-script: 'Yellowtail', 'Brush Script MT', cursive;
+    --color-brand: #119747;
+    --color-brand-dark: #0c7a39;
+    --color-brand-soft: #7cc79a;
+    --color-accent: #f6c51b;
 }
