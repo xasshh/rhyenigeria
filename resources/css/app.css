@@ -8,11 +8,12 @@
         'Segoe UI Symbol', 'Noto Color Emoji';
 
     /* Landing page */
-    --font-display: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Aeonik', 'DM Sans', ui-sans-serif, system-ui, sans-serif;
     --font-stat: 'Lato', ui-sans-serif, system-ui, sans-serif;
-    --font-script: 'Yellowtail', 'Brush Script MT', cursive;
-    --color-brand: #119747;
+    --font-script: 'Brush Script MT', 'Yellowtail', cursive;
+    --font-body: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+    --color-brand: #109648;
     --color-brand-dark: #0c7a39;
     --color-brand-soft: #7cc79a;
-    --color-accent: #f6c51b;
+    --color-accent: #f2b705;
 }
