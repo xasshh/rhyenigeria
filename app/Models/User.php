@@ -23,6 +23,11 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
+    /**
+     * The `field_agent` default predates public sign-up and is kept so the
+     * existing API keeps working. Public registration never relies on it:
+     * MemberRegistrar always sets Role::Member explicitly.
+     */
     protected $attributes = [
         'role' => 'field_agent',
         'is_active' => true,
@@ -70,6 +75,47 @@ class User extends Authenticatable
     public function position(): HasOne
     {
         return $this->hasOne(AgentPosition::class);
+    }
+
+    public function memberProfile(): HasOne
+    {
+        return $this->hasOne(MemberProfile::class);
+    }
+
+    public function empowermentReports(): HasMany
+    {
+        return $this->hasMany(EmpowermentReport::class);
+    }
+
+    public function isMember(): bool
+    {
+        return $this->role === Role::Member;
+    }
+
+    public function firstName(): string
+    {
+        return (string) str($this->name)->trim()->before(' ');
+    }
+
+    /** "Ada O." — what the public verify page shows. */
+    public function publicName(): string
+    {
+        $parts = preg_split('/\s+/', trim($this->name)) ?: [];
+        $first = $parts[0] ?? '';
+        $last = count($parts) > 1 ? end($parts) : '';
+
+        return trim($first.($last !== '' ? ' '.mb_strtoupper(mb_substr($last, 0, 1)).'.' : ''));
+    }
+
+    /** Where to send this user after they sign in on the website. */
+    public function homeRoute(): string
+    {
+        return match ($this->role) {
+            Role::SuperAdmin => route('admin.dashboard'),
+            Role::Coordinator => route('coordinator.dashboard'),
+            Role::Member => route('membership.home'),
+            Role::FieldAgent => route('home'),
+        };
     }
 
     public function isSuperAdmin(): bool
@@ -187,6 +233,38 @@ class User extends Authenticatable
         }
 
         $query->whereRaw('1 = 0');
+    }
+
+    public function scopeMembers(Builder $query): void
+    {
+        $query->where($this->qualifyColumn('role'), Role::Member->value);
+    }
+
+    /**
+     * Members the viewer may see: all of them for a super admin, those whose
+     * own area falls inside a coordinator's area, and nobody for anyone else.
+     * Every member list, detail page, photo and export goes through this.
+     */
+    public function scopeMembersVisibleTo(Builder $query, User $viewer): void
+    {
+        $query->where($this->qualifyColumn('role'), Role::Member->value);
+
+        if ($viewer->isSuperAdmin()) {
+            return;
+        }
+
+        if ($viewer->isCoordinator() && ($level = $viewer->areaLevel())) {
+            $query->where($this->qualifyColumn($level->column()), $viewer->getAttribute($level->column()));
+
+            return;
+        }
+
+        $query->whereRaw('1 = 0');
+    }
+
+    public function canSeeMember(User $member): bool
+    {
+        return static::query()->membersVisibleTo($this)->whereKey($member->id)->exists();
     }
 
     public function canSee(User $other): bool

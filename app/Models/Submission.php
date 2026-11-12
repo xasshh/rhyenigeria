@@ -61,6 +61,7 @@ class Submission extends Model
                 ? $query->where($this->qualifyColumn($level->column()), $viewer->getAttribute($level->column()))
                 : $query->whereRaw('1 = 0'),
             Role::FieldAgent => $query->where($this->qualifyColumn('user_id'), $viewer->id),
+            Role::Member => $query->whereRaw('1 = 0'),
         };
     }
 }

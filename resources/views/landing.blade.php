@@ -8,7 +8,7 @@
     $partyLogo = $image('logo-apc');
     $portrait = $image('hero-portrait');
 
-    $links = ['Home' => '#top', 'About' => '#about', 'Get Involved' => '#get-involved', 'Media' => '#media', 'Contact' => '#contact'];
+    $links = ['Home' => '#top', 'About' => '#about', 'Get Involved' => route('join'), 'Media' => '#media', 'Contact' => '#contact'];
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -24,7 +24,7 @@
     {{-- Announcement bar --}}
     <div class="bg-brand px-4 py-4 text-center text-xs leading-[17px] text-white">
         Renewed Hope Youth Engagement
-        <a href="#get-involved" class="ml-1 font-bold text-accent hover:underline">Support Us</a>
+        <a href="{{ route('join') }}" class="ml-1 font-bold text-accent hover:underline">Support Us</a>
     </div>
 
     {{-- Navigation --}}
@@ -51,7 +51,14 @@
             @endforeach
         </nav>
 
-        <a href="#get-involved" class="hidden rounded-[10px] bg-brand px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-dark lg:inline-block">Join the Movement</a>
+        <div class="hidden items-center gap-5 lg:flex">
+            @auth
+                <a href="{{ auth()->user()->homeRoute() }}" class="text-sm font-bold text-brand hover:underline">My dashboard</a>
+            @else
+                <a href="{{ route('login') }}" class="text-sm font-bold text-brand hover:underline">Sign in</a>
+            @endauth
+            <a href="{{ route('join') }}" class="rounded-[10px] bg-brand px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-dark">Join the Movement</a>
+        </div>
 
         {{-- Small screens: menu without JavaScript --}}
         <details class="group relative lg:hidden">
@@ -63,7 +70,12 @@
                 @foreach ($links as $label => $href)
                     <a href="{{ $href }}" class="rounded-lg px-3 py-2.5 hover:bg-brand/10">{{ $label }}</a>
                 @endforeach
-                <a href="#get-involved" class="mt-1 rounded-lg bg-brand px-3 py-2.5 text-center font-bold text-white">Join the Movement</a>
+                @auth
+                    <a href="{{ auth()->user()->homeRoute() }}" class="rounded-lg px-3 py-2.5 font-bold hover:bg-brand/10">My dashboard</a>
+                @else
+                    <a href="{{ route('login') }}" class="rounded-lg px-3 py-2.5 font-bold hover:bg-brand/10">Sign in</a>
+                @endauth
+                <a href="{{ route('join') }}" class="mt-1 rounded-lg bg-brand px-3 py-2.5 text-center font-bold text-white">Join the Movement</a>
             </nav>
         </details>
     </header>
@@ -80,7 +92,7 @@
                 Sub heading goes here and some additional text here. Sub heading goes here and some additional text here.
             </p>
             <div class="mt-10 flex flex-wrap gap-2.5">
-                <a href="#get-involved" class="rounded-[10px] border border-brand bg-brand px-6 py-3 text-lg leading-6 font-bold text-white transition-colors hover:bg-brand-dark">Join the Movement</a>
+                <a href="{{ route('join') }}" class="rounded-[10px] border border-brand bg-brand px-6 py-3 text-lg leading-6 font-bold text-white transition-colors hover:bg-brand-dark">Join the Movement</a>
                 <a href="#empowerment" class="rounded-[10px] border border-brand px-9 py-3 text-lg leading-6 font-bold transition-colors hover:bg-brand/10">Empowerment</a>
             </div>
         </div>

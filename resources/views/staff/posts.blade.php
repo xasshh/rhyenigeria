@@ -1,0 +1,81 @@
+@php $isAdmin = auth()->user()->isSuperAdmin(); $tz = config('membership.timezone'); @endphp
+<x-layouts.app title="News & events" heading="News & events">
+    <p class="mt-1 text-sm text-neutral-600">{{ $isAdmin ? 'Post nationally, or to one state.' : 'Posts go to members in '.(auth()->user()->state?->name ?? 'your state').'.' }}</p>
+
+    <div class="mt-5 grid gap-4 lg:grid-cols-2">
+        <form method="POST" action="{{ staff_route('news.store') }}" class="panel space-y-4 p-5">
+            @csrf
+            <h2 class="font-display text-lg font-bold">Post an update</h2>
+            <div><label class="label" for="n-title">Title</label><input id="n-title" name="title" class="field" required maxlength="255" value="{{ old('title') }}"></div>
+            <div><label class="label" for="n-body">Message</label><textarea id="n-body" name="body" rows="4" class="field" required>{{ old('body') }}</textarea></div>
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div><label class="label" for="n-source">Source label</label><input id="n-source" name="source_label" class="field" maxlength="64" placeholder="e.g. INEC" value="{{ old('source_label') }}"></div>
+                @if ($isAdmin)
+                    <div><label class="label" for="n-state">Who sees it</label>
+                        <select id="n-state" name="state_id" class="field"><option value="">Everyone (national)</option>@foreach ($states as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach</select></div>
+                @elseif ($wards->isNotEmpty())
+                    <div><label class="label" for="n-ward">Only one ward? <span class="font-normal text-neutral-500">(optional)</span></label>
+                        <select id="n-ward" name="ward_id" class="field"><option value="">Whole state</option>@foreach ($wards->groupBy('lga_name') as $lga => $ws)<optgroup label="{{ $lga }}">@foreach ($ws as $w)<option value="{{ $w->id }}">{{ $w->name }}</option>@endforeach</optgroup>@endforeach</select></div>
+                @endif
+            </div>
+            <button class="btn-primary">Post update</button>
+        </form>
+
+        <form method="POST" action="{{ staff_route('events.store') }}" class="panel space-y-4 p-5">
+            @csrf
+            <h2 class="font-display text-lg font-bold">Add an event</h2>
+            <div><label class="label" for="e-title">Title</label><input id="e-title" name="title" class="field" required maxlength="255" placeholder="e.g. Youth rally"></div>
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div><label class="label" for="e-start">Starts (Nigeria time)</label><input id="e-start" name="starts_at" type="datetime-local" class="field" required></div>
+                <div><label class="label" for="e-venue">Venue</label><input id="e-venue" name="venue" class="field" maxlength="255"></div>
+            </div>
+            <div><label class="label" for="e-desc">Details</label><textarea id="e-desc" name="description" rows="2" class="field"></textarea></div>
+            @if ($isAdmin)
+                <div><label class="label" for="e-state">Where</label>
+                    <select id="e-state" name="state_id" class="field"><option value="">National</option>@foreach ($states as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach</select></div>
+            @endif
+            <button class="btn-primary">Add event</button>
+        </form>
+    </div>
+
+    <div class="mt-6 grid gap-4 lg:grid-cols-2">
+        <section>
+            <h2 class="font-display text-lg font-bold">Updates</h2>
+            <ul class="panel mt-3 divide-y divide-line">
+                @forelse ($news as $post)
+                    <li class="flex items-start gap-3 p-4">
+                        <div class="min-w-0 flex-1 text-sm">
+                            <p class="font-semibold">{{ $post->title }}</p>
+                            <p class="text-xs text-neutral-500">{{ $post->ward?->name ?? $post->state?->name ?? 'National' }} · {{ $post->published_at->setTimezone($tz)->format('j M Y') }}{{ $post->author ? ' · '.$post->author->name : '' }}</p>
+                        </div>
+                        @if ($isAdmin || $post->state_id === auth()->user()->state_id)
+                            <form method="POST" action="{{ staff_route('news.destroy', $post) }}" x-data x-on:submit="if (!confirm('Remove this update?')) $event.preventDefault()">@csrf @method('DELETE')<button class="text-sm text-red-700">Remove</button></form>
+                        @endif
+                    </li>
+                @empty
+                    <li class="p-5 text-sm text-neutral-500">No updates yet.</li>
+                @endforelse
+            </ul>
+            <div class="mt-3">{{ $news->links() }}</div>
+        </section>
+        <section>
+            <h2 class="font-display text-lg font-bold">Events</h2>
+            <ul class="panel mt-3 divide-y divide-line">
+                @forelse ($events as $event)
+                    <li class="flex items-start gap-3 p-4">
+                        <div class="min-w-0 flex-1 text-sm">
+                            <p class="font-semibold">{{ $event->title }} @if ($event->starts_at->isPast())<span class="badge bg-neutral-100 text-neutral-500">Past</span>@endif</p>
+                            <p class="text-xs text-neutral-500">{{ $event->state?->name ?? 'National' }} · {{ $event->starts_at->setTimezone($tz)->format('D j M Y, g:ia') }}{{ $event->venue ? ' · '.$event->venue : '' }}</p>
+                        </div>
+                        @if ($isAdmin || $event->state_id === auth()->user()->state_id)
+                            <form method="POST" action="{{ staff_route('events.destroy', $event) }}" x-data x-on:submit="if (!confirm('Remove this event?')) $event.preventDefault()">@csrf @method('DELETE')<button class="text-sm text-red-700">Remove</button></form>
+                        @endif
+                    </li>
+                @empty
+                    <li class="p-5 text-sm text-neutral-500">No events yet.</li>
+                @endforelse
+            </ul>
+            <div class="mt-3">{{ $events->links() }}</div>
+        </section>
+    </div>
+</x-layouts.app>

@@ -21,6 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ['prefix' => 'api', 'middleware' => ['auth:sanctum', 'active']],
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->redirectUsersTo(fn (Request $request) => $request->user()?->homeRoute() ?? '/');
+
         $middleware->alias([
             'role' => EnsureRole::class,
             'active' => EnsureUserIsActive::class,

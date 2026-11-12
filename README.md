@@ -5,8 +5,9 @@ reports their location while they are on shift and submits data collected in
 the field. Coordinators watch a live map of the agents in their area, organised
 by state, LGA, ward and polling unit.
 
-This repository is the API only. There are no front-end pages beyond Laravel's
-default welcome page.
+It also serves the public website: the landing page, public sign-up for
+members and canvassers, the member dashboard, and web dashboards for state
+coordinators and super admins (see [Website](#website)).
 
 - Laravel 13 on PHP 8.5
 - PostgreSQL with PostGIS (all geometry is SRID 4326)
@@ -18,6 +19,7 @@ default welcome page.
 
 - [Local setup](#local-setup)
 - [Roles and scoping](#roles-and-scoping)
+- [Website](#website)
 - [API](#api)
 - [Live updates](#live-updates)
 - [Importing geography](#importing-geography)
@@ -77,12 +79,117 @@ on SQLite. They never touch the development database.
 | Super admin | `super_admin` | Everything, everywhere. Manages users and forms, reads the audit log. |
 | Coordinator | `coordinator` | Sees agents, positions, trails and submissions inside their area only. |
 | Field agent | `field_agent` | Accepts consent, runs their own shifts, posts locations and submissions. Sees only their own data. |
+| Member | `member` | Anyone who signs up at `/join`. Sees only their own card, profile, events and news. Never sees other people's data. |
+
+**Canvassers are members.** A canvasser is a `member` whose
+`member_profiles.canvasser_status` is `approved` (`pending` and `rejected` are the
+other states; `NULL` means they never applied). Approval switches canvasser
+tools on without moving anyone between roles, so a canvasser keeps the same
+card, dashboard and scoping, and can never gain field-agent or coordinator
+rights. Sign-up always saves `role = member` explicitly; the old `field_agent`
+column default is never relied on.
 
 A coordinator's area is one state, one LGA or one ward. An agent is inside a
 coordinator's area when the agent's own assigned area falls within it; a
 submission is inside it when the polling unit it relates to does. A coordinator
 with no area sees nothing. Scoping is applied in the queries themselves, so
 lists, single records, exports and WebSocket channels all follow the same rule.
+
+Members follow the same rule on the website: `User::membersVisibleTo()` limits
+a coordinator to members whose own state/LGA/ward is inside the coordinator's
+area. Every member list, detail page, empowerment photo and CSV export starts
+from it, so filters can narrow it but never widen it. A member outside your
+area returns 404. Canvasser decisions are made by **state-level** coordinators
+(and super admins) only.
+
+## Website
+
+Pages use Blade, Tailwind 4 and Alpine.js (`resources/js/site.js`). Chart.js is
+loaded only on the coordinator and admin dashboards (`resources/js/charts.js`).
+The Echo/Reverb client in `app.js` is not loaded on these pages.
+
+### Public
+
+| Path | What |
+|---|---|
+| `/` | Landing page. Every "Join the Movement" button goes to `/join`; the nav has **Sign in**. |
+| `/join` | Chooser: *Join as a Member* or *Join as a Canvasser*. Keeps `?ref=`. |
+| `/join?as=member` / `?as=canvasser` | Four-step wizard: Account → Details → Location → Finish (Volunteer for canvassers). Each step is checked on the server (`POST /join/check/{step}`) before moving on, and the final `POST /join` re-checks everything. |
+| `/verify/{token}` | Where the card's QR code points. Shows first name + last initial, state and month joined. Nothing else. |
+| `/privacy` | Privacy notice (NDPA 2023). |
+| `/login`, `/forgot-password`, `/reset-password/{token}` | Session sign-in (email + password) and password reset by email. |
+| `/geo/states/{id}/lgas`, `/geo/lgas/{id}/wards`, `/geo/wards/{id}/polling-units` | Public lookups for the sign-up dropdowns. |
+
+After sign-in, users are sent by role: members to `/membership`, coordinators to
+`/coordinator`, super admins to `/admin`. Field agents keep using the API and
+cannot sign in on the website.
+
+Sign-up details:
+
+- Phone numbers are stored as `+234XXXXXXXXXX` and are unique; email is unique and lower-cased.
+- If the chosen LGA has wards in the database, a ward is required; if not (only states and LGAs imported), the ward and polling unit are skipped.
+- Polling unit is optional ("Not sure"). VIN (19 characters) and NIN (11 digits) are optional and stored with Laravel's `encrypted` cast.
+- Location is only requested when the person taps **Share location**.
+- Protection: server-side validation per step, a hidden honeypot field, and a per-IP limit (`JOIN_RATE_LIMIT_PER_MINUTE`, default 30; generous because mobile networks share IPs).
+- Member numbers are `RHYE-{STATE CODE}-{6 random digits}`. The state code is the `code` column of `states`, so import states with short codes such as `LA` and `FC`.
+- The referral code is the member number. `?ref=RHYE-LA-123456` pre-fills "Who invited you?", and `member_profiles.referred_by_user_id` records it.
+
+### Members (`/membership`, role `member`)
+
+Home (election countdown, next event, latest national/state/ward news, apply to
+canvass), **My card** (membership card with QR, download as PNG, share links,
+state WhatsApp group, edit details, add PVC/VIN/NIN, change password), **Events
+& news**, **Empowerment** (report a programme with a private photo), and **Make
+your campaign DP** (canvas in the browser; the photo is never uploaded).
+
+### Coordinators (`/coordinator`, role `coordinator`)
+
+Dashboard (totals, sign-ups, LGA and ward breakdowns), **Members** (search and
+filters; phones masked in the list, full on the detail page; NIN/VIN always
+masked), **Canvassers** (approve/reject with a note; every decision is written to
+the audit log as `canvasser.approved` / `canvasser.rejected`), **Empowerment**,
+**News & events** (for their own state, optionally one ward), and **CSV export**
+(audit-logged as `members.exported`; never includes NIN/VIN). Viewing a member's
+detail page is logged as `member.viewed`.
+
+### Super admins (`/admin`, role `super_admin`)
+
+National overview (totals, registrations chart, sortable by-state table linking
+to `/admin/states/{id}`, gender/age/PVC breakdowns), every coordinator page
+nationally, **Coordinators** (create, change state, deactivate), **News & events**
+(national or any state), **Settings** (election date and label, each state's
+WhatsApp group link), and CSV export with an explicit **Include NIN & VIN** box.
+
+### Creating a coordinator
+
+Sign in as a super admin, open **Coordinators**, and fill in name, email, phone,
+state and a temporary password (10+ characters). Or use the API:
+
+```sh
+curl -s $API/users -H "Authorization: Bearer $TOKEN" -H 'Accept: application/json' \
+  -d name='Bola Ade' -d email=bola@example.com -d password='a-long-password' \
+  -d role=coordinator -d area_level=state -d area_id=1
+```
+
+Only **state-level** coordinators get the web dashboard features for canvasser
+decisions; LGA- and ward-level coordinators (used by the field-agent API) can
+view their area but not approve canvassers.
+
+### Geography for sign-up
+
+The sign-up dropdowns read the `states`, `lgas`, `wards` and `polling_units`
+tables, loaded with `geo:import` (below). The repository only has made-up
+samples. For production, provide INEC data as CSV:
+
+| File | Columns |
+|---|---|
+| `states.csv` | `code,name` (use two-letter codes such as `LA`, `FC`: they appear in member numbers) |
+| `lgas.csv` | `state_code,code,name` |
+| `wards.csv` | `state_code,lga_code,code,name` |
+| `polling_units.csv` | `state_code,lga_code,ward_code,code,name,latitude,longitude` (lat/lng may be empty) |
+
+States and LGAs alone are enough to launch; wards and polling units can be
+imported later without changing anything else.
 
 ## API
 
@@ -380,6 +487,10 @@ php artisan geo:import polling-unit database/data/samples/polling_units.csv
 | `TRACKING_CONSENT_VERSION` | 1 | Raise it when the consent notice changes; agents must accept again. |
 | `SUBMISSION_PHOTO_MAX_KB` | 8192 | Largest photo. |
 | `SUBMISSION_MAX_PHOTOS` | 5 | Photos per submission. |
+| `JOIN_RATE_LIMIT_PER_MINUTE` | 30 | Sign-up submissions per IP per minute. |
+| `MEMBERSHIP_CONSENT_VERSION` | 1 | Raise when the data-consent wording changes; stored with each member. |
+| `EMPOWERMENT_PHOTO_MAX_KB` | 8192 | Largest empowerment photo. Photos are on the private disk (`storage/app/private/empowerment`). |
+| `MAIL_*` | `log` | Password-reset emails. See the SMTP block in `.env.example`. `APP_URL` must be the public `https://` address: QR codes, share links and reset links use it. |
 
 Run `php artisan config:cache` after changing `.env` on the server.
 
@@ -408,6 +519,12 @@ runs the migrations (with the site briefly in maintenance mode), rebuilds the
 config, route, view and event caches, and restarts the queue worker and Reverb.
 It needs no sudo: the two processes are told to stop through the cache and
 Supervisor starts them again on the new code.
+
+The membership release adds one migration
+(`2026_11_12_100000_create_membership_tables`): it adds a unique index on
+`users.phone` (it fails if two existing users share a phone number; fix those
+first), `states.whatsapp_group_url`, and the `member_profiles`, `events`,
+`news_posts`, `empowerment_reports` and `settings` tables. `deploy.sh` runs it.
 
 Useful checks on the server:
 

@@ -51,6 +51,14 @@ class UserFactory extends Factory
         return $this->role(Role::FieldAgent)->inArea($area);
     }
 
+    /** A member living in the given area (a State, Lga or Ward model). */
+    public function member(?Model $area = null): static
+    {
+        return $this->role(Role::Member)->inArea($area)->state(fn () => [
+            'phone' => '+23480'.fake()->unique()->numerify('########'),
+        ]);
+    }
+
     /** Scope or assign the user to a State, Lga or Ward model. */
     public function inArea(?Model $area): static
     {

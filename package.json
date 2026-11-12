@@ -8,6 +8,8 @@
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
+        "alpinejs": "^3.17.5",
+        "chart.js": "^4.6.1",
         "concurrently": "^10.0.3",
         "laravel-echo": "^2.6.3",
         "laravel-vite-plugin": "^3.1",

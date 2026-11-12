@@ -17,3 +17,62 @@
     --color-brand-soft: #7cc79a;
     --color-accent: #f2b705;
 }
+
+/* Member area, sign-up and dashboards */
+@theme {
+    --color-ink: #0b2a17;
+    --color-surface: #f3f6f3;
+    --color-line: #dfe7e1;
+}
+
+[x-cloak] {
+    display: none !important;
+}
+
+@utility field {
+    @apply block w-full rounded-xl border border-line bg-white px-3.5 py-3 text-base text-ink placeholder:text-neutral-400 focus:border-brand focus:ring-2 focus:ring-brand/25 focus:outline-none disabled:bg-neutral-50;
+}
+
+@utility label {
+    @apply mb-1.5 block text-sm font-medium text-ink;
+}
+
+@utility hint {
+    @apply mt-1.5 text-xs leading-relaxed text-neutral-500;
+}
+
+@utility error {
+    @apply mt-1.5 text-sm text-red-700;
+}
+
+@utility btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-base font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60;
+}
+
+@utility btn-primary {
+    @apply btn bg-brand text-white hover:bg-brand-dark;
+}
+
+@utility btn-secondary {
+    @apply btn border border-line bg-white text-ink hover:bg-surface;
+}
+
+@utility btn-sm {
+    @apply min-h-9 rounded-lg px-3 py-1.5 text-sm;
+}
+
+@utility choice {
+    @apply flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-line bg-white px-3 py-2.5 text-center text-sm font-medium text-neutral-700 transition-colors select-none hover:border-brand/60 has-[:checked]:border-brand has-[:checked]:bg-brand/10 has-[:checked]:text-brand-dark has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand/30;
+}
+
+@utility chip {
+    @apply inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-line bg-white px-3.5 py-2 text-sm font-medium text-neutral-700 select-none has-[:checked]:border-brand has-[:checked]:bg-brand has-[:checked]:text-white has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand/30;
+}
+
+@utility panel {
+    @apply rounded-2xl border border-line bg-white;
+}
+
+@utility badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
+}
