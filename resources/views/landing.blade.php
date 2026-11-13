@@ -4,6 +4,7 @@
         ->map(fn ($ext) => "images/{$name}.{$ext}")
         ->first(fn ($path) => file_exists(public_path($path)));
 
+    $rhyeLogo = $image('logo-rhye');
     $logo = $image('logo-renewed-hope');
     $partyLogo = $image('logo-apc');
     $portrait = $image('hero-portrait');
@@ -29,7 +30,11 @@
 
     {{-- Navigation --}}
     <header class="mx-auto flex max-w-[1440px] items-center justify-between gap-6 px-5 py-5 sm:px-8 lg:px-[66px] lg:py-6">
-        <a href="#top" class="flex shrink-0 items-center gap-6 sm:gap-9" aria-label="Renewed Hope Youth Engagement home">
+        <a href="#top" class="flex shrink-0 items-center gap-4 sm:gap-9" aria-label="Renewed Hope Youth Engagement home">
+            @if ($rhyeLogo)
+                <img src="{{ asset($rhyeLogo) }}" alt="RHYE — Renewed Hope Youth Engagement" class="h-[40px] w-auto sm:h-[56px]" width="600" height="272">
+                <span class="h-8 w-px bg-brand/20 sm:h-10" aria-hidden="true"></span>
+            @endif
             @if ($logo)
                 <img src="{{ asset($logo) }}" alt="Renewed Hope" class="h-[30px] w-auto sm:h-[37.5px]" width="285" height="150">
             @else
