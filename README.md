@@ -146,7 +146,7 @@ Sign-up details:
 - If the chosen LGA has wards in the database, a ward is required; if not (only states and LGAs imported), the ward and polling unit are skipped.
 - Polling unit is optional ("Not sure"). VIN (19 characters) and NIN (11 digits) are optional and stored with Laravel's `encrypted` cast.
 - Location is only requested when the person taps **Share location**.
-- Protection: server-side validation per step, a hidden honeypot field, and a per-IP limit (`JOIN_RATE_LIMIT_PER_MINUTE`, default 30; generous because mobile networks share IPs).
+- Protection: server-side validation per step, a hidden honeypot field, and per-IP limits (`JOIN_RATE_LIMIT_PER_MINUTE` 120, `JOIN_CHECK_RATE_LIMIT_PER_MINUTE` 600, `GEO_RATE_LIMIT_PER_MINUTE` 1200; generous because venue Wi-Fi and mobile networks put many phones behind one IP).
 - Member numbers are `RHYE-{STATE CODE}-{6 random digits}`. The state code is the `code` column of `states`, so import states with short codes such as `LA` and `FC`.
 - The referral code is the member number. `?ref=RHYE-LA-123456` pre-fills "Who invited you?", and `member_profiles.referred_by_user_id` records it.
 
@@ -563,7 +563,9 @@ php artisan geo:import polling-unit database/data/samples/polling_units.csv
 | `TRACKING_CONSENT_VERSION` | 1 | Raise it when the consent notice changes; agents must accept again. |
 | `SUBMISSION_PHOTO_MAX_KB` | 8192 | Largest photo. |
 | `SUBMISSION_MAX_PHOTOS` | 5 | Photos per submission. |
-| `JOIN_RATE_LIMIT_PER_MINUTE` | 30 | Sign-up submissions per IP per minute. |
+| `JOIN_RATE_LIMIT_PER_MINUTE` | 120 | Completed sign-ups per IP per minute. Generous because at rallies many phones share one IP. |
+| `JOIN_CHECK_RATE_LIMIT_PER_MINUTE` | 600 | Wizard step checks per IP per minute (about 4 per sign-up). |
+| `GEO_RATE_LIMIT_PER_MINUTE` | 1200 | State/LGA/ward/polling-unit dropdown lookups per IP per minute (about 3 per sign-up). |
 | `MEMBERSHIP_CONSENT_VERSION` | 1 | Raise when the data-consent wording changes; stored with each member. |
 | `EMPOWERMENT_PHOTO_MAX_KB` | 8192 | Largest empowerment photo. Photos are on the private disk (`storage/app/private/empowerment`). |
 | `SOCIAL_FACEBOOK_URL`, `SOCIAL_INSTAGRAM_URL`, `SOCIAL_TIKTOK_URL`, `SOCIAL_X_URL` | see `config/membership.php` | Social media links in the homepage top bar and footer. TikTok and X point at the profiles; Facebook and Instagram point at posts until the profile links are set here. Leave one empty (`=`) to hide its icon. |

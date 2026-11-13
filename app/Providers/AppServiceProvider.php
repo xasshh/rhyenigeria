@@ -28,9 +28,9 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('join', fn (Request $request) => Limit::perMinute((int) config('membership.join_rate_limit_per_minute'))
             ->by('join:'.$request->ip()));
 
-        RateLimiter::for('join-check', fn (Request $request) => Limit::perMinute(120)->by('join-check:'.$request->ip()));
+        RateLimiter::for('join-check', fn (Request $request) => Limit::perMinute((int) config('membership.join_check_rate_limit_per_minute'))->by('join-check:'.$request->ip()));
 
-        RateLimiter::for('geo', fn (Request $request) => Limit::perMinute(240)->by('geo:'.$request->ip()));
+        RateLimiter::for('geo', fn (Request $request) => Limit::perMinute((int) config('membership.geo_rate_limit_per_minute'))->by('geo:'.$request->ip()));
 
         RateLimiter::for('password-reset', fn (Request $request) => Limit::perMinute(5)->by('reset:'.$request->ip()));
 

@@ -24,7 +24,11 @@ return [
 
     // Sign-up submissions per IP per minute. Nigerian mobile networks put many
     // phones behind one address, so keep this generous for rallies.
-    'join_rate_limit_per_minute' => (int) env('JOIN_RATE_LIMIT_PER_MINUTE', 30),
+    // At a rally hundreds of phones can share one IP (venue Wi-Fi, carrier NAT), so these are per IP and generous.
+    // One sign-up makes about 4 step checks and 3 dropdown lookups.
+    'join_rate_limit_per_minute' => (int) env('JOIN_RATE_LIMIT_PER_MINUTE', 120),
+    'join_check_rate_limit_per_minute' => (int) env('JOIN_CHECK_RATE_LIMIT_PER_MINUTE', 600),
+    'geo_rate_limit_per_minute' => (int) env('GEO_RATE_LIMIT_PER_MINUTE', 1200),
 
     'empowerment_photo_max_kb' => (int) env('EMPOWERMENT_PHOTO_MAX_KB', 8192),
 ];
