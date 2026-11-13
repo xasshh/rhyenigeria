@@ -4,22 +4,33 @@ import Alpine from 'alpinejs';
 import joinWizard from './components/join-wizard';
 import memberCard from './components/member-card';
 import dpMaker from './components/dp-maker';
+import heroSlider from './components/hero-slider';
+import areaMap from './components/area-map';
 
 Alpine.data('joinWizard', joinWizard);
 Alpine.data('memberCard', memberCard);
 Alpine.data('dpMaker', dpMaker);
+Alpine.data('heroSlider', heroSlider);
+Alpine.data('areaMap', areaMap);
 
-Alpine.data('countdown', (target) => ({
-    days: 0, hours: 0, minutes: 0, seconds: 0, done: false,
+// Counts down to `target`. `initial` is the server-rendered value, so the numbers
+// are right before this runs and nothing jumps when it starts.
+Alpine.data('countdown', (target, initial = {}) => ({
+    weeks: 0, days: 0, totalDays: 0, hours: 0, minutes: 0, seconds: 0, done: false,
+    ...initial,
     init() {
         const end = new Date(target).getTime();
         const tick = () => {
             let s = Math.max(0, Math.floor((end - Date.now()) / 1000));
             this.done = s === 0;
-            this.days = Math.floor(s / 86400); s %= 86400;
+            this.totalDays = Math.floor(s / 86400);
+            this.weeks = Math.floor(this.totalDays / 7);
+            this.days = this.totalDays % 7;
+            s %= 86400;
             this.hours = Math.floor(s / 3600); s %= 3600;
             this.minutes = Math.floor(s / 60);
             this.seconds = s % 60;
+            if (this.done) clearInterval(this.timer);
         };
         tick();
         this.timer = setInterval(tick, 1000);

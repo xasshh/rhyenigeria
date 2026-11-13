@@ -71,9 +71,9 @@ final class JoinForm
                 'gender' => ['required', new Enum(Gender::class)],
                 'age_range' => ['required', new Enum(AgeRange::class)],
                 'occupation' => ['nullable', 'string', 'max:120'],
+                'state_id' => ['required', 'integer', Rule::exists('states', 'id')],
             ],
             'location' => [
-                'state_id' => ['required', 'integer', Rule::exists('states', 'id')],
                 'lga_id' => ['required', 'integer', Rule::exists('lgas', 'id')->where('state_id', (int) ($input['state_id'] ?? 0))],
                 // A ward is only required once the LGA's wards have been imported.
                 'ward_id' => [

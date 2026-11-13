@@ -1,0 +1,775 @@
+state_code,code,name
+AB,ABA-NORTH,Aba North
+AB,ABA-SOUTH,Aba South
+AB,AROCHUKWU,Arochukwu
+AB,BENDE,Bende
+AB,IKWUANO,Ikwuano
+AB,ISIALA-NGWA-NORTH,Isiala Ngwa North
+AB,ISIALA-NGWA-SOUTH,Isiala Ngwa South
+AB,ISUIKWUATO,Isuikwuato
+AB,OBINGWA,Obingwa
+AB,OHAFIA,Ohafia
+AB,OSISIOMA,Osisioma
+AB,UGWUNAGBO,Ugwunagbo
+AB,UKWA-EAST,Ukwa East
+AB,UKWA-WEST,Ukwa West
+AB,UMU-NNEOCHI,Umu-Nneochi
+AB,UMUAHIA-NORTH,Umuahia North
+AB,UMUAHIA-SOUTH,Umuahia South
+AD,DEMSA,Demsa
+AD,FUFORE,Fufore
+AD,GANYE,Ganye
+AD,GIREI,Girei
+AD,GOMBI,Gombi
+AD,GUYUK,Guyuk
+AD,HONG,Hong
+AD,JADA,Jada
+AD,LAMURDE,Lamurde
+AD,MADAGALI,Madagali
+AD,MAIHA,Maiha
+AD,MAYO-BELWA,Mayo-Belwa
+AD,MICHIKA,Michika
+AD,MUBI-NORTH,Mubi North
+AD,MUBI-SOUTH,Mubi South
+AD,NUMAN,Numan
+AD,SHELLENG,Shelleng
+AD,SONG,Song
+AD,TOUNGO,Toungo
+AD,YOLA-NORTH,Yola North
+AD,YOLA-SOUTH,Yola South
+AK,ABAK,Abak
+AK,EASTERN-OBOLO,Eastern Obolo
+AK,EKET,Eket
+AK,ESIT-EKET,Esit Eket
+AK,ESSIEN-UDIM,Essien Udim
+AK,ETIM-EKPO,Etim Ekpo
+AK,ETINAN,Etinan
+AK,IBENO,Ibeno
+AK,IBESIKPO-ASUTAN,Ibesikpo Asutan
+AK,IBIONO-IBOM,Ibiono Ibom
+AK,IKA,Ika
+AK,IKONO,Ikono
+AK,IKOT-ABASI,Ikot Abasi
+AK,IKOT-EKPENE,Ikot Ekpene
+AK,INI,Ini
+AK,ITU,Itu
+AK,MBO,Mbo
+AK,MKPAT-ENIN,Mkpat Enin
+AK,NSIT-ATAI,Nsit Atai
+AK,NSIT-IBOM,Nsit Ibom
+AK,NSIT-UBIUM,Nsit Ubium
+AK,OBOT-AKARA,Obot Akara
+AK,OKOBO,Okobo
+AK,ONNA,Onna
+AK,ORON,Oron
+AK,ORUK-ANAM,Oruk Anam
+AK,UDUNG-UKO,Udung Uko
+AK,UKANAFUN,Ukanafun
+AK,URUAN,Uruan
+AK,URUE-OFFONG-ORUKO,Urue-Offong/Oruko
+AK,UYO,Uyo
+AN,AGUATA,Aguata
+AN,ANAMBRA-EAST,Anambra East
+AN,ANAMBRA-WEST,Anambra West
+AN,ANAOCHA,Anaocha
+AN,AWKA-NORTH,Awka North
+AN,AWKA-SOUTH,Awka South
+AN,AYAMELUM,Ayamelum
+AN,DUNUKOFIA,Dunukofia
+AN,EKWUSIGO,Ekwusigo
+AN,IDEMILI-NORTH,Idemili North
+AN,IDEMILI-SOUTH,Idemili South
+AN,IHIALA,Ihiala
+AN,NJIKOKA,Njikoka
+AN,NNEWI-NORTH,Nnewi North
+AN,NNEWI-SOUTH,Nnewi South
+AN,OGBARU,Ogbaru
+AN,ONITSHA-NORTH,Onitsha North
+AN,ONITSHA-SOUTH,Onitsha South
+AN,ORUMBA-NORTH,Orumba North
+AN,ORUMBA-SOUTH,Orumba South
+AN,OYI,Oyi
+BA,ALKALERI,Alkaleri
+BA,BAUCHI,Bauchi
+BA,BOGORO,Bogoro
+BA,DAMBAM,Dambam
+BA,DARAZO,Darazo
+BA,DASS,Dass
+BA,GAMAWA,Gamawa
+BA,GANJUWA,Ganjuwa
+BA,GIADE,Giade
+BA,ITAS-GADAU,Itas/Gadau
+BA,JAMA-ARE,Jama'are
+BA,KATAGUM,Katagum
+BA,KIRFI,Kirfi
+BA,MISAU,Misau
+BA,NINGI,Ningi
+BA,SHIRA,Shira
+BA,TAFAWA-BALEWA,Tafawa-Balewa
+BA,TORO,Toro
+BA,WARJI,Warji
+BA,ZAKI,Zaki
+BY,BRASS,Brass
+BY,EKEREMOR,Ekeremor
+BY,KOLOKUMA-OPOKUMA,Kolokuma-Opokuma
+BY,NEMBE,Nembe
+BY,OGBIA,Ogbia
+BY,SAGBAMA,Sagbama
+BY,SOUTHERN-IJAW,Southern Ijaw
+BY,YENAGOA,Yenagoa
+BE,ADO,Ado
+BE,AGATU,Agatu
+BE,APA,Apa
+BE,BURUKU,Buruku
+BE,GBOKO,Gboko
+BE,GUMA,Guma
+BE,GWER-EAST,Gwer East
+BE,GWER-WEST,Gwer West
+BE,KATSINA-ALA,Katsina-Ala
+BE,KONSHISHA,Konshisha
+BE,KWANDE,Kwande
+BE,LOGO,Logo
+BE,MAKURDI,Makurdi
+BE,OBI,Obi
+BE,OGBADIBO,Ogbadibo
+BE,OHIMINI,Ohimini
+BE,OJU,Oju
+BE,OKPOKWU,Okpokwu
+BE,OTUKPO,Otukpo
+BE,TARKA,Tarka
+BE,UKUM,Ukum
+BE,USHONGO,Ushongo
+BE,VANDEIKYA,Vandeikya
+BO,ABADAM,Abadam
+BO,ASKIRA-UBA,Askira/Uba
+BO,BAMA,Bama
+BO,BAYO,Bayo
+BO,BIU,Biu
+BO,CHIBOK,Chibok
+BO,DAMBOA,Damboa
+BO,DIKWA,Dikwa
+BO,GUBIO,Gubio
+BO,GUZAMALA,Guzamala
+BO,GWOZA,Gwoza
+BO,HAWUL,Hawul
+BO,JERE,Jere
+BO,KAGA,Kaga
+BO,KALA-BALGE,Kala/Balge
+BO,KONDUGA,Konduga
+BO,KUKAWA,Kukawa
+BO,KWAYA-KUSAR,Kwaya Kusar
+BO,MAFA,Mafa
+BO,MAGUMERI,Magumeri
+BO,MAIDUGURI,Maiduguri
+BO,MARTE,Marte
+BO,MOBBAR,Mobbar
+BO,MONGUNO,Monguno
+BO,NGALA,Ngala
+BO,NGANZAI,Nganzai
+BO,SHANI,Shani
+CR,ABI,Abi
+CR,AKAMKPA,Akamkpa
+CR,AKPABUYO,Akpabuyo
+CR,BAKASSI,Bakassi
+CR,BEKWARRA,Bekwarra
+CR,BIASE,Biase
+CR,BOKI,Boki
+CR,CALABAR-MUNICIPALITY,Calabar Municipality
+CR,CALABAR-SOUTH,Calabar South
+CR,ETUNG,Etung
+CR,IKOM,Ikom
+CR,OBANLIKU,Obanliku
+CR,OBUBRA,Obubra
+CR,OBUDU,Obudu
+CR,ODUKPANI,Odukpani
+CR,OGOJA,Ogoja
+CR,YAKURR,Yakurr
+CR,YALA,Yala
+DE,ANIOCHA-NORTH,Aniocha North
+DE,ANIOCHA-SOUTH,Aniocha South
+DE,BOMADI,Bomadi
+DE,BURUTU,Burutu
+DE,ETHIOPE-EAST,Ethiope East
+DE,ETHIOPE-WEST,Ethiope West
+DE,IKA-NORTH-EAST,Ika North East
+DE,IKA-SOUTH,Ika South
+DE,ISOKO-NORTH,Isoko North
+DE,ISOKO-SOUTH,Isoko South
+DE,NDOKWA-EAST,Ndokwa East
+DE,NDOKWA-WEST,Ndokwa West
+DE,OKPE,Okpe
+DE,OSHIMILI-NORTH,Oshimili North
+DE,OSHIMILI-SOUTH,Oshimili South
+DE,PATANI,Patani
+DE,SAPELE,Sapele
+DE,UDU,Udu
+DE,UGHELLI-NORTH,Ughelli North
+DE,UGHELLI-SOUTH,Ughelli South
+DE,UKWUANI,Ukwuani
+DE,UVWIE,Uvwie
+DE,WARRI-NORTH,Warri North
+DE,WARRI-SOUTH,Warri South
+DE,WARRI-SOUTH-WEST,Warri South-West
+EB,ABAKALIKI,Abakaliki
+EB,AFIKPO-NORTH,Afikpo North
+EB,AFIKPO-SOUTH,Afikpo South
+EB,EBONYI,Ebonyi
+EB,EZZA-NORTH,Ezza North
+EB,EZZA-SOUTH,Ezza South
+EB,IKWO,Ikwo
+EB,ISHIELU,Ishielu
+EB,IVO,Ivo
+EB,IZZI,Izzi
+EB,OHAOZARA,Ohaozara
+EB,OHAUKWU,Ohaukwu
+EB,ONICHA,Onicha
+ED,AKOKO-EDO,Akoko Edo
+ED,EGOR,Egor
+ED,ESAN-CENTRAL,Esan Central
+ED,ESAN-NORTH-EAST,Esan North East
+ED,ESAN-SOUTH-EAST,Esan South East
+ED,ESAN-WEST,Esan West
+ED,ETSAKO-CENTRAL,Etsako Central
+ED,ETSAKO-EAST,Etsako East
+ED,ETSAKO-WEST,Etsako West
+ED,IGUEBEN,Igueben
+ED,IKPOBA-OKHA,Ikpoba-Okha
+ED,OREDO,Oredo
+ED,ORHIONMWON,Orhionmwon
+ED,OVIA-NORTH-EAST,Ovia North East
+ED,OVIA-SOUTH-WEST,Ovia South West
+ED,OWAN-EAST,Owan East
+ED,OWAN-WEST,Owan West
+ED,UHUNMWONDE,Uhunmwonde
+EK,ADO-EKITI,Ado-Ekiti
+EK,EFON,Efon
+EK,EKITI-EAST,Ekiti East
+EK,EKITI-SOUTH-WEST,Ekiti South West
+EK,EKITI-WEST,Ekiti West
+EK,EMURE,Emure
+EK,GBOYIN,Gboyin
+EK,IDO-OSI,Ido-Osi
+EK,IJERO,Ijero
+EK,IKERE,Ikere
+EK,IKOLE,Ikole
+EK,ILEJEMEJE,Ilejemeje
+EK,IREPODUN-IFELODUN,Irepodun-Ifelodun
+EK,ISE-ORUN,Ise-Orun
+EK,MOBA,Moba
+EK,OYE,Oye
+EN,ANINRI,Aninri
+EN,AWGU,Awgu
+EN,ENUGU-EAST,Enugu East
+EN,ENUGU-NORTH,Enugu North
+EN,ENUGU-SOUTH,Enugu South
+EN,EZEAGU,Ezeagu
+EN,IGBO-ETI,Igbo-Eti
+EN,IGBO-EZE-NORTH,Igbo-eze North
+EN,IGBO-EZE-SOUTH,Igbo-eze South
+EN,ISI-UZO,Isi-Uzo
+EN,NKANU-EAST,Nkanu East
+EN,NKANU-WEST,Nkanu West
+EN,NSUKKA,Nsukka
+EN,OJI-RIVER,Oji-River
+EN,UDENU,Udenu
+EN,UDI,Udi
+EN,UZO-UWANI,Uzo-Uwani
+FC,ABAJI,Abaji
+FC,ABUJA-MUNICIPAL,Abuja Municipal
+FC,BWARI,Bwari
+FC,GWAGWALADA,Gwagwalada
+FC,KUJE,Kuje
+FC,KWALI,Kwali
+GO,AKKO,Akko
+GO,BALANGA,Balanga
+GO,BILLIRI,Billiri
+GO,DUKKU,Dukku
+GO,FUNAKAYE,Funakaye
+GO,GOMBE,Gombe
+GO,KALTUNGO,Kaltungo
+GO,KWAMI,Kwami
+GO,NAFADA,Nafada
+GO,SHONGOM,Shongom
+GO,YAMALTU-DEBA,Yamaltu/Deba
+IM,ABOH-MBAISE,Aboh-Mbaise
+IM,AHIAZU-MBAISE,Ahiazu-Mbaise
+IM,EHIME-MBANO,Ehime-Mbano
+IM,EZINIHITTE-MBAISE,Ezinihitte Mbaise
+IM,IDEATO-NORTH,Ideato North
+IM,IDEATO-SOUTH,Ideato South
+IM,IHITTE-UBOMA,Ihitte/Uboma
+IM,IKEDURU,Ikeduru
+IM,ISIALA-MBANO,Isiala Mbano
+IM,ISU,Isu
+IM,MBAITOLI,Mbaitoli
+IM,NGOR-OKPALA,Ngor-Okpala
+IM,NJABA,Njaba
+IM,NKWERRE,Nkwerre
+IM,NWANGELE,Nwangele
+IM,OBOWO,Obowo
+IM,OGUTA,Oguta
+IM,OHAJI-EGBEMA,Ohaji-Egbema
+IM,OKIGWE,Okigwe
+IM,ONUIMO,Onuimo
+IM,ORLU,Orlu
+IM,ORSU,Orsu
+IM,ORU-EAST,Oru-East
+IM,ORU-WEST,Oru-West
+IM,OWERRI-MUNICIPAL,Owerri Municipal
+IM,OWERRI-NORTH,Owerri North
+IM,OWERRI-WEST,Owerri West
+JI,AUYO,Auyo
+JI,BABURA,Babura
+JI,BIRINIWA,Biriniwa
+JI,BIRNIN-KUDU,Birnin Kudu
+JI,BUJI,Buji
+JI,DUTSE,Dutse
+JI,GAGARAWA,Gagarawa
+JI,GARKI,Garki
+JI,GUMEL,Gumel
+JI,GURI,Guri
+JI,GWARAM,Gwaram
+JI,GWIWA,Gwiwa
+JI,HADEJIA,Hadejia
+JI,JAHUN,Jahun
+JI,KAFIN-HAUSA,Kafin Hausa
+JI,KAUGAMA,Kaugama
+JI,KAZAURE,Kazaure
+JI,KIRI-KASAMA,Kiri Kasama
+JI,KIYAWA,Kiyawa
+JI,MAIGATARI,Maigatari
+JI,MALAM-MADORI,Malam Madori
+JI,MIGA,Miga
+JI,RINGIM,Ringim
+JI,RONI,Roni
+JI,SULE-TANKARKAR,Sule Tankarkar
+JI,TAURA,Taura
+JI,YANKWASHI,Yankwashi
+KD,BIRNIN-GWARI,Birnin Gwari
+KD,CHIKUN,Chikun
+KD,GIWA,Giwa
+KD,IGABI,Igabi
+KD,IKARA,Ikara
+KD,JABA,Jaba
+KD,JEMA-A,Jema'a
+KD,KACHIA,Kachia
+KD,KADUNA-NORTH,Kaduna North
+KD,KADUNA-SOUTH,Kaduna South
+KD,KAGARKO,Kagarko
+KD,KAJURU,Kajuru
+KD,KAURA,Kaura
+KD,KAURU,Kauru
+KD,KUBAU,Kubau
+KD,KUDAN,Kudan
+KD,LERE,Lere
+KD,MAKARFI,Makarfi
+KD,SABON-GARI,Sabon Gari
+KD,SANGA,Sanga
+KD,SOBA,Soba
+KD,ZANGON-KATAF,Zangon Kataf
+KD,ZARIA,Zaria
+KN,AJINGI,Ajingi
+KN,ALBASU,Albasu
+KN,BAGWAI,Bagwai
+KN,BEBEJI,Bebeji
+KN,BICHI,Bichi
+KN,BUNKURE,Bunkure
+KN,DALA,Dala
+KN,DAMBATTA,Dambatta
+KN,DAWAKIN-KUDU,Dawakin Kudu
+KN,DAWAKIN-TOFA,Dawakin Tofa
+KN,DOGUWA,Doguwa
+KN,FAGGE,Fagge
+KN,GABASAWA,Gabasawa
+KN,GARKO,Garko
+KN,GARUN-MALLAM,Garun Mallam
+KN,GAYA,Gaya
+KN,GEZAWA,Gezawa
+KN,GWALE,Gwale
+KN,GWARZO,Gwarzo
+KN,KABO,Kabo
+KN,KANO-MUNICIPAL,Kano Municipal
+KN,KARAYE,Karaye
+KN,KIBIYA,Kibiya
+KN,KIRU,Kiru
+KN,KUMBOTSO,Kumbotso
+KN,KUNCHI,Kunchi
+KN,KURA,Kura
+KN,MADOBI,Madobi
+KN,MAKODA,Makoda
+KN,MINJIBIR,Minjibir
+KN,NASARAWA,Nasarawa
+KN,RANO,Rano
+KN,RIMIN-GADO,Rimin Gado
+KN,ROGO,Rogo
+KN,SHANONO,Shanono
+KN,SUMAILA,Sumaila
+KN,TAKAI,Takai
+KN,TARAUNI,Tarauni
+KN,TOFA,Tofa
+KN,TSANYAWA,Tsanyawa
+KN,TUDUN-WADA,Tudun Wada
+KN,UNGOGO,Ungogo
+KN,WARAWA,Warawa
+KN,WUDIL,Wudil
+KT,BAKORI,Bakori
+KT,BATAGARAWA,Batagarawa
+KT,BATSARI,Batsari
+KT,BAURE,Baure
+KT,BINDAWA,Bindawa
+KT,CHARANCHI,Charanchi
+KT,DANDUME,Dandume
+KT,DANJA,Danja
+KT,DANMUSA,Danmusa
+KT,DAURA,Daura
+KT,DUTSI,Dutsi
+KT,DUTSIN-MA,Dutsin-Ma
+KT,FASKARI,Faskari
+KT,FUNTUA,Funtua
+KT,INGAWA,Ingawa
+KT,JIBIA,Jibia
+KT,KAFUR,Kafur
+KT,KAITA,Kaita
+KT,KANKARA,Kankara
+KT,KANKIYA,Kankiya
+KT,KATSINA,Katsina
+KT,KURFI,Kurfi
+KT,KUSADA,Kusada
+KT,MAI-ADUA,Mai'Adua
+KT,MALUMFASHI,Malumfashi
+KT,MANI,Mani
+KT,MASHI,Mashi
+KT,MATAZU,Matazu
+KT,MUSAWA,Musawa
+KT,RIMI,Rimi
+KT,SABUWA,Sabuwa
+KT,SAFANA,Safana
+KT,SANDAMU,Sandamu
+KT,ZANGO,Zango
+KE,ALEIRO,Aleiro
+KE,AREWA,Arewa
+KE,ARGUNGU,Argungu
+KE,AUGIE,Augie
+KE,BAGUDO,Bagudo
+KE,BIRNIN-KEBBI,Birnin Kebbi
+KE,BUNZA,Bunza
+KE,DANDI,Dandi
+KE,DANKO-WASAGU,Danko Wasagu
+KE,FAKAI,Fakai
+KE,GWANDU,Gwandu
+KE,JEGA,Jega
+KE,KALGO,Kalgo
+KE,KOKO-BESSE,Koko/Besse
+KE,MAIYAMA,Maiyama
+KE,NGASKI,Ngaski
+KE,SAKABA,Sakaba
+KE,SHANGA,Shanga
+KE,SURU,Suru
+KE,YAURI,Yauri
+KE,ZURU,Zuru
+KO,ADAVI,Adavi
+KO,AJAOKUTA,Ajaokuta
+KO,ANKPA,Ankpa
+KO,BASSA,Bassa
+KO,DEKINA,Dekina
+KO,IBAJI,Ibaji
+KO,IDAH,Idah
+KO,IGALAMELA-ODOLU,Igalamela-Odolu
+KO,IJUMU,Ijumu
+KO,KABBA-BUNU,Kabba-Bunu
+KO,KOTON-KARFE,Koton-Karfe
+KO,LOKOJA,Lokoja
+KO,MOPA-MURO,Mopa-Muro
+KO,OFU,Ofu
+KO,OGORI-MAGONGO,Ogori Magongo
+KO,OKEHI,Okehi
+KO,OKENE,Okene
+KO,OLAMABORO,Olamaboro
+KO,OMALA,Omala
+KO,YAGBA-EAST,Yagba East
+KO,YAGBA-WEST,Yagba West
+KW,ASA,Asa
+KW,BARUTEN,Baruten
+KW,EDU,Edu
+KW,EKITI,Ekiti
+KW,IFELODUN,Ifelodun
+KW,ILORIN-EAST,Ilorin East
+KW,ILORIN-SOUTH,Ilorin South
+KW,ILORIN-WEST,Ilorin West
+KW,IREPODUN,Irepodun
+KW,ISIN,Isin
+KW,KAIAMA,Kaiama
+KW,MORO,Moro
+KW,OFFA,Offa
+KW,OKE-ERO,Oke-Ero
+KW,OYUN,Oyun
+KW,PATEGI,Pategi
+LA,AGEGE,Agege
+LA,AJEROMI-IFELODUN,Ajeromi/Ifelodun
+LA,ALIMOSHO,Alimosho
+LA,AMUWO-ODOFIN,Amuwo Odofin
+LA,APAPA,Apapa
+LA,BADAGRY,Badagry
+LA,EPE,Epe
+LA,ETI-OSA,Eti-Osa
+LA,IBEJU-LEKKI,Ibeju/Lekki
+LA,IFAKO-IJAYE,Ifako/Ijaye
+LA,IKEJA,Ikeja
+LA,IKORODU,Ikorodu
+LA,KOSOFE,Kosofe
+LA,LAGOS-ISLAND,Lagos Island
+LA,LAGOS-MAINLAND,Lagos Mainland
+LA,MUSHIN,Mushin
+LA,OJO,Ojo
+LA,OSHODI-ISOLO,Oshodi/Isolo
+LA,SHOMOLU,Shomolu
+LA,SURULERE,Surulere
+NA,AKWANGA,Akwanga
+NA,AWE,Awe
+NA,DOMA,Doma
+NA,KARU,Karu
+NA,KEANA,Keana
+NA,KEFFI,Keffi
+NA,KOKONA,Kokona
+NA,LAFIA,Lafia
+NA,NASARAWA,Nasarawa
+NA,NASARAWA-EGON,Nasarawa Egon
+NA,OBI,Obi
+NA,TOTO,Toto
+NA,WAMBA,Wamba
+NI,AGAIE,Agaie
+NI,AGWARA,Agwara
+NI,BIDA,Bida
+NI,BORGU,Borgu
+NI,BOSSO,Bosso
+NI,CHANCHAGA,Chanchaga
+NI,EDATI,Edati
+NI,GBAKO,Gbako
+NI,GURARA,Gurara
+NI,KATCHA,Katcha
+NI,KONTAGORA,Kontagora
+NI,LAPAI,Lapai
+NI,LAVUN,Lavun
+NI,MAGAMA,Magama
+NI,MARIGA,Mariga
+NI,MASHEGU,Mashegu
+NI,MOKWA,Mokwa
+NI,MUYA,Muya
+NI,PAIKORO,Paikoro
+NI,RAFI,Rafi
+NI,RIJAU,Rijau
+NI,SHIRORO,Shiroro
+NI,SULEJA,Suleja
+NI,TAFA,Tafa
+NI,WUSHISHI,Wushishi
+OG,ABEOKUTA-NORTH,Abeokuta North
+OG,ABEOKUTA-SOUTH,Abeokuta South
+OG,ADO-ODO-OTA,Ado Odo-Ota
+OG,EGBADO-NORTH,Egbado North
+OG,EGBADO-SOUTH,Egbado South
+OG,EWEKORO,Ewekoro
+OG,IFO,Ifo
+OG,IJEBU-EAST,Ijebu East
+OG,IJEBU-NORTH,Ijebu North
+OG,IJEBU-NORTH-EAST,Ijebu North-East
+OG,IJEBU-ODE,Ijebu-Ode
+OG,IKENNE,Ikenne
+OG,IMEKO-AFON,Imeko-Afon
+OG,IPOKIA,Ipokia
+OG,OBAFEMI-OWODE,Obafemi-Owode
+OG,ODEDA,Odeda
+OG,ODOGBOLU,Odogbolu
+OG,OGUN-WATERSIDE,Ogun Waterside
+OG,REMO-NORTH,Remo North
+OG,SHAGAMU,Shagamu
+ON,AKOKO-NORTH-EAST,Akoko North-East
+ON,AKOKO-NORTH-WEST,Akoko North-West
+ON,AKOKO-SOUTH-EAST,Akoko South-East
+ON,AKOKO-SOUTH-WEST,Akoko South-West
+ON,AKURE-NORTH,Akure North
+ON,AKURE-SOUTH,Akure South
+ON,ESE-ODO,Ese-Odo
+ON,IDANRE,Idanre
+ON,IFEDORE,Ifedore
+ON,ILAJE,Ilaje
+ON,ILE-OLUJI-OKEIGBO,Ile-Oluji/Okeigbo
+ON,IRELE,Irele
+ON,ODIGBO,Odigbo
+ON,OKITIPUPA,Okitipupa
+ON,ONDO-EAST,Ondo East
+ON,ONDO-WEST,Ondo West
+ON,OSE,Ose
+ON,OWO,Owo
+OS,ATAKUMOSA-EAST,Atakumosa East
+OS,ATAKUMOSA-WEST,Atakumosa West
+OS,AYEDAADE,Ayedaade
+OS,AYEDIRE,Ayedire
+OS,BOLUWADURO,Boluwaduro
+OS,BORIPE,Boripe
+OS,EDE-NORTH,Ede North
+OS,EDE-SOUTH,Ede South
+OS,EGBEDORE,Egbedore
+OS,EJIGBO,Ejigbo
+OS,IFE-CENTRAL,Ife Central
+OS,IFE-EAST,Ife East
+OS,IFE-NORTH,Ife North
+OS,IFE-SOUTH,Ife South
+OS,IFEDAYO,Ifedayo
+OS,IFELODUN,Ifelodun
+OS,ILA,Ila
+OS,ILESHA-EAST,Ilesha East
+OS,ILESHA-WEST,Ilesha West
+OS,IREPODUN,Irepodun
+OS,IREWOLE,Irewole
+OS,ISOKAN,Isokan
+OS,IWO,Iwo
+OS,OBOKUN,Obokun
+OS,ODO-OTIN,Odo Otin
+OS,OLA-OLUWA,Ola-Oluwa
+OS,OLORUNDA,Olorunda
+OS,ORIADE,Oriade
+OS,OROLU,Orolu
+OS,OSOGBO,Osogbo
+OY,AFIJIO,Afijio
+OY,AKINYELE,Akinyele
+OY,ATIBA,Atiba
+OY,ATISBO,Atisbo
+OY,EGBEDA,Egbeda
+OY,IBADAN-NORTH,Ibadan North
+OY,IBADAN-NORTH-EAST,Ibadan North East
+OY,IBADAN-NORTH-WEST,Ibadan North West
+OY,IBADAN-SOUTH-EAST,Ibadan South East
+OY,IBADAN-SOUTH-WEST,Ibadan South West
+OY,IBARAPA-CENTRAL,Ibarapa Central
+OY,IBARAPA-EAST,Ibarapa East
+OY,IBARAPA-NORTH,Ibarapa North
+OY,IDO,Ido
+OY,IREPO,Irepo
+OY,ISEYIN,Iseyin
+OY,ITESIWAJU,Itesiwaju
+OY,IWAJOWA,Iwajowa
+OY,KAJOLA,Kajola
+OY,LAGELU,Lagelu
+OY,OGBOMOSHO-NORTH,Ogbomosho North
+OY,OGBOMOSHO-SOUTH,Ogbomosho South
+OY,OGO-OLUWA,Ogo-Oluwa
+OY,OLORUNSOGO,Olorunsogo
+OY,OLUYOLE,Oluyole
+OY,ONA-ARA,Ona-Ara
+OY,ORELOPE,Orelope
+OY,ORI-IRE,Ori-Ire
+OY,OYO-EAST,Oyo East
+OY,OYO-WEST,Oyo West
+OY,SAKI-EAST,Saki East
+OY,SAKI-WEST,Saki West
+OY,SURULERE,Surulere
+PL,BARKIN-LADI,Barkin Ladi
+PL,BASSA,Bassa
+PL,BOKKOS,Bokkos
+PL,JOS-EAST,Jos East
+PL,JOS-NORTH,Jos North
+PL,JOS-SOUTH,Jos South
+PL,KANAM,Kanam
+PL,KANKE,Kanke
+PL,LANGTANG-NORTH,Langtang North
+PL,LANGTANG-SOUTH,Langtang South
+PL,MANGU,Mangu
+PL,MIKANG,Mikang
+PL,PANKSHIN,Pankshin
+PL,QUA-AN-PAN,Qua'an Pan
+PL,RIYOM,Riyom
+PL,SHENDAM,Shendam
+PL,WASE,Wase
+RI,ABUA-ODU,Abua/Odu
+RI,AHOADA-EAST,Ahoada East
+RI,AHOADA-WEST,Ahoada West
+RI,AKUKU-TORU,Akuku-Toru
+RI,ANDONI-ODUAL,Andoni/Odual
+RI,ASARI-TORU,Asari-Toru
+RI,BONNY,Bonny
+RI,DEGEMA,Degema
+RI,ELEME,Eleme
+RI,EMUOHA,Emuoha
+RI,ETCHE,Etche
+RI,GOKANA,Gokana
+RI,IKWERRE,Ikwerre
+RI,KHANA,Khana
+RI,OBIO-AKPOR,Obio/Akpor
+RI,OGBA-EGBEMA-ANDONI,Ogba/Egbema/Andoni
+RI,OGU-BOLO,Ogu/Bolo
+RI,OKRIKA,Okrika
+RI,OMUMA,Omuma
+RI,OPOBO-NKORO,Opobo/Nkoro
+RI,OYIGBO,Oyigbo
+RI,PORT-HARCOURT,Port Harcourt
+RI,TAI,Tai
+SO,BINJI,Binji
+SO,BODINGA,Bodinga
+SO,DANGE-SHUNI,Dange-Shuni
+SO,GADA,Gada
+SO,GORONYO,Goronyo
+SO,GUDU,Gudu
+SO,GWADABAWA,Gwadabawa
+SO,ILLELA,Illela
+SO,ISA,Isa
+SO,KEBBE,Kebbe
+SO,KWARE,Kware
+SO,RABAH,Rabah
+SO,SABON-BIRNI,Sabon Birni
+SO,SHAGARI,Shagari
+SO,SILAME,Silame
+SO,SOKOTO-NORTH,Sokoto North
+SO,SOKOTO-SOUTH,Sokoto South
+SO,TAMBAWAL,Tambawal
+SO,TANGAZA,Tangaza
+SO,TURETA,Tureta
+SO,WAMAKKO,Wamakko
+SO,WURNO,Wurno
+SO,YABO,Yabo
+TA,ARDO-KOLA,Ardo-Kola
+TA,BALI,Bali
+TA,DONGA,Donga
+TA,GASHAKA,Gashaka
+TA,GASSOL,Gassol
+TA,IBI,Ibi
+TA,JALINGO,Jalingo
+TA,KARIM-LAMIDO,Karim-Lamido
+TA,KURMI,Kurmi
+TA,LAU,Lau
+TA,SARDAUNA,Sardauna
+TA,TAKUM,Takum
+TA,USSA,Ussa
+TA,WUKARI,Wukari
+TA,YORRO,Yorro
+TA,ZING,Zing
+YO,BADE,Bade
+YO,BURSARI,Bursari
+YO,DAMATURU,Damaturu
+YO,FIKA,Fika
+YO,FUNE,Fune
+YO,GEIDAM,Geidam
+YO,GUJBA,Gujba
+YO,GULANI,Gulani
+YO,JAKUSKO,Jakusko
+YO,KARASUWA,Karasuwa
+YO,MACHINA,Machina
+YO,NANGERE,Nangere
+YO,NGURU,Nguru
+YO,POTISKUM,Potiskum
+YO,TARMUWA,Tarmuwa
+YO,YUNUSARI,Yunusari
+YO,YUSUFARI,Yusufari
+ZA,ANKA,Anka
+ZA,BAKURA,Bakura
+ZA,BIRNIN-MAGAJI,Birnin Magaji
+ZA,BUKKUYUM,Bukkuyum
+ZA,BUNGUDU,Bungudu
+ZA,GUMMI,Gummi
+ZA,GUSAU,Gusau
+ZA,KAURA-NAMODA,Kaura-Namoda
+ZA,MARADUN,Maradun
+ZA,MARU,Maru
+ZA,SHINKAFI,Shinkafi
+ZA,TALATA-MAFARA,Talata-Mafara
+ZA,TSAFE,Tsafe
+ZA,ZURMI,Zurmi

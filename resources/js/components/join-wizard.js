@@ -6,12 +6,21 @@ const NEVER_STORED = ['password', 'password_confirmation', 'nin', 'vin', 'websit
 
 const FIELD_STEP = {
     email: 0, phone: 0, password: 0,
-    name: 1, gender: 1, age_range: 1, occupation: 1,
-    state_id: 2, lga_id: 2, ward_id: 2, polling_unit_id: 2, has_pvc: 2, vin: 2, nin: 2, latitude: 2, longitude: 2,
+    name: 1, gender: 1, age_range: 1, occupation: 1, state_id: 1,
+    lga_id: 2, ward_id: 2, polling_unit_id: 2, has_pvc: 2, vin: 2, nin: 2, latitude: 2, longitude: 2,
 };
+
+const ASIDE = [
+    "Fill in each step and watch your membership card come together. It's ready the moment you finish.",
+    "Looking good. Next we'll find your ward so the right coordinator can reach you.",
+    "Your card now knows your ward. One more step and you're in.",
+];
 
 export default (config) => ({
     step: 0,
+    canvasser: config.canvasser,
+    showPassword: false,
+    sameWhatsapp: true,
     busy: false,
     errors: {},
     general: '',
@@ -30,8 +39,10 @@ export default (config) => ({
     async init() {
         let saved = null;
         try { saved = JSON.parse(sessionStorage.getItem(STORE_KEY) || 'null'); } catch { /* storage blocked */ }
-        if (saved && saved.canvasser === config.canvasser) {
+        // The link (?as=) decides member or canvasser; earlier answers are kept either way.
+        if (saved) {
             Object.assign(this.form, saved.form, config.ref ? { referrer: config.ref } : {});
+            if (saved.form.whatsapp_phone) this.sameWhatsapp = false;
             this.step = Math.min(saved.step || 0, 3);
             // Re-load the dropdowns the saved answers depend on.
             const { lga_id, ward_id, polling_unit_id } = this.form;
@@ -44,6 +55,11 @@ export default (config) => ({
             // Passwords are never stored, so a reload past step 1 needs them again.
             if (this.step > 0 && !this.form.password) this.step = 0;
         }
+        // ?state= from the homepage map, unless the person already chose one.
+        if (!this.form.state_id && config.state) {
+            this.form.state_id = String(config.state);
+            await this.loadLgas();
+        }
         this.$watch('form', () => this.save(), { deep: true });
         this.$watch('step', () => this.save());
     },
@@ -51,10 +67,53 @@ export default (config) => ({
     save() {
         const form = { ...this.form };
         NEVER_STORED.forEach((k) => delete form[k]);
-        try { sessionStorage.setItem(STORE_KEY, JSON.stringify({ canvasser: config.canvasser, step: this.step, form })); } catch { /* ignore */ }
+        try { sessionStorage.setItem(STORE_KEY, JSON.stringify({ canvasser: this.canvasser, step: this.step, form })); } catch { /* ignore */ }
     },
 
     get stepName() { return STEPS[this.step]; },
+
+    get stepList() {
+        return [
+            ['Account', 'Email, phone, password'],
+            ['Details', 'Name, age range, state'],
+            ['Location', 'LGA, ward, polling unit'],
+            this.canvasser ? ['Volunteer', "How you'd like to help"] : ['Finish', 'Invite code and consent'],
+        ];
+    },
+
+    get asideText() {
+        if (this.step < 3) return ASIDE[this.step];
+        return this.canvasser
+            ? "Tell us how you'd like to help and your application goes straight to your state coordinator."
+            : 'Last step. Agree to how we look after your data and your card is ready.';
+    },
+
+    /** What the live card on the left shows. */
+    get card() {
+        const name = (this.form.name || '').trim();
+        const stateName = config.states.find((s) => String(s.id) === String(this.form.state_id))?.name || '';
+        const lga = this.lgas.find((l) => String(l.id) === String(this.form.lga_id))?.name || '';
+        const ward = this.wards.find((w) => String(w.id) === String(this.form.ward_id))?.name || '';
+        const applying = this.canvasser && this.step === 3;
+        return {
+            name: name || 'Your name',
+            stateName,
+            state: stateName || 'State',
+            ward: [lga || 'LGA', ward || 'Ward'].join(' · '),
+            tone: applying ? 'canvasser' : 'member',
+            badge: applying ? 'Canvasser · applying' : 'Member',
+        };
+    },
+
+    /** The Member / Canvasser switch on step 1; keeps the address bar in step so a reload stays on the same path. */
+    setCanvasser(on) {
+        this.canvasser = on;
+        try {
+            const url = new URL(window.location.href);
+            url.searchParams.set('as', on ? 'canvasser' : 'member');
+            window.history.replaceState(null, '', url);
+        } catch { /* ignore */ }
+    },
     get wardLabel() {
         if (!this.form.lga_id) return '';
         if (this.loading.wards) return 'Loading wards…';
@@ -122,7 +181,9 @@ export default (config) => ({
     },
 
     payload() {
-        const data = { ...this.form, canvasser: config.canvasser ? 1 : 0, as: config.canvasser ? 'canvasser' : 'member' };
+        const data = { ...this.form, canvasser: this.canvasser ? 1 : 0, as: this.canvasser ? 'canvasser' : 'member' };
+        if (!this.canvasser) { delete data.canvasser_roles; delete data.whatsapp_phone; }
+        if (this.sameWhatsapp) delete data.whatsapp_phone;
         if (data.has_pvc !== null) data.has_pvc = data.has_pvc ? 1 : 0;
         data.consent = data.consent ? 1 : 0;
         Object.keys(data).forEach((k) => (data[k] === null || data[k] === '') && delete data[k]);

@@ -40,6 +40,19 @@
             </section>
         </div>
 
+        @if ($lgaMap)
+            <section class="panel mt-4 p-5">
+                <div class="flex flex-wrap items-baseline justify-between gap-2">
+                    <h2 class="font-display font-bold">{{ $state?->name ?? auth()->user()->state?->name }} by LGA</h2>
+                    <p class="text-sm text-neutral-500">Darker LGAs have more members. Click one to see its members.</p>
+                </div>
+                <x-area-map class="mx-auto mt-4 max-w-3xl" :map="$lgaMap" key="id"
+                    :url="staff_route('map.lgas', array_filter(['state_id' => $state?->id]))"
+                    :href="staff_route('members.index', array_filter(['lga_id' => '__KEY__', 'state_id' => $state?->id]))"
+                    action="See members in :name" :label="'Map of '.($state?->name ?? auth()->user()->state?->name).' by LGA, coloured by number of members'" />
+            </section>
+        @endif
+
         <div class="mt-4 grid gap-4 lg:grid-cols-2">
             @foreach (['LGA' => [$byLga, 'lga_id'], 'Ward (top 50)' => [$byWard, 'ward_id']] as $title => [$rows, $param])
                 <section class="panel overflow-hidden">

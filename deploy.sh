@@ -37,6 +37,9 @@ echo "==> Migrating the database"
 php artisan down --retry=15
 php artisan migrate --force
 
+# Uploaded homepage slides are served from storage/app/public through this link.
+[ -L public/storage ] || php artisan storage:link
+
 echo "==> Rebuilding caches"
 php artisan config:cache
 php artisan route:cache

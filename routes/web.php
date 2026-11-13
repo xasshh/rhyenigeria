@@ -4,8 +4,11 @@ use App\Http\Controllers\Api\GeographyController;
 use App\Http\Controllers\Web\Admin\CoordinatorController;
 use App\Http\Controllers\Web\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Web\Admin\SettingsController;
+use App\Http\Controllers\Web\Admin\SlideController;
 use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\JoinController;
+use App\Http\Controllers\Web\LandingController;
+use App\Http\Controllers\Web\MapController;
 use App\Http\Controllers\Web\MembershipController;
 use App\Http\Controllers\Web\PublicController;
 use App\Http\Controllers\Web\Staff\CanvasserController;
@@ -15,7 +18,7 @@ use App\Http\Controllers\Web\Staff\MemberController;
 use App\Http\Controllers\Web\Staff\PostController;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'landing')->name('home');
+Route::get('/', LandingController::class)->name('home');
 Route::get('privacy', [PublicController::class, 'privacy'])->name('privacy');
 Route::get('verify/{token}', [PublicController::class, 'verify'])->middleware('throttle:60,1')->name('verify');
 
@@ -25,6 +28,9 @@ Route::middleware(['throttle:geo', 'cache.headers:public;max_age=600'])->prefix(
     Route::get('lgas/{lga}/wards', [GeographyController::class, 'wards'])->name('geo.wards');
     Route::get('wards/{ward}/polling-units', [GeographyController::class, 'pollingUnits'])->name('geo.polling-units');
 });
+
+// Homepage map: members per state (aggregate counts only), cached.
+Route::get('map/states.json', [MapController::class, 'states'])->middleware('throttle:geo')->name('map.states');
 
 // Sign-up.
 Route::get('join', [JoinController::class, 'show'])->name('join');
@@ -43,6 +49,9 @@ Route::middleware('guest')->group(function () {
 Route::post('logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
 Route::middleware(['auth', 'active'])->group(function () {
+    // The homepage "Empowerment" button. Guests are sent to sign in first and come back here.
+    Route::get('empowerment', [PublicController::class, 'empowerment'])->name('empowerment');
+
     // Empowerment photos: the member themselves, or staff who can see that member.
     Route::get('empowerment/{report}/photo', [EmpowermentController::class, 'photo'])->name('empowerment.photo');
 
@@ -71,6 +80,9 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('empowerment', [EmpowermentController::class, 'index'])->name('empowerment.index');
         Route::get('posts', [PostController::class, 'index'])->name('posts.index');
         Route::post('posts/events', [PostController::class, 'storeEvent'])->name('events.store');
+        Route::put('posts/events/{event}', [PostController::class, 'updateEvent'])->name('events.update');
+        Route::put('posts/news/{news}', [PostController::class, 'updateNews'])->name('news.update');
+        Route::get('map/lgas', [MapController::class, 'lgas'])->name('map.lgas');
         Route::delete('posts/events/{event}', [PostController::class, 'destroyEvent'])->name('events.destroy');
         Route::post('posts/news', [PostController::class, 'storeNews'])->name('news.store');
         Route::delete('posts/news/{news}', [PostController::class, 'destroyNews'])->name('news.destroy');
@@ -89,6 +101,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::patch('coordinators/{coordinator}', [CoordinatorController::class, 'update'])->name('coordinators.update');
         Route::get('settings', [SettingsController::class, 'edit'])->name('settings.edit');
         Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
+        Route::resource('slides', SlideController::class)->except('show');
+        Route::patch('slides/{slide}/toggle', [SlideController::class, 'toggle'])->name('slides.toggle');
         $staffRoutes();
     });
 });

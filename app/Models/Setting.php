@@ -13,6 +13,11 @@ class Setting extends Model
 
     public const ELECTION_LABEL = 'election_label';
 
+    /** Presidential and National Assembly election, used until a super admin sets another date. */
+    public const DEFAULT_ELECTION_DATE = '2027-01-16 00:00';
+
+    public const DEFAULT_ELECTION_LABEL = 'Presidential and National Assembly election';
+
     protected $primaryKey = 'key';
 
     protected $keyType = 'string';
@@ -34,10 +39,18 @@ class Setting extends Model
         Cache::forget("setting:{$key}");
     }
 
-    public static function electionDate(): ?CarbonImmutable
+    /** The election date in UTC: the admin setting, or 16 January 2027 (Nigeria time) when none is set. */
+    public static function electionDate(): CarbonImmutable
     {
         $value = static::get(self::ELECTION_DATE);
 
-        return $value ? CarbonImmutable::parse($value) : null;
+        return $value
+            ? CarbonImmutable::parse($value)
+            : CarbonImmutable::parse(self::DEFAULT_ELECTION_DATE, config('membership.timezone'))->utc();
+    }
+
+    public static function electionLabel(): string
+    {
+        return static::get(self::ELECTION_LABEL) ?? self::DEFAULT_ELECTION_LABEL;
     }
 }

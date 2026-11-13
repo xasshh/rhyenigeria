@@ -16,6 +16,8 @@ export default defineConfig({
                 bunny('DM Sans', { weights: [400, 500, 700] }),
                 bunny('Lato', { weights: [400] }),
                 bunny('Yellowtail', { weights: [400] }),
+                // Headlines on the sign-in/join screens and the homepage (RHYE sign-in & join PDF).
+                bunny('Bricolage Grotesque', { weights: [700, 800] }),
             ],
         }),
         tailwindcss(),

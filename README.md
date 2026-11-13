@@ -25,6 +25,7 @@ coordinators and super admins (see [Website](#website)).
 - [Importing geography](#importing-geography)
 - [Scheduled tasks and settings](#scheduled-tasks-and-settings)
 - [Deployment](#deployment)
+- [Later](#later)
 
 ## Local setup
 
@@ -112,13 +113,28 @@ The Echo/Reverb client in `app.js` is not loaded on these pages.
 
 | Path | What |
 |---|---|
-| `/` | Landing page. Every "Join the Movement" button goes to `/join`; the nav has **Sign in**. |
-| `/join` | Chooser: *Join as a Member* or *Join as a Canvasser*. Keeps `?ref=`. |
-| `/join?as=member` / `?as=canvasser` | Four-step wizard: Account → Details → Location → Finish (Volunteer for canvassers). Each step is checked on the server (`POST /join/check/{step}`) before moving on, and the final `POST /join` re-checks everything. |
+| `/` | Homepage: header slider (edited under **Admin → Homepage slides**), the election countdown directly below it, and an interactive map of Nigeria coloured by member count. Every "Join the Movement" button goes to `/join`; the nav has **Sign in**. |
+| `/map/states.json` | Members per state, keyed by state code (`{"counts": {"LA": 13, …}, "total": …}`). Aggregate counts only, cached for 5 minutes (`Cache-Control: max-age=300`). Feeds the homepage map. |
+| `/empowerment` | The homepage **Empowerment** button. Signed-in users go to their own Empowerment page (members `/membership/empowerment`, coordinators and admins their staff page); guests are sent to `/login` and land there after signing in. |
+| `/join` | Chooser: *Member* or *Canvasser*. Keeps `?ref=` and `?state=`. |
+| `/join?state=LA` | Pre-selects the state in the wizard (the homepage map links here). Unknown codes are ignored. |
+| `/join?as=member` / `?as=canvasser` | Four-step wizard: Account → Details (name, gender, age range, state) → Location (LGA, ward, polling unit, PVC) → Finish (Volunteer for canvassers). Member/Canvasser can also be switched on step 1. A live membership card on the left fills in as you go. Each step is checked on the server (`POST /join/check/{step}`) before moving on, and the final `POST /join` re-checks everything. |
 | `/verify/{token}` | Where the card's QR code points. Shows first name + last initial, state and month joined. Nothing else. |
 | `/privacy` | Privacy notice (NDPA 2023). |
 | `/login`, `/forgot-password`, `/reset-password/{token}` | Session sign-in (email + password) and password reset by email. |
 | `/geo/states/{id}/lgas`, `/geo/lgas/{id}/wards`, `/geo/wards/{id}/polling-units` | Public lookups for the sign-up dropdowns. |
+
+The sign-in, join, password-reset and welcome screens follow the *RHYE — Sign in & Join screens* PDF (dark
+forest panel with the headline and card on the left, the form on the right; on phones the panel shrinks to a
+short band above the form). Headlines use Bricolage Grotesque, body text DM Sans. The thumbprint motif
+(`<x-fingerprint>`) is an original SVG drawn in code and is shared with the homepage. After a reset link is sent,
+`/forgot-password` shows a "Check your email" step; saving a new password signs the person in (except field
+agents and deactivated accounts) and signs out every other browser and API token.
+
+The slogan, **Hope Renewed, Nation Rebuilt.**, lives in `config('membership.slogan')` and is used in page titles
+and descriptions, the homepage hero, announcement bar and footer, the membership card (screen and PNG), share
+messages and the campaign-DP frame. The favicon set (`public/favicon.ico`, `favicon-32.png`,
+`apple-touch-icon.png`, `images/icon-512.png`) is the four-figure emblem from the RHYE logo.
 
 After sign-in, users are sent by role: members to `/membership`, coordinators to
 `/coordinator`, super admins to `/admin`. Field agents keep using the API and
@@ -134,6 +150,24 @@ Sign-up details:
 - Member numbers are `RHYE-{STATE CODE}-{6 random digits}`. The state code is the `code` column of `states`, so import states with short codes such as `LA` and `FC`.
 - The referral code is the member number. `?ref=RHYE-LA-123456` pre-fills "Who invited you?", and `member_profiles.referred_by_user_id` records it.
 
+### Homepage slides and countdown
+
+**Admin → Homepage slides** (`/admin/slides`) lists the header slides. Each has an image (JPEG, PNG or WebP, at
+least 600 px wide; a 1600 px WebP copy is made with GD and the original is kept, both on the `public` disk under
+`slides/`), an optional small line, a headline, short text, a button label and link (a path such as `/join` or a
+full `https://` link), an order number and an on/off switch. The migration seeds slide 1 with the Plateau State
+Education Empowerment Initiative flyer (`public/images/slides/slide-1.webp`, original `slide-1.jpeg`) and slides
+2–5 as placeholder frames that are switched on; replace their content, or switch them off.
+
+The slider advances every 7 seconds, pauses on hover, keyboard focus and touch, swipes on phones, has dots,
+arrows and a pause button, answers the left/right arrow keys, and does not auto-advance for people who ask for
+reduced motion.
+
+The countdown counts to `Setting::electionDate()`: the date set under **Settings**, or, when none is set,
+**Saturday 16 January 2027, 00:00 Africa/Lagos** (Presidential and National Assembly election). It shows weeks,
+days, hours, minutes and seconds, rendered on the server first and then ticked by Alpine. Once it reaches zero
+it shows "Today is Election Day: go and vote." The member dashboard uses the same date.
+
 ### Members (`/membership`, role `member`)
 
 Home (election countdown, next event, latest national/state/ward news, apply to
@@ -148,7 +182,9 @@ Dashboard (totals, sign-ups, LGA and ward breakdowns), **Members** (search and
 filters; phones masked in the list, full on the detail page; NIN/VIN always
 masked), **Canvassers** (approve/reject with a note; every decision is written to
 the audit log as `canvasser.approved` / `canvasser.rejected`), **Empowerment**,
-**News & events** (for their own state, optionally one ward), and **CSV export**
+**News & events** (post, edit and remove, for their own state, optionally one ward), a **map of their state by
+LGA** on the dashboard (coloured by member count; clicking an LGA opens the member list filtered to it; counts
+come from `/coordinator/map/lgas`, scoped like everything else), and **CSV export**
 (audit-logged as `members.exported`; never includes NIN/VIN). Viewing a member's
 detail page is logged as `member.viewed`.
 
@@ -174,6 +210,10 @@ curl -s $API/users -H "Authorization: Bearer $TOKEN" -H 'Accept: application/jso
 Only **state-level** coordinators get the web dashboard features for canvasser
 decisions; LGA- and ward-level coordinators (used by the field-agent API) can
 view their area but not approve canvassers.
+
+A coordinator never sees another state: every list, detail page, count, map, export and post edit starts from
+their own scope, and putting another state's id in a URL or filter narrows the result to nothing rather than
+widening it (`tests/Feature/CoordinatorStateIsolationTest.php`).
 
 ### Geography for sign-up
 
@@ -462,6 +502,35 @@ finds its parent by code.
 - The command prints how many rows were created, updated and skipped (unchanged
   or invalid). `--dry-run` reports the same numbers without saving anything.
 
+### Real Nigerian data and boundaries
+
+`database/data/nigeria/` holds the production files:
+
+| File | What |
+|---|---|
+| `states.csv`, `lgas.csv`, `wards.csv` | 37 states (two-letter codes), 774 LGAs, 8,809 wards. No polling units yet. |
+| `state-boundaries.geojson` | State boundaries (`code`, `name`), used by the homepage map. |
+| `lga-boundaries.geojson` | LGA boundaries (`state_code`, `code`, `name`), simplified to about 250 m, used by the coordinator maps. |
+
+The boundaries come from **geoBoundaries gbOpen, Nigeria ADM1 and ADM2** (release `9469f09`, simplified
+versions), whose source is **GRID3**, licensed **CC BY 4.0**: <https://www.geoboundaries.org/> (Runfola et al.
+2020, *geoBoundaries: A global database of political administrative boundaries*, PLoS ONE). Attribution:
+"Boundaries © GRID3 via geoBoundaries, CC BY 4.0". ADM1 shapes were matched to our states by ISO code. ADM2
+shapes were assigned to a state with PostGIS (`ST_PointOnSurface` inside the state boundary) and matched to our
+LGAs by name; the 31 spelling differences (for example *Yenegoa*/*Yenagoa*, *Kogi*/*Koton-Karfe*,
+*Yewa North*/*Egbado North*) were paired within each state. All 774 LGAs have a boundary.
+
+```sh
+php artisan geo:import state database/data/nigeria/states.csv
+php artisan geo:import lga   database/data/nigeria/lgas.csv
+php artisan geo:import ward  database/data/nigeria/wards.csv
+php artisan geo:import state database/data/nigeria/state-boundaries.geojson
+php artisan geo:import lga   database/data/nigeria/lga-boundaries.geojson
+```
+
+The maps are drawn on the server as SVG from these boundaries (`App\Services\Geo\AreaMap`, cached for a day and
+cleared by every `geo:import`), so no mapping library is loaded.
+
 `database/data/samples/` holds small example files in each format. Their codes,
 names and boundaries are made up; do not load them into production.
 
@@ -490,6 +559,7 @@ php artisan geo:import polling-unit database/data/samples/polling_units.csv
 | `JOIN_RATE_LIMIT_PER_MINUTE` | 30 | Sign-up submissions per IP per minute. |
 | `MEMBERSHIP_CONSENT_VERSION` | 1 | Raise when the data-consent wording changes; stored with each member. |
 | `EMPOWERMENT_PHOTO_MAX_KB` | 8192 | Largest empowerment photo. Photos are on the private disk (`storage/app/private/empowerment`). |
+| `HELP_URL` | (empty) | Where "Get help" on the sign-in and join screens points, e.g. a WhatsApp link or `mailto:`. Empty uses the privacy notice. |
 | `MAIL_*` | `log` | Password-reset emails. See the SMTP block in `.env.example`. `APP_URL` must be the public `https://` address: QR codes, share links and reset links use it. |
 
 Run `php artisan config:cache` after changing `.env` on the server.
@@ -532,3 +602,32 @@ Useful checks on the server:
 sudo supervisorctl status
 tail -n 50 /var/www/rhyenigeria/storage/logs/laravel.log
 ```
+
+### Release: new sign-in/join screens, homepage slider, countdown and maps
+
+- **New migration** `2026_11_13_130501_create_hero_slides_table`: creates `hero_slides` and inserts the five
+  starting slides. `deploy.sh` runs it.
+- **New `.env` key** (optional): `HELP_URL`.
+- `deploy.sh` now runs `php artisan storage:link` when `public/storage` is missing (uploaded slides are served
+  from it).
+- **Run once on the server after deploying**, from `/var/www/rhyenigeria`, if the real geography is not loaded
+  there yet (states first; each file is safe to re-run):
+
+  ```sh
+  php artisan geo:import state database/data/nigeria/states.csv
+  php artisan geo:import lga   database/data/nigeria/lgas.csv
+  php artisan geo:import ward  database/data/nigeria/wards.csv
+  php artisan geo:import state database/data/nigeria/state-boundaries.geojson
+  php artisan geo:import lga   database/data/nigeria/lga-boundaries.geojson
+  ```
+
+  Without the boundary files the maps show "Boundaries for this map have not been loaded yet."
+
+## Later
+
+Not built yet, on purpose:
+
+- **INEC election calendar.** Publish the official INEC election timetable on the platform, once someone has
+  researched and confirmed it from INEC's own publications.
+- **Complete ward list.** Import the complete ward list for all 774 LGAs once the file is supplied
+  (`geo:import ward`; see [Importing geography](#importing-geography)). Polling units can follow the same way.

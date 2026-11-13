@@ -64,7 +64,7 @@ class MemberRegistrationTest extends TestCase
         $this->assertNull($profile->canvasser_status);
         $this->assertNotNull($profile->consent_accepted_at);
 
-        $this->get('/membership/welcome')->assertOk()->assertSee('Welcome to the movement, Ada!')->assertSee($profile->member_number);
+        $this->get('/membership/welcome')->assertOk()->assertSee('Welcome to the movement, Ada.')->assertSee($profile->member_number);
     }
 
     public function test_a_member_can_sign_in_and_is_sent_to_their_dashboard(): void
@@ -211,12 +211,15 @@ class MemberRegistrationTest extends TestCase
         $user = User::factory()->member()->create(['email' => 'ada@example.com']);
         MemberProfile::factory()->for($user)->create();
 
-        $this->post('/forgot-password', ['email' => 'ada@example.com'])->assertSessionHas('status');
+        $this->post('/forgot-password', ['email' => 'ada@example.com'])->assertSessionHas('status')->assertSessionHas('reset_sent_to', 'ada@example.com');
+        $this->get('/forgot-password')->assertOk()->assertSee('Check your email')->assertSee('a•••••@example.com');
 
         Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
             $this->get('/reset-password/'.$notification->token.'?email='.$user->email)->assertOk();
             $this->post('/reset-password', ['token' => $notification->token, 'email' => $user->email, 'password' => 'brand-new-pass', 'password_confirmation' => 'brand-new-pass'])
-                ->assertRedirect(route('login'));
+                ->assertRedirect(route('membership.home'));
+            $this->assertAuthenticatedAs($user);
+            $this->post('/logout');
 
             return true;
         });
@@ -235,7 +238,7 @@ class MemberRegistrationTest extends TestCase
     public function test_landing_buttons_lead_to_the_join_chooser(): void
     {
         $this->get('/')->assertOk()->assertSee(route('join'))->assertSee('Sign in');
-        $this->get('/join')->assertOk()->assertSee('Join as a Member')->assertSee('Join as a Canvasser');
+        $this->get('/join')->assertOk()->assertSee('How would you like to take part?')->assertSee('?as=member', false)->assertSee('?as=canvasser', false);
         $this->get('/join?as=canvasser')->assertOk()->assertSee('How would you like to help?');
     }
 }

@@ -57,7 +57,7 @@ export default (card) => ({
             // QR on white.
             const q = 112 * S, qx = W - 24 * S - q, qy = 92 * S;
             ctx.fillStyle = '#fff'; roundRect(ctx, qx - 8 * S, qy - 8 * S, q + 16 * S, q + 16 * S, 14 * S); ctx.fill();
-            const svg = this.$root.querySelector('[data-qr] svg');
+            const svg = this.$root.querySelector('[data-qr] svg') || document.querySelector('[data-qr] svg');
             if (svg) ctx.drawImage(await svgToImage(svg), qx, qy, q, q);
 
             // Footer.
@@ -67,6 +67,10 @@ export default (card) => ({
             ctx.fillText(`Joined ${card.joined}`, x, 284 * S);
             ctx.textAlign = 'right'; ctx.fillStyle = '#fff'; ctx.font = `700 ${12 * S}px DM Sans, sans-serif`;
             ctx.fillText(card.role, W - 24 * S, 284 * S);
+            if (card.slogan) {
+                ctx.textAlign = 'center'; ctx.fillStyle = '#f2b705'; ctx.font = `italic 600 ${11 * S}px DM Sans, sans-serif`;
+                ctx.fillText(card.slogan, W / 2, 284 * S);
+            }
 
             await downloadCanvas(c, `${card.number}.png`);
         } finally {

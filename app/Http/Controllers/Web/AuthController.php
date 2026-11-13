@@ -47,6 +47,12 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
+        // A member page remembered from before sign-in is no use to staff (it would be a 403).
+        $intended = (string) parse_url((string) $request->session()->get('url.intended'), PHP_URL_PATH);
+        if (! $user->isMember() && str_starts_with($intended, '/membership')) {
+            $request->session()->forget('url.intended');
+        }
+
         return redirect()->intended($user->homeRoute());
     }
 
@@ -67,11 +73,14 @@ class AuthController extends Controller
     public function sendResetLink(Request $request): RedirectResponse
     {
         $request->validate(['email' => ['required', 'email']]);
+        $email = mb_strtolower(trim($request->input('email')));
 
-        Password::sendResetLink(['email' => mb_strtolower(trim($request->input('email')))]);
+        Password::sendResetLink(['email' => $email]);
 
         // Same answer whether or not the address is registered.
-        return back()->with('status', 'If that email is registered, we have sent a link to reset your password. Check your inbox and spam folder.');
+        return redirect()->route('password.request')
+            ->with('reset_sent_to', $email)
+            ->with('status', 'If that email is registered, we have sent a link to reset your password. Check your inbox and spam folder.');
     }
 
     public function showReset(Request $request, string $token): View
@@ -87,18 +96,28 @@ class AuthController extends Controller
             'password' => ['required', 'confirmed', PasswordRule::min(8)],
         ]);
 
+        $resetUser = null;
         $status = Password::reset(
             ['email' => mb_strtolower(trim($request->input('email')))] + $request->only('password', 'password_confirmation', 'token'),
-            function ($user, string $password) {
+            function ($user, string $password) use (&$resetUser) {
+                // A new remember token signs out every other browser; deleting tokens signs out the API.
                 $user->forceFill(['password' => $password, 'remember_token' => Str::random(60)])->save();
-                // Sign out any API sessions too.
                 $user->tokens()->delete();
                 event(new PasswordReset($user));
+                $resetUser = $user;
             },
         );
 
         if ($status !== Password::PasswordReset) {
             throw ValidationException::withMessages(['email' => __($status)]);
+        }
+
+        // "Save and sign in": only for accounts that may use the website.
+        if ($resetUser !== null && $resetUser->is_active && $resetUser->role !== Role::FieldAgent) {
+            Auth::login($resetUser);
+            $request->session()->regenerate();
+
+            return redirect($resetUser->homeRoute())->with('status', 'Your new password is saved. You are signed in.');
         }
 
         return redirect()->route('login')->with('status', 'Your password has been reset. You can sign in now.');

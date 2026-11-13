@@ -1,6 +1,12 @@
 <?php
 
 return [
+    // The campaign slogan, used on the homepage, page titles, the card, share messages and the DP frame.
+    'slogan' => 'Hope Renewed, Nation Rebuilt.',
+
+    // Where "Get help" on the sign-in and join screens points (a WhatsApp or mailto: link, for example).
+    'help_url' => env('HELP_URL'),
+
     // Dates and times are stored in UTC and shown in this zone.
     'timezone' => 'Africa/Lagos',
 

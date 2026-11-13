@@ -26,7 +26,7 @@
         <h2>What we never do</h2>
         <p>We <strong>never sell</strong> your data, and we do not share it with third parties for their own purposes.</p>
 
-        <h2>Your rights</h2>
+        <h2 id="your-rights">Your rights</h2>
         <p>You may ask to see, correct or delete your data at any time, and you may withdraw your consent. Ask your state coordinator or contact us through the website, and we will act on it. Deleting your data ends your membership.</p>
     </article>
 </x-layouts.auth>

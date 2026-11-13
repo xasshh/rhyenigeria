@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\MemberProfile;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class PublicController extends Controller
@@ -31,5 +33,17 @@ class PublicController extends Controller
     public function privacy(): View
     {
         return view('privacy');
+    }
+
+    /** The homepage "Empowerment" button: each role's Empowerment page. Guests sign in first and land here. */
+    public function empowerment(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        return redirect()->route(match (true) {
+            $user->isSuperAdmin() => 'admin.empowerment.index',
+            $user->isCoordinator() => 'coordinator.empowerment.index',
+            default => 'membership.empowerment',
+        });
     }
 }

@@ -1,0 +1,1 @@
+<svg {{ $attributes->merge(['class' => 'h-3.5 w-5 shrink-0 rounded-[2px]']) }} viewBox="0 0 3 2" aria-hidden="true"><path fill="#008751" d="M0 0h1v2H0zM2 0h1v2H2z"/><path fill="#fff" d="M1 0h1v2H1z"/></svg>

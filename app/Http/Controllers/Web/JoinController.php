@@ -27,14 +27,19 @@ class JoinController extends Controller
 
         $ref = strtoupper((string) preg_replace('/[^A-Za-z0-9-]/', '', (string) $request->query('ref')));
         $as = $request->query('as');
+        // ?state=LA (from the homepage map) pre-selects the state.
+        $preselected = $request->filled('state')
+            ? State::query()->where('code', strtoupper((string) $request->query('state')))->first(['id', 'code'])
+            : null;
 
         if (! in_array($as, ['member', 'canvasser'], true)) {
-            return view('join.choose', ['ref' => $ref]);
+            return view('join.choose', ['ref' => $ref, 'stateCode' => $preselected?->code]);
         }
 
         return view('join.wizard', [
             'canvasser' => $as === 'canvasser',
             'ref' => $ref,
+            'preselectedStateId' => $preselected?->id,
             'states' => State::query()->orderBy('name')->get(['id', 'name']),
             'genders' => Gender::cases(),
             'ageRanges' => AgeRange::cases(),

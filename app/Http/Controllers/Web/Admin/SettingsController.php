@@ -15,7 +15,7 @@ class SettingsController extends Controller
     public function edit(): View
     {
         return view('admin.settings', [
-            'electionDate' => Setting::electionDate()?->setTimezone(config('membership.timezone')),
+            'electionDate' => Setting::get(Setting::ELECTION_DATE) ? Setting::electionDate()->setTimezone(config('membership.timezone')) : null,
             'electionLabel' => Setting::get(Setting::ELECTION_LABEL),
             'states' => State::orderBy('name')->get(['id', 'name', 'whatsapp_group_url']),
         ]);

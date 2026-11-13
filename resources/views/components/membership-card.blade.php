@@ -6,7 +6,7 @@
     ]));
     $joined = $profile->created_at->setTimezone(config('membership.timezone'))->format('j M Y');
 @endphp
-<div x-data="memberCard(@js(['name' => $user->name, 'number' => $profile->member_number, 'place' => $place, 'joined' => $joined, 'role' => $profile->roleLabel(), 'logo' => asset('images/logo-renewed-hope.png')]))" {{ $attributes }}>
+<div x-data="memberCard(@js(['name' => $user->name, 'number' => $profile->member_number, 'place' => $place, 'joined' => $joined, 'role' => $profile->roleLabel(), 'logo' => asset('images/logo-renewed-hope.png'), 'slogan' => config('membership.slogan')]))" {{ $attributes }}>
     <div class="relative mx-auto aspect-[1.586] w-full max-w-[400px] overflow-hidden rounded-[22px] bg-gradient-to-br from-brand-dark to-brand p-[5%] text-white shadow-xl shadow-brand/25">
         <div class="pointer-events-none absolute -top-16 -right-14 h-48 w-48 rounded-full bg-white/[0.07]"></div>
         <div class="pointer-events-none absolute -bottom-20 -left-6 h-44 w-44 rounded-full bg-accent/20"></div>
@@ -35,6 +35,7 @@
 
             <div class="mt-2.5 flex items-center justify-between border-t border-white/25 pt-2 text-[clamp(9px,2.6vw,11px)]">
                 <span class="text-white/80">Joined {{ $joined }}</span>
+                <span class="hidden truncate px-2 font-semibold text-accent italic min-[380px]:inline">{{ config('membership.slogan') }}</span>
                 <span class="font-bold">{{ $profile->roleLabel() }}</span>
             </div>
         </div>

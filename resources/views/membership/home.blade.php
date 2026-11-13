@@ -7,21 +7,19 @@
         {{-- Election countdown --}}
         <section class="overflow-hidden rounded-2xl bg-gradient-to-br from-brand-dark to-brand p-5 text-white">
             <p class="text-xs font-semibold tracking-[0.14em] text-white/75 uppercase">{{ $electionLabel }}</p>
-            @if ($electionDate)
-                <div x-data="countdown(@js($electionDate->toIso8601String()))" class="mt-3">
-                    <div class="grid grid-cols-4 gap-2 text-center">
-                        @foreach (['days' => 'Days', 'hours' => 'Hours', 'minutes' => 'Mins', 'seconds' => 'Secs'] as $unit => $label)
-                            <div class="rounded-xl bg-white/12 py-2.5">
-                                <p class="text-2xl font-bold tabular-nums sm:text-3xl" x-text="{{ $unit === 'days' ? 'days' : 'pad('.$unit.')' }}">–</p>
-                                <p class="text-[11px] text-white/75">{{ $label }}</p>
-                            </div>
-                        @endforeach
-                    </div>
-                    <p class="mt-3 text-sm text-white/85">{{ $electionDate->setTimezone(config('membership.timezone'))->format('l j F Y') }}</p>
+            @php($left = \App\Support\Countdown::parts($electionDate))
+            <div x-data="countdown(@js($electionDate->toIso8601String()), @js($left))" class="mt-3">
+                <div class="grid grid-cols-4 gap-2 text-center" x-show="!done" @if ($left['done']) hidden @endif>
+                    @foreach (['totalDays' => 'Days', 'hours' => 'Hours', 'minutes' => 'Mins', 'seconds' => 'Secs'] as $unit => $label)
+                        <div class="rounded-xl bg-white/12 py-2.5">
+                            <p class="text-2xl font-bold tabular-nums sm:text-3xl" x-text="{{ $unit === 'totalDays' ? 'totalDays' : 'pad('.$unit.')' }}">{{ $unit === 'totalDays' ? $left[$unit] : str_pad((string) $left[$unit], 2, '0', STR_PAD_LEFT) }}</p>
+                            <p class="text-[11px] text-white/75">{{ $label }}</p>
+                        </div>
+                    @endforeach
                 </div>
-            @else
-                <p class="mt-3 text-lg font-semibold">The date will be announced soon.</p>
-            @endif
+                <p class="text-xl font-bold" x-show="done" @unless ($left['done']) x-cloak @endunless>Today is Election Day: go and vote.</p>
+                <p class="mt-3 text-sm text-white/85">{{ $electionDate->setTimezone(config('membership.timezone'))->format('l j F Y') }}</p>
+            </div>
         </section>
 
         {{-- Next event --}}
@@ -49,7 +47,7 @@
     @endif
 
     {{-- Canvassing --}}
-    <section class="panel mt-4 p-5">
+    <section id="canvass" class="panel mt-4 scroll-mt-24 p-5">
         @switch($profile->canvasser_status?->value)
             @case('approved')
                 <div class="flex items-center gap-3"><span class="badge bg-brand text-white">Canvasser</span><h2 class="font-display font-bold">You're an approved canvasser</h2></div>

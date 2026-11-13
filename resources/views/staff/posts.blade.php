@@ -43,13 +43,33 @@
             <h2 class="font-display text-lg font-bold">Updates</h2>
             <ul class="panel mt-3 divide-y divide-line">
                 @forelse ($news as $post)
-                    <li class="flex items-start gap-3 p-4">
-                        <div class="min-w-0 flex-1 text-sm">
-                            <p class="font-semibold">{{ $post->title }}</p>
-                            <p class="text-xs text-neutral-500">{{ $post->ward?->name ?? $post->state?->name ?? 'National' }} · {{ $post->published_at->setTimezone($tz)->format('j M Y') }}{{ $post->author ? ' · '.$post->author->name : '' }}</p>
+                    <li class="p-4">
+                        <div class="flex items-start gap-3">
+                            <div class="min-w-0 flex-1 text-sm">
+                                <p class="font-semibold">{{ $post->title }}</p>
+                                <p class="text-xs text-neutral-500">{{ $post->ward?->name ?? $post->state?->name ?? 'National' }} · {{ $post->published_at->setTimezone($tz)->format('j M Y') }}{{ $post->author ? ' · '.$post->author->name : '' }}</p>
+                            </div>
+                            @if ($isAdmin || $post->state_id === auth()->user()->state_id)
+                                <form method="POST" action="{{ staff_route('news.destroy', $post) }}" x-data x-on:submit="if (!confirm('Remove this update?')) $event.preventDefault()">@csrf @method('DELETE')<button class="text-sm text-red-700">Remove</button></form>
+                            @endif
                         </div>
                         @if ($isAdmin || $post->state_id === auth()->user()->state_id)
-                            <form method="POST" action="{{ staff_route('news.destroy', $post) }}" x-data x-on:submit="if (!confirm('Remove this update?')) $event.preventDefault()">@csrf @method('DELETE')<button class="text-sm text-red-700">Remove</button></form>
+                            <details class="group mt-2">
+                                <summary class="cursor-pointer text-sm font-medium text-brand">Edit</summary>
+                                <form method="POST" action="{{ staff_route('news.update', $post) }}" class="mt-3 space-y-3">
+                                    @csrf @method('PUT')
+                                    <input name="title" class="field py-2 text-sm" maxlength="255" required value="{{ $post->title }}" aria-label="Title">
+                                    <textarea name="body" class="field py-2 text-sm" rows="4" maxlength="10000" required aria-label="Text">{{ $post->body }}</textarea>
+                                    <input name="source_label" class="field py-2 text-sm" maxlength="64" value="{{ $post->source_label }}" placeholder="Source (optional)" aria-label="Source">
+                                    @if ($isAdmin)
+                                        <select name="state_id" class="field py-2 text-sm" aria-label="State"><option value="">Everyone (national)</option>@foreach ($states as $s)<option value="{{ $s->id }}" @selected($post->state_id === $s->id)>{{ $s->name }}</option>@endforeach</select>
+                                        @if ($post->ward_id)<input type="hidden" name="ward_id" value="{{ $post->ward_id }}"><p class="hint">Stays limited to {{ $post->ward?->name }} ward.</p>@endif
+                                    @else
+                                        <select name="ward_id" class="field py-2 text-sm" aria-label="Ward"><option value="">Whole state</option>@foreach ($wards->groupBy('lga_name') as $lga => $ws)<optgroup label="{{ $lga }}">@foreach ($ws as $w)<option value="{{ $w->id }}" @selected($post->ward_id === $w->id)>{{ $w->name }}</option>@endforeach</optgroup>@endforeach</select>
+                                    @endif
+                                    <button class="btn-primary btn-sm">Save changes</button>
+                                </form>
+                            </details>
                         @endif
                     </li>
                 @empty
@@ -62,13 +82,31 @@
             <h2 class="font-display text-lg font-bold">Events</h2>
             <ul class="panel mt-3 divide-y divide-line">
                 @forelse ($events as $event)
-                    <li class="flex items-start gap-3 p-4">
-                        <div class="min-w-0 flex-1 text-sm">
-                            <p class="font-semibold">{{ $event->title }} @if ($event->starts_at->isPast())<span class="badge bg-neutral-100 text-neutral-500">Past</span>@endif</p>
-                            <p class="text-xs text-neutral-500">{{ $event->state?->name ?? 'National' }} · {{ $event->starts_at->setTimezone($tz)->format('D j M Y, g:ia') }}{{ $event->venue ? ' · '.$event->venue : '' }}</p>
+                    <li class="p-4">
+                        <div class="flex items-start gap-3">
+                            <div class="min-w-0 flex-1 text-sm">
+                                <p class="font-semibold">{{ $event->title }} @if ($event->starts_at->isPast())<span class="badge bg-neutral-100 text-neutral-500">Past</span>@endif</p>
+                                <p class="text-xs text-neutral-500">{{ $event->state?->name ?? 'National' }} · {{ $event->starts_at->setTimezone($tz)->format('D j M Y, g:ia') }}{{ $event->venue ? ' · '.$event->venue : '' }}</p>
+                            </div>
+                            @if ($isAdmin || $event->state_id === auth()->user()->state_id)
+                                <form method="POST" action="{{ staff_route('events.destroy', $event) }}" x-data x-on:submit="if (!confirm('Remove this event?')) $event.preventDefault()">@csrf @method('DELETE')<button class="text-sm text-red-700">Remove</button></form>
+                            @endif
                         </div>
                         @if ($isAdmin || $event->state_id === auth()->user()->state_id)
-                            <form method="POST" action="{{ staff_route('events.destroy', $event) }}" x-data x-on:submit="if (!confirm('Remove this event?')) $event.preventDefault()">@csrf @method('DELETE')<button class="text-sm text-red-700">Remove</button></form>
+                            <details class="group mt-2">
+                                <summary class="cursor-pointer text-sm font-medium text-brand">Edit</summary>
+                                <form method="POST" action="{{ staff_route('events.update', $event) }}" class="mt-3 space-y-3">
+                                    @csrf @method('PUT')
+                                    <input name="title" class="field py-2 text-sm" maxlength="255" required value="{{ $event->title }}" aria-label="Title">
+                                    <input name="starts_at" type="datetime-local" class="field py-2 text-sm" required value="{{ $event->starts_at->setTimezone($tz)->format('Y-m-d\TH:i') }}" aria-label="Date and time">
+                                    <input name="venue" class="field py-2 text-sm" maxlength="255" value="{{ $event->venue }}" placeholder="Venue" aria-label="Venue">
+                                    <textarea name="description" class="field py-2 text-sm" rows="3" maxlength="5000" aria-label="Description">{{ $event->description }}</textarea>
+                                    @if ($isAdmin)
+                                        <select name="state_id" class="field py-2 text-sm" aria-label="State"><option value="">National</option>@foreach ($states as $s)<option value="{{ $s->id }}" @selected($event->state_id === $s->id)>{{ $s->name }}</option>@endforeach</select>
+                                    @endif
+                                    <button class="btn-primary btn-sm">Save changes</button>
+                                </form>
+                            </details>
                         @endif
                     </li>
                 @empty

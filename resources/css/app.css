@@ -25,6 +25,19 @@
     --color-line: #dfe7e1;
 }
 
+/* Sign-in, join and homepage (RHYE sign-in & join PDF) */
+@theme {
+    --font-headline: 'Bricolage Grotesque', 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+    --color-forest: #0f2a1c;
+    --color-forest-soft: #1a3b29;
+    --color-action: #2e7d3f;
+    --color-action-dark: #256a33;
+    --color-mint: #7fd38e;
+    --color-leaf: #4cbf4c;
+    --color-amber-soft: #fdf1d6;
+    --color-amber-ink: #8a5a00;
+}
+
 [x-cloak] {
     display: none !important;
 }
@@ -75,4 +88,54 @@
 
 @utility badge {
     @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
+}
+
+@utility btn-action {
+    @apply btn min-h-[52px] rounded-xl bg-action text-white hover:bg-action-dark focus-visible:ring-action/40;
+}
+
+@utility btn-ghost {
+    @apply btn min-h-[52px] rounded-xl border border-line bg-white text-ink hover:bg-surface;
+}
+
+@utility field-lg {
+    @apply block w-full rounded-xl border border-[#d6ddd8] bg-white px-4 py-3.5 text-base text-ink placeholder:text-neutral-400 focus:border-action focus:ring-2 focus:ring-action/20 focus:outline-none disabled:bg-[#f1f3f1] disabled:text-neutral-400;
+}
+
+@utility pill {
+    @apply inline-flex cursor-pointer items-center gap-2.5 rounded-full border border-[#d6ddd8] bg-white px-4 py-2.5 text-[15px] text-ink select-none hover:border-action/60 has-[:checked]:border-action has-[:checked]:bg-[#eaf3ec] has-[:checked]:font-semibold has-[:checked]:text-action-dark has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-action/30;
+}
+
+@utility eyebrow {
+    @apply text-xs font-semibold tracking-[0.18em] uppercase;
+}
+
+/* The ring inside a pill radio. */
+.pill-dot {
+    @apply relative h-[18px] w-[18px] shrink-0 rounded-full border-2 border-neutral-300 bg-white;
+}
+.pill:has(:checked) .pill-dot {
+    @apply border-action;
+}
+.pill:has(:checked) .pill-dot::after {
+    content: '';
+    @apply absolute inset-[3px] rounded-full bg-action;
+}
+
+/* Countdown: each new number slides in from above. */
+.countdown-digit {
+    animation: countdown-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes countdown-in {
+    from { transform: translateY(-55%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }

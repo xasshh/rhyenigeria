@@ -12,6 +12,6 @@ class LandingPageTest extends TestCase
             ->assertOk()
             ->assertSee('Renewed Hope Youth Engagement')
             ->assertSee('Join the Movement')
-            ->assertSee('5,000+ youth empowered');
+            ->assertSee('5,000+')->assertSee('youth empowered');
     }
 }

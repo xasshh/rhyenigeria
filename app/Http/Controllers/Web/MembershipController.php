@@ -39,7 +39,7 @@ class MembershipController extends Controller
             'user' => $user,
             'profile' => $user->memberProfile,
             'electionDate' => Setting::electionDate(),
-            'electionLabel' => Setting::get(Setting::ELECTION_LABEL, 'Election day'),
+            'electionLabel' => Setting::electionLabel(),
             'nextEvent' => Event::query()->forState($user->state_id)->upcoming()->with('state')->first(),
             'news' => NewsPost::query()->forMember($user->state_id, $user->ward_id)->with('state', 'ward')->latest('published_at')->limit(5)->get(),
             'canvasserRoles' => CanvasserRole::cases(),
@@ -222,7 +222,7 @@ class MembershipController extends Controller
         $profile = $user->memberProfile;
         $verifyUrl = route('verify', $profile->verify_token);
         $inviteUrl = route('join', ['ref' => $profile->referral_code]);
-        $message = 'I just joined the Renewed Hope Youth Engagement movement. Join me: '.$inviteUrl;
+        $message = 'I just joined the Renewed Hope Youth Engagement movement. '.config('membership.slogan').' Join me: '.$inviteUrl;
 
         return [
             'user' => $user,

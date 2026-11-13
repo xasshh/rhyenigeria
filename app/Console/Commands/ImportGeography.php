@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Services\Geo\AreaMap;
 use App\Services\Geo\GeoImporter;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -30,6 +31,11 @@ class ImportGeography extends Command
         }
 
         $this->components->info(($dryRun ? 'Dry run - nothing was saved. ' : '')."Imported {$level} rows from {$file}");
+
+        if (! $dryRun) {
+            // The homepage and coordinator maps are drawn from these boundaries.
+            AreaMap::forget();
+        }
 
         $this->table(['Created', 'Updated', 'Skipped', 'of which unchanged', 'of which invalid', 'Rows read'], [[
             $result->created,

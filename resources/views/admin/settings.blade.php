@@ -8,11 +8,11 @@
                     <label class="label" for="election_date">Date and time (Nigeria time)</label>
                     <input id="election_date" name="election_date" type="datetime-local" class="field" value="{{ old('election_date', $electionDate?->format('Y-m-d\TH:i')) }}">
                     @error('election_date')<p class="error">{{ $message }}</p>@enderror
-                    <p class="hint">Leave empty to hide the countdown.</p>
+                    <p class="hint">Shown on the homepage and member dashboards. Leave empty to use Saturday 16 January 2027.</p>
                 </div>
                 <div>
                     <label class="label" for="election_label">Label</label>
-                    <input id="election_label" name="election_label" class="field" maxlength="80" value="{{ old('election_label', $electionLabel) }}" placeholder="Election day">
+                    <input id="election_label" name="election_label" class="field" maxlength="80" value="{{ old('election_label', $electionLabel) }}" placeholder="{{ \App\Models\Setting::DEFAULT_ELECTION_LABEL }}">
                 </div>
             </div>
         </section>

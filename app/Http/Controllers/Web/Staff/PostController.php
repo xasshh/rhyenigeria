@@ -87,6 +87,56 @@ class PostController extends Controller
         return back()->with('status', 'Update posted.');
     }
 
+    public function updateEvent(Request $request, Event $event): RedirectResponse
+    {
+        $viewer = $request->user();
+        $this->authorizePost($viewer, $event->state_id);
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:5000'],
+            'starts_at' => ['required', 'date'],
+            'venue' => ['nullable', 'string', 'max:255'],
+            'state_id' => ['nullable', 'integer', Rule::exists('states', 'id')],
+        ]);
+
+        $event->fill([
+            'title' => $data['title'],
+            'description' => $data['description'] ?? null,
+            'venue' => $data['venue'] ?? null,
+            'starts_at' => CarbonImmutable::parse($data['starts_at'], config('membership.timezone'))->utc(),
+        ]);
+        // Coordinators cannot move a post out of their state; super admins can retarget it.
+        $event->state_id = $this->targetState($viewer, $data['state_id'] ?? null);
+        $event->save();
+
+        return redirect()->to(staff_route('posts.index'))->with('status', 'Event updated.');
+    }
+
+    public function updateNews(Request $request, NewsPost $news): RedirectResponse
+    {
+        $viewer = $request->user();
+        $this->authorizePost($viewer, $news->state_id);
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'body' => ['required', 'string', 'max:10000'],
+            'source_label' => ['nullable', 'string', 'max:64'],
+            'state_id' => ['nullable', 'integer', Rule::exists('states', 'id')],
+            'ward_id' => ['nullable', 'integer'],
+        ]);
+
+        $news->fill(['title' => $data['title'], 'body' => $data['body'], 'source_label' => $data['source_label'] ?? null]);
+        $news->state_id = $this->targetState($viewer, $data['state_id'] ?? null);
+        $news->ward_id = null;
+        if (! empty($data['ward_id'])) {
+            $ward = Ward::with('lga')->findOrFail($data['ward_id']);
+            abort_unless($news->state_id !== null && $ward->lga->state_id === $news->state_id, 422, 'That ward is not in the chosen state.');
+            $news->ward_id = $ward->id;
+        }
+        $news->save();
+
+        return redirect()->to(staff_route('posts.index'))->with('status', 'Update saved.');
+    }
+
     public function destroyEvent(Request $request, Event $event): RedirectResponse
     {
         $this->authorizePost($request->user(), $event->state_id);
