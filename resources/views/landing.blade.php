@@ -129,8 +129,8 @@
                         :inert="index !== {{ $i }}" @if ($i !== 0) inert @endif
                         role="group" aria-roledescription="slide" aria-label="{{ $i + 1 }} of {{ $slides->count() }}">
 
-                        <x-fingerprint @class(['absolute -top-28 -left-40 -z-10 w-[520px]', 'text-brand/[0.13]' => $light, 'text-accent/[0.22]' => ! $light]) />
-                        <x-fingerprint @class(['absolute -right-24 -bottom-48 -z-10 hidden w-[560px] lg:block', 'text-brand/[0.13]' => $light, 'text-accent/[0.22]' => ! $light]) />
+                        <x-fingerprint @class(['absolute -top-28 -left-40 -z-10 w-[520px]', 'text-brand/[0.24]' => $light, 'text-accent/[0.22]' => ! $light]) />
+                        <x-fingerprint @class(['absolute -right-24 -bottom-48 -z-10 hidden w-[560px] lg:block', 'text-brand/[0.24]' => $light, 'text-accent/[0.22]' => ! $light]) />
 
                         @if ($slide->isClassic())
                             {{-- The original landing-page hero (RHYE-2026 Figma). --}}

@@ -37,7 +37,7 @@
 
         <div class="relative isolate flex min-h-dvh flex-col overflow-hidden bg-white px-5 pt-5 pb-6 sm:px-8 lg:min-h-0 lg:px-14 lg:pt-9">
             {{-- Thumbprints: green on the white side, yellow on the green side. --}}
-            <x-fingerprint class="pointer-events-none absolute -right-28 -bottom-36 -z-10 w-[300px] rotate-[25deg] text-brand/[0.10] sm:w-[420px] lg:w-[520px]" />
+            <x-fingerprint class="pointer-events-none absolute -right-28 -bottom-36 -z-10 w-[300px] rotate-[25deg] text-brand/[0.18] sm:w-[420px] lg:w-[520px]" />
             <header class="flex items-center justify-between gap-4">
                 <x-logo />
                 <p class="text-right text-[15px] text-neutral-600">{{ $top ?? '' }}</p>
