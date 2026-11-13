@@ -11,6 +11,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -33,19 +34,19 @@ class HomepageTest extends TestCase
             ->assertSee('aria-roledescription="carousel"', false);
     }
 
-    public function test_the_slides_run_event_president_patron_minister_then_placeholder(): void
+    public function test_the_slides_run_event_president_patron_minister_convener(): void
     {
         $slides = HeroSlide::query()->shown()->get();
 
         $this->assertCount(5, $slides);
-        $this->assertSame(['image', 'classic', 'portrait', 'portrait', 'image'], $slides->pluck('layout')->all());
-        $this->assertSame(['images/slides/slide-1.webp', 'images/hero-portrait.webp', 'images/slides/seyi-tinubu.webp', 'images/slides/ayodele-olawande.webp', null], $slides->pluck('image_path')->all());
+        $this->assertSame(['image', 'classic', 'portrait', 'portrait', 'portrait'], $slides->pluck('layout')->all());
+        $this->assertSame(['images/slides/slide-1.webp', 'images/hero-portrait.webp', 'images/slides/seyi-tinubu.webp', 'images/slides/ayodele-olawande.webp', 'images/slides/abdulazeez-kaka.webp'], $slides->pluck('image_path')->all());
         foreach ($slides->pluck('image_path')->filter() as $path) {
             $this->assertFileExists(public_path($path));
         }
 
         $this->get('/')->assertOk()
-            ->assertSeeInOrder(['Education Empowerment Initiative', 'Youth for PBAT', '5,000+ youth empowered', 'Bar. Seyi Tinubu', 'Comrade Ayodele Olawande', 'Headline for slide 5'])
+            ->assertSeeInOrder(['Education Empowerment Initiative', 'Youth for PBAT', '5,000+ youth empowered', 'Bar. Seyi Tinubu', 'Comrade Ayodele Olawande', 'National Convener', 'Abdulazeez Kaka'])
             // Backgrounds alternate white, green, white… by position.
             ->assertSeeInOrder(['bg-white text-forest', 'bg-action text-white', 'bg-white text-forest', 'bg-action text-white', 'bg-white text-forest'], false);
     }
@@ -180,5 +181,26 @@ class HomepageTest extends TestCase
         $this->actingAs(User::factory()->coordinator(State::factory()->create())->create())->get('/admin/slides')->assertForbidden();
         $this->actingAs($member)->put('/admin/slides/'.$slide->id, ['position' => 1, 'headline' => 'Hacked'])->assertForbidden();
         $this->assertNotSame('Hacked', $slide->fresh()->headline);
+    }
+
+    public function test_the_super_admin_dashboard_has_a_state_map_linking_to_each_state(): void
+    {
+        $state = State::factory()->create(['code' => 'PL', 'name' => 'Plateau']);
+        DB::update('UPDATE states SET boundary = ST_Multi(ST_MakeEnvelope(8.5, 8.5, 10, 10, 4326)) WHERE id = ?', [$state->id]);
+
+        $this->actingAs(User::factory()->superAdmin()->create())->get('/admin')->assertOk()
+            ->assertSee('Members across Nigeria')
+            ->assertSee('data-area="PL"', false)
+            ->assertSee('href="'.route('admin.states.show', $state->id).'"', false);
+    }
+
+    public function test_the_homepage_links_to_the_official_social_accounts(): void
+    {
+        $this->get('/')->assertOk()
+            ->assertSee('Follow us')
+            ->assertSee('https://x.com/rhyengagement', false)
+            ->assertSee('https://www.tiktok.com/@renewedhopeyouthe', false)
+            ->assertSee('aria-label="Instagram"', false)
+            ->assertSee('aria-label="Facebook"', false);
     }
 }

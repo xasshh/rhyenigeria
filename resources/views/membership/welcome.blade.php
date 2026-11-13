@@ -13,7 +13,8 @@
 @endphp
 <x-layouts.base title="Welcome" noindex>
     <div class="relative isolate min-h-dvh overflow-hidden bg-forest text-white">
-        <x-fingerprint class="absolute -bottom-40 -left-40 -z-10 w-[640px] text-white/[0.06]" />
+        <x-fingerprint class="absolute -bottom-40 -left-40 -z-10 w-[640px] text-accent/[0.16]" />
+        <x-fingerprint class="absolute -top-24 -right-24 -z-10 hidden w-[360px] rotate-180 text-accent/[0.12] lg:block" />
 
         <header class="flex items-center justify-between px-5 py-5 sm:px-8 lg:px-14 lg:py-7">
             <a href="{{ route('home') }}" class="rounded-2xl bg-white px-4 py-2.5"><img src="{{ asset('images/logo-rhye.png') }}" alt="RHYE — Renewed Hope Youth Engagement" class="h-9 w-auto" width="600" height="272"></a>

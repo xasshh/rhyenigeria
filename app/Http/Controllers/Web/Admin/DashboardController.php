@@ -4,13 +4,14 @@ namespace App\Http\Controllers\Web\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\State;
+use App\Services\Geo\AreaMap;
 use App\Services\Membership\MemberDirectory;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request, MemberDirectory $directory): View
+    public function index(Request $request, MemberDirectory $directory, AreaMap $map): View
     {
         $members = $directory->query($request->user());
         $byState = $directory->byArea($members, 'state')->keyBy('id');
@@ -27,6 +28,7 @@ class DashboardController extends Controller
         ]);
 
         return view('admin.dashboard', [
+            'map' => $map->states(),
             'summary' => $directory->summary($members),
             'states' => $states,
             'gender' => $directory->breakdown($members, 'gender'),

@@ -25,12 +25,12 @@ class HeroSlide extends Model
     /** The original landing-page hero: round portrait and the three stat badges. */
     public const LAYOUT_CLASSIC = 'classic';
 
-    /** A photo cropped to a circle with a thin green ring, like the President's portrait on the original hero. */
+    /** A photo of a person, shown in the same rounded frame as flyers. */
     public const LAYOUT_PORTRAIT = 'portrait';
 
     public const LAYOUTS = [
-        self::LAYOUT_PORTRAIT => 'Portrait in a circle (for photos of people)',
-        self::LAYOUT_IMAGE => 'Image beside the text (for flyers)',
+        self::LAYOUT_PORTRAIT => 'Photo of a person',
+        self::LAYOUT_IMAGE => 'Flyer or other image',
         self::LAYOUT_CLASSIC => 'Original hero (round portrait, stat badges)',
     ];
 

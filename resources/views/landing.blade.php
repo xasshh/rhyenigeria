@@ -47,6 +47,7 @@
             </a>
             <span class="hidden sm:inline">Renewed Hope Youth Engagement <a href="{{ route('join') }}" class="ml-1 font-bold text-accent hover:underline">Support Us</a></span>
             <a href="{{ route('join') }}" class="font-bold text-accent hover:underline sm:hidden">Support Us</a>
+            <x-social-links size="sm" class="hidden lg:flex" />
         </div>
     </div>
 
@@ -128,13 +129,14 @@
                         :inert="index !== {{ $i }}" @if ($i !== 0) inert @endif
                         role="group" aria-roledescription="slide" aria-label="{{ $i + 1 }} of {{ $slides->count() }}">
 
-                        <x-fingerprint @class(['absolute -top-28 -left-40 -z-10 w-[520px]', 'text-action/[0.06]' => $light, 'text-white/[0.07]' => ! $light]) />
-                        <x-fingerprint @class(['absolute -right-24 -bottom-48 -z-10 hidden w-[560px] lg:block', 'text-action/[0.07]' => $light, 'text-white/[0.08]' => ! $light]) />
+                        <x-fingerprint @class(['absolute -top-28 -left-40 -z-10 w-[520px]', 'text-brand/[0.13]' => $light, 'text-accent/[0.22]' => ! $light]) />
+                        <x-fingerprint @class(['absolute -right-24 -bottom-48 -z-10 hidden w-[560px] lg:block', 'text-brand/[0.13]' => $light, 'text-accent/[0.22]' => ! $light]) />
 
                         @if ($slide->isClassic())
                             {{-- The original landing-page hero (RHYE-2026 Figma). --}}
                             <div class="mx-auto grid max-w-[1440px] items-center gap-12 px-5 pt-14 pb-28 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,560px)] lg:gap-10 lg:px-[66px] lg:pt-16 lg:pb-32">
-                                <div>
+                                {{-- Phones: the President's picture first, the text under it. --}}
+                                <div class="order-2 lg:order-1">
                                     @if ($slide->eyebrow)
                                         <p @class(['font-script text-[26px] leading-none tracking-[-0.02em] italic sm:text-[32px] lg:pl-[124px]', 'text-brand' => $light, 'text-accent' => ! $light])>{{ $slide->eyebrow }}</p>
                                     @endif
@@ -150,7 +152,8 @@
                                     </div>
                                 </div>
 
-                                <div class="relative mx-auto aspect-square w-full max-w-[340px] sm:max-w-[480px] lg:max-w-[540px]">
+                                <div class="relative order-1 mx-auto aspect-square w-full max-w-[340px] sm:max-w-[480px] lg:order-2 lg:max-w-[540px]">
+                                    <x-logo-tag class="top-[3%] right-[-2%]" />
                                     @if ($slide->imageUrl())
                                         <img src="{{ $slide->imageUrl() }}" alt="{{ $slide->image_alt ?? '' }}" class="h-full w-full" width="1176" height="1176" @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif>
                                     @else
@@ -175,11 +178,7 @@
                                 </div>
                             </div>
                         @else
-                            <div @class([
-                                'mx-auto grid max-w-[1440px] items-center gap-8 px-5 pt-10 pb-28 sm:px-8 lg:gap-14 lg:px-[66px] lg:pt-14 lg:pb-32',
-                                'lg:grid-cols-[minmax(0,1fr)_minmax(0,540px)]' => $slide->isPortrait(),
-                                'lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)]' => ! $slide->isPortrait(),
-                            ])>
+                            <div class="mx-auto grid max-w-[1440px] items-center gap-8 px-5 pt-10 pb-28 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] lg:gap-14 lg:px-[66px] lg:pt-14 lg:pb-32">
                                 <div class="order-2 lg:order-1">
                                     @if ($slide->eyebrow)
                                         <p @class(['inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[12px] font-semibold tracking-[0.14em] uppercase sm:text-[13px]', 'bg-action/10 text-action' => $light, 'bg-white/15 text-white' => ! $light])>{{ $slide->eyebrow }}</p>
@@ -196,18 +195,17 @@
                                     </div>
                                 </div>
                                 <div class="order-1 lg:order-2">
-                                    @if ($slide->isPortrait() && $slide->imageUrl())
-                                        {{-- Same treatment as the President's portrait: a circle with a thin green ring. --}}
-                                        <div class="mx-auto aspect-square w-full max-w-[320px] overflow-hidden rounded-full border-[3px] border-brand bg-white sm:max-w-[440px] lg:max-w-[520px]">
-                                            <img src="{{ $slide->imageUrl() }}" alt="{{ $slide->image_alt ?? '' }}" class="h-full w-full object-cover object-top" width="900" height="900" @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif>
-                                        </div>
-                                    @elseif ($slide->imageUrl())
+                                    {{-- Flyers and photos of people share one frame so the slides look uniform. --}}
+                                    @if ($slide->imageUrl())
+                                        <div class="relative mx-auto w-full max-w-[340px] sm:max-w-[400px] lg:max-w-none">
+                                        <x-logo-tag class="-bottom-4 -left-3 sm:-left-5" />
                                         <a href="{{ $slide->originalImageUrl() ?? $slide->imageUrl() }}" target="_blank" rel="noopener" @class(['mx-auto block w-full max-w-[340px] overflow-hidden rounded-[24px] bg-white sm:max-w-[400px] lg:max-w-none', 'shadow-[0_30px_60px_-25px_rgba(15,42,28,0.45)] ring-1 ring-line' => $light, 'shadow-[0_30px_60px_-25px_rgba(0,0,0,0.6)] ring-1 ring-white/10' => ! $light]) aria-label="Open the full image">
                                             <img src="{{ $slide->imageUrl() }}" alt="{{ $slide->image_alt ?? '' }}" class="aspect-[4/5] h-auto w-full object-cover object-top" width="1280" height="1600" @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif>
                                         </a>
+                                        </div>
                                     @else
                                         <div @class(['relative mx-auto flex aspect-[4/5] w-full max-w-[340px] items-center justify-center overflow-hidden rounded-[24px] border border-dashed sm:max-w-[400px] lg:max-w-none', 'border-action/30 bg-action/[0.04]' => $light, 'border-white/30 bg-white/[0.06]' => ! $light])>
-                                            <x-fingerprint class="absolute w-3/4 opacity-10" />
+                                            <x-fingerprint @class(['absolute w-3/4', 'text-brand/20' => $light, 'text-accent/30' => ! $light]) />
                                             <span @class(['relative rounded-full px-4 py-2 text-sm', 'bg-white text-neutral-600' => $light, 'bg-forest/60 text-white/80' => ! $light])>Image coming soon</span>
                                         </div>
                                     @endif
@@ -257,8 +255,8 @@
         <section id="countdown" class="relative isolate overflow-hidden bg-action text-white" aria-labelledby="countdown-title"
                  x-data="countdown(@js($electionDate->toIso8601String()), @js($countdown))">
             {{-- Thumbprint watermark: the mark every voter leaves on the ballot. --}}
-            <x-fingerprint class="absolute top-1/2 left-1/2 -z-10 w-[680px] -translate-x-1/2 -translate-y-1/2 text-white/[0.08] sm:w-[820px]" stroke="1.6" />
-            <x-fingerprint class="absolute -top-10 -right-10 -z-10 w-[180px] rotate-12 text-forest/25 sm:w-[240px]" />
+            <x-fingerprint class="absolute top-1/2 left-1/2 -z-10 w-[680px] -translate-x-1/2 -translate-y-1/2 text-accent/[0.16] sm:w-[820px]" stroke="1.6" />
+            <x-fingerprint class="absolute -top-10 -right-10 -z-10 w-[180px] rotate-12 text-accent/40 sm:w-[240px]" />
 
             <div class="mx-auto max-w-[1200px] px-5 py-14 text-center sm:px-8 sm:py-20">
                 <p class="eyebrow text-mint"><span class="mr-2 inline-block h-2 w-2 animate-pulse rounded-full bg-accent align-middle" aria-hidden="true"></span>{{ $electionLabel }}</p>
@@ -320,6 +318,10 @@
             <div>
                 <p class="font-headline text-[26px] font-extrabold tracking-[-0.02em] text-mint">{{ $slogan }}</p>
                 <p class="mt-1 font-body text-white/70">Renewed Hope Youth Engagement · Youth for PBAT</p>
+            </div>
+            <div>
+                <p class="font-body text-sm font-semibold tracking-[0.14em] text-white/60 uppercase">Follow us</p>
+                <x-social-links class="mt-3" />
             </div>
             <nav class="flex flex-wrap gap-x-6 gap-y-2 font-body text-[15px] text-white/80" aria-label="Footer">
                 <a href="{{ route('join') }}" class="hover:text-white">Join the movement</a>

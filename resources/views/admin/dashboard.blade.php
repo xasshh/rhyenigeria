@@ -11,6 +11,16 @@
     </div>
 
     <section class="panel mt-4 p-5">
+        <div class="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 class="font-display font-bold">Members across Nigeria</h2>
+            <p class="text-sm text-neutral-500">Darker states have more members. Click a state to open its dashboard. Counts refresh every few minutes.</p>
+        </div>
+        <x-area-map class="mx-auto mt-4 max-w-4xl" :map="$map" :url="route('map.states')" key="code" link-key="id"
+            :href="route('admin.states.show', '__KEY__')" action="Open :name"
+            label="Map of Nigeria's 36 states and the FCT, coloured by number of members" />
+    </section>
+
+    <section class="panel mt-4 p-5">
         <div class="flex flex-wrap items-center justify-between gap-2">
             <h2 class="font-display font-bold">Registrations over time</h2>
             <div class="inline-flex rounded-lg border border-line p-0.5 text-sm">

@@ -7,7 +7,8 @@
 <x-layouts.base :title="$title" :noindex="$noindex">
     <div class="min-h-dvh bg-white lg:grid lg:grid-cols-[440px_minmax(0,1fr)] xl:grid-cols-[505px_minmax(0,1fr)]" @if ($alpine) x-data="{{ $alpine }}" @endif>
         <aside class="relative isolate overflow-hidden bg-forest px-5 pt-5 pb-7 text-white sm:px-8 lg:flex lg:min-h-dvh lg:flex-col lg:px-16 lg:pt-14 lg:pb-12">
-            <x-fingerprint class="absolute -top-10 -right-16 -z-10 w-[260px] text-white/[0.07] lg:-top-24 lg:-right-36 lg:w-[460px]" />
+            <x-fingerprint class="absolute -top-10 -right-16 -z-10 w-[260px] text-accent/[0.22] lg:-top-24 lg:-right-36 lg:w-[460px]" />
+            <x-fingerprint class="absolute -bottom-40 -left-32 -z-10 hidden w-[420px] rotate-[200deg] text-accent/[0.14] lg:block" />
 
             <p class="flex items-center gap-2.5 text-[11px] font-semibold tracking-[0.2em] text-[#cfe8d4] uppercase lg:text-[13px]">
                 <span class="h-2 w-2 rounded-full bg-leaf" aria-hidden="true"></span> Renewed Hope Youth Engagement
@@ -34,7 +35,9 @@
             @endif
         </aside>
 
-        <div class="flex min-h-dvh flex-col bg-white px-5 pt-5 pb-6 sm:px-8 lg:min-h-0 lg:px-14 lg:pt-9">
+        <div class="relative isolate flex min-h-dvh flex-col overflow-hidden bg-white px-5 pt-5 pb-6 sm:px-8 lg:min-h-0 lg:px-14 lg:pt-9">
+            {{-- Thumbprints: green on the white side, yellow on the green side. --}}
+            <x-fingerprint class="pointer-events-none absolute -right-28 -bottom-36 -z-10 w-[300px] rotate-[25deg] text-brand/[0.10] sm:w-[420px] lg:w-[520px]" />
             <header class="flex items-center justify-between gap-4">
                 <x-logo />
                 <p class="text-right text-[15px] text-neutral-600">{{ $top ?? '' }}</p>

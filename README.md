@@ -155,15 +155,14 @@ Sign-up details:
 **Admin → Homepage slides** (`/admin/slides`) lists the header slides. Each has an image (JPEG, PNG or WebP, at
 least 600 px wide; a 1600 px WebP copy is made with GD and the original is kept, both on the `public` disk under
 `slides/`), an optional small line, a headline, short text, a button label and link (a path such as `/join` or a
-full `https://` link), an order number, an on/off switch and a **layout**: *Portrait in a circle* (photos of people), *Original hero* (the first landing design: round
+full `https://` link), an order number, an on/off switch and a **layout**: *Photo of a person*, *Flyer or other image*, *Original hero* (the first landing design: round
 portrait from `public/images/hero-portrait.webp` and the three stat badges) or *Image beside
 the text*. Backgrounds alternate by position, whatever the layout: white, green, white, green… All "Join the
 Movement" buttons on the homepage use the site's yellow (`accent`, #f2b705). Current order: 1 the Plateau State
 Education Empowerment Initiative flyer (`slide-1.webp`, original `slide-1.jpeg`), 2 the original hero with
 President Tinubu, 3 the patron, Bar. Seyi Tinubu (`seyi-tinubu.webp`), 4 the Minister, Comrade Ayodele Olawande
-(`ayodele-olawande.webp`, original `.jpeg`), 5 a placeholder frame waiting for content. Slides 3 and 4 use the
-*Portrait in a circle* layout: the photo is cropped to a circle with a thin green ring in CSS, matching the
-President's portrait, so uploaded photos need no editing.
+(`ayodele-olawande.webp`, original `.jpeg`), 5 the National Convener, Abdulazeez Kaka (`abdulazeez-kaka.webp`). Slides 3–5 use the *Photo of a person* layout. Photos and flyers share one rounded 4:5 frame (cropped in CSS, so
+uploads need no editing) and carry the RHYE logo sticker; only the original hero keeps its round portrait.
 
 The top announcement bar also shows a compact live countdown (weeks, days, h:m:s) that links to the big one.
 
@@ -567,6 +566,7 @@ php artisan geo:import polling-unit database/data/samples/polling_units.csv
 | `JOIN_RATE_LIMIT_PER_MINUTE` | 30 | Sign-up submissions per IP per minute. |
 | `MEMBERSHIP_CONSENT_VERSION` | 1 | Raise when the data-consent wording changes; stored with each member. |
 | `EMPOWERMENT_PHOTO_MAX_KB` | 8192 | Largest empowerment photo. Photos are on the private disk (`storage/app/private/empowerment`). |
+| `SOCIAL_FACEBOOK_URL`, `SOCIAL_INSTAGRAM_URL`, `SOCIAL_TIKTOK_URL`, `SOCIAL_X_URL` | see `config/membership.php` | Social media links in the homepage top bar and footer. TikTok and X point at the profiles; Facebook and Instagram point at posts until the profile links are set here. Leave one empty (`=`) to hide its icon. |
 | `HELP_URL` | (empty) | Where "Get help" on the sign-in and join screens points, e.g. a WhatsApp link or `mailto:`. Empty uses the privacy notice. |
 | `MAIL_*` | `log` | Password-reset emails. See the SMTP block in `.env.example`. `APP_URL` must be the public `https://` address: QR codes, share links and reset links use it. |
 

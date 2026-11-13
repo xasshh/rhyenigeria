@@ -2,6 +2,7 @@
     'map',                 // AreaMap::states() or ::lgas(): viewBox + areas
     'url',                 // JSON counts endpoint
     'key' => 'code',       // which area field the counts are keyed by
+    'linkKey' => null,     // which area field goes into the link (defaults to `key`)
     'href',                // link for one area, with __KEY__ standing in for the key
     'action' => null,      // what clicking does, read to screen readers and shown in the label
     'noun' => 'members',
@@ -15,7 +16,7 @@
             <svg viewBox="{{ $map['viewBox'] }}" class="h-auto w-full" role="group" aria-label="{{ $label }}"
                  x-on:pointerover="over($event)" x-on:pointermove="move($event)" x-on:focusin="focus($event)" x-on:focusout="tip = null" x-on:click="tap($event)">
                 @foreach ($map['areas'] as $area)
-                    <a href="{{ str_replace('__KEY__', rawurlencode((string) $area[$key]), $href) }}" data-area="{{ $area[$key] }}" data-name="{{ $area['name'] }}" data-action="{{ $action ? str_replace(':name', $area['name'], $action) : '' }}"
+                    <a href="{{ str_replace('__KEY__', rawurlencode((string) $area[$linkKey ?? $key]), $href) }}" data-area="{{ $area[$key] }}" data-name="{{ $area['name'] }}" data-action="{{ $action ? str_replace(':name', $area['name'], $action) : '' }}"
                        class="group outline-none" aria-label="{{ $area['name'] }}">
                         <path d="{{ $area['d'] }}" fill="#e9eee9" stroke="#fff" stroke-width="1.2" stroke-linejoin="round" vector-effect="non-scaling-stroke"
                               class="transition-[fill,opacity] duration-300 group-hover:opacity-80 group-focus-visible:stroke-[#0f2a1c] group-focus-visible:[stroke-width:2.5]" />
