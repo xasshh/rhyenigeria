@@ -22,6 +22,17 @@ export default defineConfig({
         }),
         tailwindcss(),
     ],
+    build: {
+        rollupOptions: {
+            output: {
+                // The live map's web worker ships as .mjs; publish it as .js so Nginx serves it as JavaScript
+                // (its default MIME table has no .mjs, and browsers refuse module workers sent as octet-stream).
+                assetFileNames: (asset) => (asset.names?.[0] ?? asset.name ?? '').endsWith('.mjs')
+                    ? 'assets/[name]-[hash].js'
+                    : 'assets/[name]-[hash][extname]',
+            },
+        },
+    },
     server: {
         watch: {
             ignored: ['**/storage/framework/views/**'],
