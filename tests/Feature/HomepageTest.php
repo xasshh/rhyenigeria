@@ -40,7 +40,7 @@ class HomepageTest extends TestCase
 
         $this->assertCount(5, $slides);
         $this->assertSame(['image', 'classic', 'portrait', 'portrait', 'portrait'], $slides->pluck('layout')->all());
-        $this->assertSame(['images/slides/slide-1.webp', 'images/hero-portrait.webp', 'images/slides/seyi-tinubu.webp', 'images/slides/ayodele-olawande.webp', 'images/slides/abdulazeez-kaka.webp'], $slides->pluck('image_path')->all());
+        $this->assertSame(['images/slides/slide-1.webp', 'images/slides/tinubu-portrait.webp', 'images/slides/seyi-tinubu.webp', 'images/slides/ayodele-olawande.webp', 'images/slides/abdulazeez-kaka.webp'], $slides->pluck('image_path')->all());
         foreach ($slides->pluck('image_path')->filter() as $path) {
             $this->assertFileExists(public_path($path));
         }

@@ -152,17 +152,18 @@
                                     </div>
                                 </div>
 
-                                <div class="relative order-1 mx-auto aspect-square w-full max-w-[340px] sm:max-w-[480px] lg:order-2 lg:max-w-[540px]">
-                                    <x-logo-tag class="top-[3%] right-[-2%]" />
-                                    @if ($slide->imageUrl())
-                                        <img src="{{ $slide->imageUrl() }}" alt="{{ $slide->image_alt ?? '' }}" class="h-full w-full" width="1176" height="1176" @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif>
-                                    @else
-                                        <div class="h-full w-full rounded-full border-2 border-current/40 bg-current/10"></div>
-                                    @endif
+                                <div class="relative order-1 mx-auto mb-4 w-full max-w-[320px] sm:max-w-[400px] lg:order-2 lg:mb-0 lg:max-w-[460px]">
+                                    {{-- Same rounded 4:5 frame as the other slides; badges and the logo sticker overlap its edges. --}}
+                                    <div @class(['aspect-[4/5] w-full overflow-hidden rounded-[24px] bg-white', 'shadow-[0_30px_60px_-25px_rgba(15,42,28,0.45)] ring-1 ring-line' => $light, 'shadow-[0_30px_60px_-25px_rgba(0,0,0,0.6)] ring-1 ring-white/10' => ! $light])>
+                                        @if ($slide->imageUrl())
+                                            <img src="{{ $slide->imageUrl() }}" alt="{{ $slide->image_alt ?? '' }}" class="h-full w-full object-cover object-top" width="900" height="1126" @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif>
+                                        @endif
+                                    </div>
+                                    <x-logo-tag class="-top-4 -right-3 sm:-right-5" />
                                     @foreach ([
-                                        ['5,000+ youth empowered', 'top-[-6%] left-[2%] max-w-[13.5rem]'],
-                                        ['275+ Events Organized', 'right-0 bottom-[8%] max-w-[13.5rem]'],
-                                        ['36+ Nationwide', 'bottom-[-6%] left-[5%]'],
+                                        ['5,000+ youth empowered', 'top-[10%] -left-3 max-w-[11rem] sm:-left-10 sm:max-w-[13.5rem]'],
+                                        ['275+ Events Organized', '-right-3 bottom-[22%] max-w-[11rem] sm:-right-10 sm:max-w-[13.5rem]'],
+                                        ['36+ Nationwide', '-bottom-5 left-[8%]'],
                                     ] as [$stat, $position])
                                         <p class="font-stat absolute {{ $position }} rounded-xl border-2 border-[#b3b3b3] bg-white px-3.5 py-2 text-sm leading-tight text-black sm:rounded-[20px] sm:px-6 sm:py-4 sm:text-xl sm:leading-[28px]">
                                             {{ $stat }}
