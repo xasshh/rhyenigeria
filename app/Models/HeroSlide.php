@@ -19,13 +19,13 @@ class HeroSlide extends Model
     /** Files shipped with the code live under public/images; uploads are on the public disk. */
     public const BUNDLED_PREFIX = 'images/';
 
-    /** A picture beside the text, on the dark background. */
+    /** A picture beside the text. */
     public const LAYOUT_IMAGE = 'image';
 
-    /** The original landing-page hero: white background, round portrait and the three stat badges. */
+    /** The original landing-page hero: round portrait and the three stat badges. */
     public const LAYOUT_CLASSIC = 'classic';
 
-    public const LAYOUTS = [self::LAYOUT_IMAGE => 'Image beside the text (dark)', self::LAYOUT_CLASSIC => 'Original hero (white, round portrait, stat badges)'];
+    public const LAYOUTS = [self::LAYOUT_IMAGE => 'Image beside the text', self::LAYOUT_CLASSIC => 'Original hero (round portrait, stat badges)'];
 
     protected function casts(): array
     {

@@ -77,7 +77,7 @@
             @else
                 <a href="{{ route('login') }}" class="text-sm font-bold text-brand hover:underline">Sign in</a>
             @endauth
-            <a href="{{ route('join') }}" class="rounded-[10px] bg-brand px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-dark">Join the Movement</a>
+            <a href="{{ route('join') }}" class="rounded-[10px] bg-accent px-4 py-2.5 text-sm font-bold text-forest transition-colors hover:bg-[#d9a404]">Join the Movement</a>
         </div>
 
         {{-- Small screens: menu without JavaScript --}}
@@ -95,14 +95,17 @@
                 @else
                     <a href="{{ route('login') }}" class="rounded-lg px-3 py-2.5 font-bold hover:bg-brand/10">Sign in</a>
                 @endauth
-                <a href="{{ route('join') }}" class="mt-1 rounded-lg bg-brand px-3 py-2.5 text-center font-bold text-white">Join the Movement</a>
+                <a href="{{ route('join') }}" class="mt-1 rounded-lg bg-accent px-3 py-2.5 text-center font-bold text-forest hover:bg-[#d9a404]">Join the Movement</a>
             </nav>
         </details>
     </header>
 
     <main>
-        {{-- Header slider: each slide brings its own background (white for the original hero, dark for picture slides). --}}
-        @php($themes = $slides->map(fn ($slide) => $slide->isClassic() ? 'light' : 'dark')->values()->all() ?: ['dark'])
+        {{-- Header slider: backgrounds alternate white, green, white… by position; the layout decides what is on the slide. --}}
+        @php
+            $themes = $slides->keys()->map(fn ($i) => $i % 2 === 0 ? 'light' : 'dark')->values()->all() ?: ['dark'];
+            $yellow = 'bg-accent text-forest hover:bg-[#d9a404]';
+        @endphp
         <section class="relative isolate overflow-hidden"
                  x-data="heroSlider({ count: {{ max($slides->count(), 1) }} })"
                  x-on:mouseenter="hovering = true" x-on:mouseleave="hovering = false"
@@ -114,32 +117,36 @@
 
             <div class="grid" aria-live="off">
                 @forelse ($slides as $i => $slide)
+                    @php($light = $themes[$i] === 'light')
                     <article @class([
                             'relative isolate overflow-hidden transition-opacity duration-700 [grid-area:1/1]',
-                            'bg-white text-brand' => $slide->isClassic(),
-                            'bg-forest text-white' => ! $slide->isClassic(),
                             'data-[active=false]:invisible data-[active=false]:opacity-0',
+                            'bg-white text-forest' => $light,
+                            'bg-action text-white' => ! $light,
                         ])
                         data-active="{{ $i === 0 ? 'true' : 'false' }}" :data-active="index === {{ $i }} ? 'true' : 'false'"
                         :inert="index !== {{ $i }}" @if ($i !== 0) inert @endif
                         role="group" aria-roledescription="slide" aria-label="{{ $i + 1 }} of {{ $slides->count() }}">
+
+                        <x-fingerprint @class(['absolute -top-28 -left-40 -z-10 w-[520px]', 'text-action/[0.06]' => $light, 'text-white/[0.07]' => ! $light]) />
+                        <x-fingerprint @class(['absolute -right-24 -bottom-48 -z-10 hidden w-[560px] lg:block', 'text-action/[0.07]' => $light, 'text-white/[0.08]' => ! $light]) />
 
                         @if ($slide->isClassic())
                             {{-- The original landing-page hero (RHYE-2026 Figma). --}}
                             <div class="mx-auto grid max-w-[1440px] items-center gap-12 px-5 pt-14 pb-28 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,560px)] lg:gap-10 lg:px-[66px] lg:pt-16 lg:pb-32">
                                 <div>
                                     @if ($slide->eyebrow)
-                                        <p class="font-script text-[26px] leading-none tracking-[-0.02em] italic sm:text-[32px] lg:pl-[124px]">{{ $slide->eyebrow }}</p>
+                                        <p @class(['font-script text-[26px] leading-none tracking-[-0.02em] italic sm:text-[32px] lg:pl-[124px]', 'text-brand' => $light, 'text-accent' => ! $light])>{{ $slide->eyebrow }}</p>
                                     @endif
-                                    <h2 class="mt-4 text-[44px] leading-[1.14] font-bold tracking-[-0.02em] text-balance sm:text-6xl lg:text-[72px] lg:leading-[86px]">{{ $slide->headline }}</h2>
+                                    <h2 @class(['mt-4 text-[44px] leading-[1.14] font-bold tracking-[-0.02em] text-balance sm:text-6xl lg:text-[72px] lg:leading-[86px]', 'text-brand' => $light])>{{ $slide->headline }}</h2>
                                     @if ($slide->body)
-                                        <p class="font-body mt-5 max-w-[583px] text-lg leading-relaxed tracking-[-0.02em] sm:text-[24px] sm:leading-[34px]">{{ $slide->body }}</p>
+                                        <p @class(['font-body mt-5 max-w-[583px] text-lg leading-relaxed tracking-[-0.02em] sm:text-[24px] sm:leading-[34px]', 'text-brand' => $light, 'text-white/90' => ! $light])>{{ $slide->body }}</p>
                                     @endif
                                     <div class="mt-10 flex flex-wrap gap-2.5">
                                         @if ($slide->button_label && $slide->button_url)
-                                            <a href="{{ $slide->button_url }}" class="rounded-[10px] border border-brand bg-brand px-6 py-3 text-lg leading-6 font-bold text-white transition-colors hover:bg-brand-dark">{{ $slide->button_label }}</a>
+                                            <a href="{{ $slide->button_url }}" class="rounded-[10px] px-6 py-3 text-lg leading-6 font-bold transition-colors {{ $yellow }}">{{ $slide->button_label }}</a>
                                         @endif
-                                        <a href="{{ route('empowerment') }}" class="rounded-[10px] border border-brand px-9 py-3 text-lg leading-6 font-bold transition-colors hover:bg-brand/10">Empowerment</a>
+                                        <a href="{{ route('empowerment') }}" @class(['rounded-[10px] border px-9 py-3 text-lg leading-6 font-bold transition-colors', 'border-brand text-brand hover:bg-brand/10' => $light, 'border-white/60 text-white hover:bg-white/10' => ! $light])>Empowerment</a>
                                     </div>
                                 </div>
 
@@ -147,7 +154,7 @@
                                     @if ($slide->imageUrl())
                                         <img src="{{ $slide->imageUrl() }}" alt="{{ $slide->image_alt ?? '' }}" class="h-full w-full" width="1176" height="1176" @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif>
                                     @else
-                                        <div class="h-full w-full rounded-full border-2 border-brand bg-brand/10"></div>
+                                        <div class="h-full w-full rounded-full border-2 border-current/40 bg-current/10"></div>
                                     @endif
                                     @foreach ([
                                         ['5,000+ youth empowered', 'top-[-6%] left-[2%] max-w-[13.5rem]'],
@@ -157,7 +164,7 @@
                                         <p class="font-stat absolute {{ $position }} rounded-xl border-2 border-[#b3b3b3] bg-white px-3.5 py-2 text-sm leading-tight text-black sm:rounded-[20px] sm:px-6 sm:py-4 sm:text-xl sm:leading-[28px]">
                                             {{ $stat }}
                                             @if ($loop->iteration === 2)
-                                                <svg class="absolute -top-6 -right-1 h-12 w-10 text-[#545454] sm:-top-7 sm:h-14 sm:w-12" viewBox="0 0 48 56" fill="currentColor" aria-hidden="true">
+                                                <svg @class(['absolute -top-6 -right-1 h-12 w-10 sm:-top-7 sm:h-14 sm:w-12', 'text-[#545454]' => $light, 'text-accent' => ! $light]) viewBox="0 0 48 56" fill="currentColor" aria-hidden="true">
                                                     <path d="M28 20c1.6 9 5.5 13 14 15-8.500 2-12.400 6-14 15-1.600-9-5.500-13-14-15 8.500-2 12.400-6 14-15z"/>
                                                     <path d="M11 6c.9 5 3 7.200 7.500 8.200C14 15.200 11.900 17.400 11 22.400 10.100 17.400 8 15.200 3.500 14.200 8 13.200 10.100 11 11 6z"/>
                                                     <path d="M36 2c.5 3 1.800 4.300 4.500 4.900C37.800 7.500 36.500 8.800 36 11.800c-.5-3-1.800-4.300-4.500-4.900C34.200 6.300 35.500 5 36 2z"/>
@@ -168,33 +175,31 @@
                                 </div>
                             </div>
                         @else
-                            <x-fingerprint class="absolute -top-28 -left-40 -z-10 w-[520px] text-white/[0.05]" />
-                            <x-fingerprint class="absolute -right-24 -bottom-48 -z-10 hidden w-[560px] text-mint/[0.07] lg:block" />
                             <div class="mx-auto grid max-w-[1440px] items-center gap-8 px-5 pt-10 pb-28 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] lg:gap-14 lg:px-[66px] lg:pt-14 lg:pb-32">
                                 <div class="order-2 lg:order-1">
                                     @if ($slide->eyebrow)
-                                        <p class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-[12px] font-semibold tracking-[0.14em] text-mint uppercase sm:text-[13px]">{{ $slide->eyebrow }}</p>
+                                        <p @class(['inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[12px] font-semibold tracking-[0.14em] uppercase sm:text-[13px]', 'bg-action/10 text-action' => $light, 'bg-white/15 text-white' => ! $light])>{{ $slide->eyebrow }}</p>
                                     @endif
                                     <h2 class="mt-4 font-headline text-[38px] leading-[1.02] font-extrabold tracking-[-0.03em] text-balance sm:text-[52px] lg:text-[64px]">{{ $slide->headline }}</h2>
                                     @if ($slide->body)
-                                        <p class="mt-5 max-w-[560px] font-body text-[18px] leading-relaxed text-white/80 sm:text-[20px]">{{ $slide->body }}</p>
+                                        <p @class(['mt-5 max-w-[560px] font-body text-[18px] leading-relaxed sm:text-[20px]', 'text-neutral-700' => $light, 'text-white/90' => ! $light])>{{ $slide->body }}</p>
                                     @endif
                                     <div class="mt-8 flex flex-wrap gap-3">
                                         @if ($slide->button_label && $slide->button_url)
-                                            <a href="{{ $slide->button_url }}" class="inline-flex min-h-[52px] items-center gap-2 rounded-xl bg-leaf px-6 text-[17px] font-bold text-forest transition-colors hover:bg-mint">{{ $slide->button_label }} <x-icon name="arrow-right" class="h-4 w-4" /></a>
+                                            <a href="{{ $slide->button_url }}" class="inline-flex min-h-[52px] items-center gap-2 rounded-xl px-6 text-[17px] font-bold transition-colors {{ $yellow }}">{{ $slide->button_label }} <x-icon name="arrow-right" class="h-4 w-4" /></a>
                                         @endif
-                                        <a href="{{ route('empowerment') }}" class="inline-flex min-h-[52px] items-center gap-2 rounded-xl border border-white/30 px-6 text-[17px] font-bold text-white transition-colors hover:bg-white/10"><x-icon name="gift" class="h-5 w-5" /> Empowerment</a>
+                                        <a href="{{ route('empowerment') }}" @class(['inline-flex min-h-[52px] items-center gap-2 rounded-xl border px-6 text-[17px] font-bold transition-colors', 'border-action/40 text-action hover:bg-action/10' => $light, 'border-white/50 text-white hover:bg-white/10' => ! $light])><x-icon name="gift" class="h-5 w-5" /> Empowerment</a>
                                     </div>
                                 </div>
                                 <div class="order-1 lg:order-2">
                                     @if ($slide->imageUrl())
-                                        <a href="{{ $slide->originalImageUrl() ?? $slide->imageUrl() }}" target="_blank" rel="noopener" class="mx-auto block w-full max-w-[340px] overflow-hidden rounded-[24px] bg-white shadow-[0_30px_60px_-25px_rgba(0,0,0,0.6)] ring-1 ring-white/10 sm:max-w-[400px] lg:max-w-none" aria-label="Open the full image">
+                                        <a href="{{ $slide->originalImageUrl() ?? $slide->imageUrl() }}" target="_blank" rel="noopener" @class(['mx-auto block w-full max-w-[340px] overflow-hidden rounded-[24px] bg-white sm:max-w-[400px] lg:max-w-none', 'shadow-[0_30px_60px_-25px_rgba(15,42,28,0.45)] ring-1 ring-line' => $light, 'shadow-[0_30px_60px_-25px_rgba(0,0,0,0.6)] ring-1 ring-white/10' => ! $light]) aria-label="Open the full image">
                                             <img src="{{ $slide->imageUrl() }}" alt="{{ $slide->image_alt ?? '' }}" class="aspect-[4/5] h-auto w-full object-cover object-top" width="1280" height="1600" @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif>
                                         </a>
                                     @else
-                                        <div class="relative mx-auto flex aspect-[4/5] w-full max-w-[340px] items-center justify-center overflow-hidden rounded-[24px] border border-dashed border-white/25 bg-white/[0.04] sm:max-w-[400px] lg:max-w-none">
-                                            <x-fingerprint class="absolute w-3/4 text-white/10" />
-                                            <span class="relative rounded-full bg-forest/80 px-4 py-2 text-sm text-white/70">Image coming soon</span>
+                                        <div @class(['relative mx-auto flex aspect-[4/5] w-full max-w-[340px] items-center justify-center overflow-hidden rounded-[24px] border border-dashed sm:max-w-[400px] lg:max-w-none', 'border-action/30 bg-action/[0.04]' => $light, 'border-white/30 bg-white/[0.06]' => ! $light])>
+                                            <x-fingerprint class="absolute w-3/4 opacity-10" />
+                                            <span @class(['relative rounded-full px-4 py-2 text-sm', 'bg-white text-neutral-600' => $light, 'bg-forest/60 text-white/80' => ! $light])>Image coming soon</span>
                                         </div>
                                     @endif
                                 </div>
@@ -202,12 +207,12 @@
                         @endif
                     </article>
                 @empty
-                    <article class="bg-forest text-white [grid-area:1/1]">
+                    <article class="bg-action text-white [grid-area:1/1]">
                         <div class="mx-auto max-w-[1440px] px-5 py-16 sm:px-8 lg:px-[66px]">
                             <h2 class="font-headline text-[44px] leading-[1.02] font-extrabold tracking-[-0.03em] sm:text-[64px]">{{ $slogan }}</h2>
                             <div class="mt-8 flex flex-wrap gap-3">
-                                <a href="{{ route('join') }}" class="inline-flex min-h-[52px] items-center rounded-xl bg-leaf px-6 text-[17px] font-bold text-forest hover:bg-mint">Join the Movement</a>
-                                <a href="{{ route('empowerment') }}" class="inline-flex min-h-[52px] items-center gap-2 rounded-xl border border-white/30 px-6 text-[17px] font-bold text-white hover:bg-white/10"><x-icon name="gift" class="h-5 w-5" /> Empowerment</a>
+                                <a href="{{ route('join') }}" class="inline-flex min-h-[52px] items-center rounded-xl px-6 text-[17px] font-bold {{ $yellow }}">Join the Movement</a>
+                                <a href="{{ route('empowerment') }}" class="inline-flex min-h-[52px] items-center gap-2 rounded-xl border border-white/50 px-6 text-[17px] font-bold text-white hover:bg-white/10"><x-icon name="gift" class="h-5 w-5" /> Empowerment</a>
                             </div>
                         </div>
                     </article>
@@ -272,7 +277,7 @@
                 </div>
 
                 <div class="mt-10 flex flex-wrap justify-center gap-3">
-                    <a href="{{ route('join') }}" class="inline-flex min-h-[52px] items-center gap-2 rounded-xl bg-white px-6 text-[17px] font-bold text-forest hover:bg-mint">Join the Movement <x-icon name="arrow-right" class="h-4 w-4" /></a>
+                    <a href="{{ route('join') }}" class="inline-flex min-h-[52px] items-center gap-2 rounded-xl bg-accent px-6 text-[17px] font-bold text-forest hover:bg-[#d9a404]">Join the Movement <x-icon name="arrow-right" class="h-4 w-4" /></a>
                 </div>
             </div>
         </section>

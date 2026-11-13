@@ -63,7 +63,7 @@
                             <option value="{{ $value }}" @selected(old('layout', $slide->layout ?? 'image') === $value)>{{ $label }}</option>
                         @endforeach
                     </select>
-                    <p class="hint">The original hero works best with a square portrait that already has its round crop.</p>
+                    <p class="hint">The original hero works best with a square portrait that already has its round crop. Backgrounds alternate white and green by order.</p>
                     @error('layout')<p class="error">{{ $message }}</p>@enderror
                 </div>
                 <div>
