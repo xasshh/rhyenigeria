@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
 /** One slide of the homepage header slider. */
-#[Fillable(['position', 'is_active', 'image_alt', 'eyebrow', 'headline', 'body', 'button_label', 'button_url'])]
+#[Fillable(['position', 'is_active', 'layout', 'image_alt', 'eyebrow', 'headline', 'body', 'button_label', 'button_url'])]
 class HeroSlide extends Model
 {
     /** @use HasFactory<HeroSlideFactory> */
@@ -18,6 +18,14 @@ class HeroSlide extends Model
 
     /** Files shipped with the code live under public/images; uploads are on the public disk. */
     public const BUNDLED_PREFIX = 'images/';
+
+    /** A picture beside the text, on the dark background. */
+    public const LAYOUT_IMAGE = 'image';
+
+    /** The original landing-page hero: white background, round portrait and the three stat badges. */
+    public const LAYOUT_CLASSIC = 'classic';
+
+    public const LAYOUTS = [self::LAYOUT_IMAGE => 'Image beside the text (dark)', self::LAYOUT_CLASSIC => 'Original hero (white, round portrait, stat badges)'];
 
     protected function casts(): array
     {
@@ -30,6 +38,11 @@ class HeroSlide extends Model
     public function scopeShown(Builder $query): void
     {
         $query->where('is_active', true)->orderBy('position')->orderBy('id');
+    }
+
+    public function isClassic(): bool
+    {
+        return $this->layout === self::LAYOUT_CLASSIC;
     }
 
     public function imageUrl(): ?string

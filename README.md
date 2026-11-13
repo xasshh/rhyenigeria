@@ -155,9 +155,13 @@ Sign-up details:
 **Admin → Homepage slides** (`/admin/slides`) lists the header slides. Each has an image (JPEG, PNG or WebP, at
 least 600 px wide; a 1600 px WebP copy is made with GD and the original is kept, both on the `public` disk under
 `slides/`), an optional small line, a headline, short text, a button label and link (a path such as `/join` or a
-full `https://` link), an order number and an on/off switch. The migration seeds slide 1 with the Plateau State
-Education Empowerment Initiative flyer (`public/images/slides/slide-1.webp`, original `slide-1.jpeg`) and slides
-2–5 as placeholder frames that are switched on; replace their content, or switch them off.
+full `https://` link), an order number, an on/off switch and a **layout**: *Original hero* (the first landing design: white
+background, round portrait from `public/images/hero-portrait.webp` and the three stat badges) or *Image beside
+the text* (dark background). Current order: 1 the original hero, 2 the patron, Seyi Tinubu
+(`public/images/slides/seyi-tinubu.webp`), 3 the Plateau State Education Empowerment Initiative flyer
+(`slide-1.webp`, original `slide-1.jpeg`), 4–5 placeholder frames waiting for content.
+
+The top announcement bar also shows a compact live countdown (weeks, days, h:m:s) that links to the big one.
 
 The slider advances every 7 seconds, pauses on hover, keyboard focus and touch, swipes on phones, has dots,
 arrows and a pause button, answers the left/right arrow keys, and does not auto-advance for people who ask for
@@ -605,8 +609,9 @@ tail -n 50 /var/www/rhyenigeria/storage/logs/laravel.log
 
 ### Release: new sign-in/join screens, homepage slider, countdown and maps
 
-- **New migration** `2026_11_13_130501_create_hero_slides_table`: creates `hero_slides` and inserts the five
-  starting slides. `deploy.sh` runs it.
+- **New migrations** `2026_11_13_130501_create_hero_slides_table` (creates `hero_slides` with five starting
+  slides) and `2026_11_13_133230_add_layout_to_hero_slides_table` (adds `layout` and reorders the slides: original
+  hero, Seyi Tinubu, the flyer, two placeholders; only untouched placeholders are reused). `deploy.sh` runs them.
 - **New `.env` key** (optional): `HELP_URL`.
 - `deploy.sh` now runs `php artisan storage:link` when `public/storage` is missing (uploaded slides are served
   from it).

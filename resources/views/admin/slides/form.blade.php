@@ -57,6 +57,16 @@
             </section>
             <section class="panel space-y-4 p-5">
                 <div>
+                    <label class="label" for="layout">Layout</label>
+                    <select id="layout" name="layout" class="field">
+                        @foreach (\App\Models\HeroSlide::LAYOUTS as $value => $label)
+                            <option value="{{ $value }}" @selected(old('layout', $slide->layout ?? 'image') === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    <p class="hint">The original hero works best with a square portrait that already has its round crop.</p>
+                    @error('layout')<p class="error">{{ $message }}</p>@enderror
+                </div>
+                <div>
                     <label class="label" for="position">Order</label>
                     <input id="position" name="position" type="number" min="0" max="999" class="field" required value="{{ old('position', $slide->position) }}">
                     <p class="hint">Lower numbers come first.</p>

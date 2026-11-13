@@ -7,6 +7,7 @@ use App\Models\HeroSlide;
 use App\Support\WebImage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /** Admin → Homepage slides: the header slider on the landing page. */
@@ -19,7 +20,7 @@ class SlideController extends Controller
 
     public function create(): View
     {
-        return view('admin.slides.form', ['slide' => new HeroSlide(['is_active' => false, 'position' => (int) HeroSlide::max('position') + 1])]);
+        return view('admin.slides.form', ['slide' => new HeroSlide(['is_active' => false, 'layout' => HeroSlide::LAYOUT_IMAGE, 'position' => (int) HeroSlide::max('position') + 1])]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -64,6 +65,7 @@ class SlideController extends Controller
         $data = $request->validate([
             'position' => ['required', 'integer', 'min:0', 'max:999'],
             'is_active' => ['boolean'],
+            'layout' => ['required', Rule::in(array_keys(HeroSlide::LAYOUTS))],
             'eyebrow' => ['nullable', 'string', 'max:80'],
             'headline' => ['required', 'string', 'max:160'],
             'body' => ['nullable', 'string', 'max:400'],

@@ -18,6 +18,7 @@ class HeroSlideFactory extends Factory
         return [
             'position' => fake()->numberBetween(1, 20),
             'is_active' => true,
+            'layout' => 'image',
             'headline' => fake()->sentence(4),
             'body' => fake()->sentence(12),
             'button_label' => 'Join the Movement',

@@ -31,12 +31,23 @@
     @vite(['resources/css/app.css', 'resources/js/site.js'])
 </head>
 <body id="top" class="bg-white font-display text-brand antialiased">
-    {{-- Announcement bar --}}
-    <div class="bg-forest px-4 py-3 text-center text-[13px] leading-snug text-white">
-        <span class="font-semibold text-mint">{{ $slogan }}</span>
-        <span class="mx-1.5 text-white/40" aria-hidden="true">·</span>
-        Renewed Hope Youth Engagement
-        <a href="{{ route('join') }}" class="ml-1 font-bold text-accent hover:underline">Support Us</a>
+    {{-- Announcement bar, with a compact live countdown --}}
+    <div class="bg-forest px-4 py-2.5 text-[13px] leading-snug text-white" x-data="countdown(@js($electionDate->toIso8601String()), @js($countdown))">
+        <div class="mx-auto flex max-w-[1440px] flex-wrap items-center justify-center gap-x-4 gap-y-1.5">
+            <span class="font-semibold text-mint">{{ $slogan }}</span>
+            <a href="#countdown" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 font-semibold tabular-nums hover:bg-white/15" aria-label="Time left until election day">
+                <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" aria-hidden="true"></span>
+                <span x-show="!done" @if ($countdown['done']) hidden @endif>
+                    <span class="text-white/70">Election Day in</span>
+                    <span x-text="weeks">{{ $countdown['weeks'] }}</span>w
+                    <span x-text="days">{{ $countdown['days'] }}</span>d
+                    <span x-text="pad(hours) + ':' + pad(minutes) + ':' + pad(seconds)">{{ $pad($countdown['hours']) }}:{{ $pad($countdown['minutes']) }}:{{ $pad($countdown['seconds']) }}</span>
+                </span>
+                <span x-show="done" @unless ($countdown['done']) x-cloak @endunless>Today is Election Day: go and vote</span>
+            </a>
+            <span class="hidden sm:inline">Renewed Hope Youth Engagement <a href="{{ route('join') }}" class="ml-1 font-bold text-accent hover:underline">Support Us</a></span>
+            <a href="{{ route('join') }}" class="font-bold text-accent hover:underline sm:hidden">Support Us</a>
+        </div>
     </div>
 
     {{-- Navigation --}}
@@ -90,89 +101,142 @@
     </header>
 
     <main>
-        {{-- Header slider --}}
-        <section class="relative isolate overflow-hidden bg-forest text-white" aria-labelledby="slogan">
-            <x-fingerprint class="absolute -top-28 -left-40 -z-10 w-[520px] text-white/[0.05]" />
-            <x-fingerprint class="absolute -right-24 -bottom-48 -z-10 hidden w-[560px] text-mint/[0.07] lg:block" />
-
-            <div class="mx-auto max-w-[1440px] px-5 pt-8 pb-8 sm:px-8 lg:px-[66px] lg:pt-12 lg:pb-12"
+        {{-- Header slider: each slide brings its own background (white for the original hero, dark for picture slides). --}}
+        @php($themes = $slides->map(fn ($slide) => $slide->isClassic() ? 'light' : 'dark')->values()->all() ?: ['dark'])
+        <section class="relative isolate overflow-hidden"
                  x-data="heroSlider({ count: {{ max($slides->count(), 1) }} })"
                  x-on:mouseenter="hovering = true" x-on:mouseleave="hovering = false"
                  x-on:focusin="focused = true" x-on:focusout="focused = $el.contains($event.relatedTarget)"
                  x-on:touchstart.passive="touchStart($event)" x-on:touchend.passive="touchEnd($event)"
                  x-on:keydown="key($event)"
                  role="region" aria-roledescription="carousel" aria-label="Highlights">
+            <h1 class="sr-only">Renewed Hope Youth Engagement — {{ $slogan }}</h1>
 
-                <p class="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                    <span class="font-script text-[24px] leading-none text-mint italic sm:text-[28px]">Youth for PBAT</span>
-                    <span id="slogan" role="heading" aria-level="1" class="font-headline text-[17px] font-bold tracking-[0.01em] text-white/90 sm:text-[19px]">{{ $slogan }}</span>
-                </p>
+            <div class="grid" aria-live="off">
+                @forelse ($slides as $i => $slide)
+                    <article @class([
+                            'relative isolate overflow-hidden transition-opacity duration-700 [grid-area:1/1]',
+                            'bg-white text-brand' => $slide->isClassic(),
+                            'bg-forest text-white' => ! $slide->isClassic(),
+                            'data-[active=false]:invisible data-[active=false]:opacity-0',
+                        ])
+                        data-active="{{ $i === 0 ? 'true' : 'false' }}" :data-active="index === {{ $i }} ? 'true' : 'false'"
+                        :inert="index !== {{ $i }}" @if ($i !== 0) inert @endif
+                        role="group" aria-roledescription="slide" aria-label="{{ $i + 1 }} of {{ $slides->count() }}">
 
-                <div class="mt-6 grid lg:mt-8" aria-live="off">
-                    @forelse ($slides as $i => $slide)
-                        <article class="grid items-center gap-8 transition-opacity duration-700 [grid-area:1/1] lg:grid-cols-[minmax(0,1fr)_minmax(0,500px)] lg:gap-14 {{ $i === 0 ? '' : 'invisible opacity-0' }}"
-                                 :class="index === {{ $i }} ? 'visible opacity-100' : 'invisible opacity-0'"
-                                 :inert="index !== {{ $i }}" @if ($i !== 0) inert @endif
-                                 role="group" aria-roledescription="slide" aria-label="{{ $i + 1 }} of {{ $slides->count() }}">
-                            <div class="order-2 lg:order-1">
-                                @if ($slide->eyebrow)
-                                    <p class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-[12px] font-semibold tracking-[0.14em] text-mint uppercase sm:text-[13px]">{{ $slide->eyebrow }}</p>
-                                @endif
-                                <h2 class="mt-4 font-headline text-[38px] leading-[1.02] font-extrabold tracking-[-0.03em] text-balance sm:text-[52px] lg:text-[64px]">{{ $slide->headline }}</h2>
-                                @if ($slide->body)
-                                    <p class="mt-5 max-w-[560px] font-body text-[18px] leading-relaxed text-white/80 sm:text-[20px]">{{ $slide->body }}</p>
-                                @endif
-                                <div class="mt-8 flex flex-wrap gap-3">
-                                    @if ($slide->button_label && $slide->button_url)
-                                        <a href="{{ $slide->button_url }}" class="inline-flex min-h-[52px] items-center gap-2 rounded-xl bg-leaf px-6 text-[17px] font-bold text-forest transition-colors hover:bg-mint">{{ $slide->button_label }} <x-icon name="arrow-right" class="h-4 w-4" /></a>
+                        @if ($slide->isClassic())
+                            {{-- The original landing-page hero (RHYE-2026 Figma). --}}
+                            <div class="mx-auto grid max-w-[1440px] items-center gap-12 px-5 pt-14 pb-28 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,560px)] lg:gap-10 lg:px-[66px] lg:pt-16 lg:pb-32">
+                                <div>
+                                    @if ($slide->eyebrow)
+                                        <p class="font-script text-[26px] leading-none tracking-[-0.02em] italic sm:text-[32px] lg:pl-[124px]">{{ $slide->eyebrow }}</p>
                                     @endif
-                                    <a href="{{ route('empowerment') }}" class="inline-flex min-h-[52px] items-center gap-2 rounded-xl border border-white/30 px-6 text-[17px] font-bold text-white transition-colors hover:bg-white/10"><x-icon name="gift" class="h-5 w-5" /> Empowerment</a>
+                                    <h2 class="mt-4 text-[44px] leading-[1.14] font-bold tracking-[-0.02em] text-balance sm:text-6xl lg:text-[72px] lg:leading-[86px]">{{ $slide->headline }}</h2>
+                                    @if ($slide->body)
+                                        <p class="font-body mt-5 max-w-[583px] text-lg leading-relaxed tracking-[-0.02em] sm:text-[24px] sm:leading-[34px]">{{ $slide->body }}</p>
+                                    @endif
+                                    <div class="mt-10 flex flex-wrap gap-2.5">
+                                        @if ($slide->button_label && $slide->button_url)
+                                            <a href="{{ $slide->button_url }}" class="rounded-[10px] border border-brand bg-brand px-6 py-3 text-lg leading-6 font-bold text-white transition-colors hover:bg-brand-dark">{{ $slide->button_label }}</a>
+                                        @endif
+                                        <a href="{{ route('empowerment') }}" class="rounded-[10px] border border-brand px-9 py-3 text-lg leading-6 font-bold transition-colors hover:bg-brand/10">Empowerment</a>
+                                    </div>
+                                </div>
+
+                                <div class="relative mx-auto aspect-square w-full max-w-[340px] sm:max-w-[480px] lg:max-w-[540px]">
+                                    @if ($slide->imageUrl())
+                                        <img src="{{ $slide->imageUrl() }}" alt="{{ $slide->image_alt ?? '' }}" class="h-full w-full" width="1176" height="1176" @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif>
+                                    @else
+                                        <div class="h-full w-full rounded-full border-2 border-brand bg-brand/10"></div>
+                                    @endif
+                                    @foreach ([
+                                        ['5,000+ youth empowered', 'top-[-6%] left-[2%] max-w-[13.5rem]'],
+                                        ['275+ Events Organized', 'right-0 bottom-[8%] max-w-[13.5rem]'],
+                                        ['36+ Nationwide', 'bottom-[-6%] left-[5%]'],
+                                    ] as [$stat, $position])
+                                        <p class="font-stat absolute {{ $position }} rounded-xl border-2 border-[#b3b3b3] bg-white px-3.5 py-2 text-sm leading-tight text-black sm:rounded-[20px] sm:px-6 sm:py-4 sm:text-xl sm:leading-[28px]">
+                                            {{ $stat }}
+                                            @if ($loop->iteration === 2)
+                                                <svg class="absolute -top-6 -right-1 h-12 w-10 text-[#545454] sm:-top-7 sm:h-14 sm:w-12" viewBox="0 0 48 56" fill="currentColor" aria-hidden="true">
+                                                    <path d="M28 20c1.6 9 5.5 13 14 15-8.500 2-12.400 6-14 15-1.600-9-5.500-13-14-15 8.500-2 12.400-6 14-15z"/>
+                                                    <path d="M11 6c.9 5 3 7.200 7.500 8.200C14 15.200 11.900 17.400 11 22.400 10.100 17.400 8 15.200 3.500 14.200 8 13.200 10.100 11 11 6z"/>
+                                                    <path d="M36 2c.5 3 1.800 4.300 4.500 4.900C37.800 7.500 36.500 8.800 36 11.800c-.5-3-1.800-4.300-4.500-4.900C34.200 6.300 35.500 5 36 2z"/>
+                                                </svg>
+                                            @endif
+                                        </p>
+                                    @endforeach
                                 </div>
                             </div>
-                            <div class="order-1 lg:order-2">
-                                @if ($slide->imageUrl())
-                                    <a href="{{ $slide->originalImageUrl() ?? $slide->imageUrl() }}" target="_blank" rel="noopener" class="mx-auto block w-full max-w-[360px] overflow-hidden rounded-[24px] bg-white shadow-[0_30px_60px_-25px_rgba(0,0,0,0.6)] ring-1 ring-white/10 sm:max-w-[420px] lg:max-w-none" aria-label="Open the full flyer">
-                                        <img src="{{ $slide->imageUrl() }}" alt="{{ $slide->image_alt ?? '' }}" class="aspect-[4/5] h-auto w-full object-cover" width="1280" height="1600" @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif>
-                                    </a>
-                                @else
-                                    <div class="relative mx-auto flex aspect-[4/5] w-full max-w-[360px] items-center justify-center overflow-hidden rounded-[24px] border border-dashed border-white/25 bg-white/[0.04] sm:max-w-[420px] lg:max-w-none">
-                                        <x-fingerprint class="absolute w-3/4 text-white/10" />
-                                        <span class="relative rounded-full bg-forest/80 px-4 py-2 text-sm text-white/70">Image coming soon</span>
+                        @else
+                            <x-fingerprint class="absolute -top-28 -left-40 -z-10 w-[520px] text-white/[0.05]" />
+                            <x-fingerprint class="absolute -right-24 -bottom-48 -z-10 hidden w-[560px] text-mint/[0.07] lg:block" />
+                            <div class="mx-auto grid max-w-[1440px] items-center gap-8 px-5 pt-10 pb-28 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] lg:gap-14 lg:px-[66px] lg:pt-14 lg:pb-32">
+                                <div class="order-2 lg:order-1">
+                                    @if ($slide->eyebrow)
+                                        <p class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-[12px] font-semibold tracking-[0.14em] text-mint uppercase sm:text-[13px]">{{ $slide->eyebrow }}</p>
+                                    @endif
+                                    <h2 class="mt-4 font-headline text-[38px] leading-[1.02] font-extrabold tracking-[-0.03em] text-balance sm:text-[52px] lg:text-[64px]">{{ $slide->headline }}</h2>
+                                    @if ($slide->body)
+                                        <p class="mt-5 max-w-[560px] font-body text-[18px] leading-relaxed text-white/80 sm:text-[20px]">{{ $slide->body }}</p>
+                                    @endif
+                                    <div class="mt-8 flex flex-wrap gap-3">
+                                        @if ($slide->button_label && $slide->button_url)
+                                            <a href="{{ $slide->button_url }}" class="inline-flex min-h-[52px] items-center gap-2 rounded-xl bg-leaf px-6 text-[17px] font-bold text-forest transition-colors hover:bg-mint">{{ $slide->button_label }} <x-icon name="arrow-right" class="h-4 w-4" /></a>
+                                        @endif
+                                        <a href="{{ route('empowerment') }}" class="inline-flex min-h-[52px] items-center gap-2 rounded-xl border border-white/30 px-6 text-[17px] font-bold text-white transition-colors hover:bg-white/10"><x-icon name="gift" class="h-5 w-5" /> Empowerment</a>
                                     </div>
-                                @endif
+                                </div>
+                                <div class="order-1 lg:order-2">
+                                    @if ($slide->imageUrl())
+                                        <a href="{{ $slide->originalImageUrl() ?? $slide->imageUrl() }}" target="_blank" rel="noopener" class="mx-auto block w-full max-w-[340px] overflow-hidden rounded-[24px] bg-white shadow-[0_30px_60px_-25px_rgba(0,0,0,0.6)] ring-1 ring-white/10 sm:max-w-[400px] lg:max-w-none" aria-label="Open the full image">
+                                            <img src="{{ $slide->imageUrl() }}" alt="{{ $slide->image_alt ?? '' }}" class="aspect-[4/5] h-auto w-full object-cover object-top" width="1280" height="1600" @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif>
+                                        </a>
+                                    @else
+                                        <div class="relative mx-auto flex aspect-[4/5] w-full max-w-[340px] items-center justify-center overflow-hidden rounded-[24px] border border-dashed border-white/25 bg-white/[0.04] sm:max-w-[400px] lg:max-w-none">
+                                            <x-fingerprint class="absolute w-3/4 text-white/10" />
+                                            <span class="relative rounded-full bg-forest/80 px-4 py-2 text-sm text-white/70">Image coming soon</span>
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
-                        </article>
-                    @empty
-                        <article class="[grid-area:1/1]">
+                        @endif
+                    </article>
+                @empty
+                    <article class="bg-forest text-white [grid-area:1/1]">
+                        <div class="mx-auto max-w-[1440px] px-5 py-16 sm:px-8 lg:px-[66px]">
                             <h2 class="font-headline text-[44px] leading-[1.02] font-extrabold tracking-[-0.03em] sm:text-[64px]">{{ $slogan }}</h2>
                             <div class="mt-8 flex flex-wrap gap-3">
                                 <a href="{{ route('join') }}" class="inline-flex min-h-[52px] items-center rounded-xl bg-leaf px-6 text-[17px] font-bold text-forest hover:bg-mint">Join the Movement</a>
                                 <a href="{{ route('empowerment') }}" class="inline-flex min-h-[52px] items-center gap-2 rounded-xl border border-white/30 px-6 text-[17px] font-bold text-white hover:bg-white/10"><x-icon name="gift" class="h-5 w-5" /> Empowerment</a>
                             </div>
-                        </article>
-                    @endforelse
-                </div>
+                        </div>
+                    </article>
+                @endforelse
+            </div>
 
-                @if ($slides->count() > 1)
-                    <div class="mt-8 flex items-center justify-between gap-4 lg:mt-10">
-                        <div class="flex items-center gap-1" role="group" aria-label="Choose a slide">
+            @if ($slides->count() > 1)
+                {{-- Controls sit over the bottom of every slide and switch colours to suit it. --}}
+                <div class="pointer-events-none absolute inset-x-0 bottom-0 z-10">
+                    <div class="mx-auto flex max-w-[1440px] items-center justify-between gap-4 px-5 pb-6 text-white transition-colors duration-500 data-[theme=light]:text-forest sm:px-8 lg:px-[66px] lg:pb-8"
+                         data-theme="{{ $themes[0] }}" :data-theme="@js($themes)[index]">
+                        <div class="pointer-events-auto flex items-center gap-1" role="group" aria-label="Choose a slide">
                             @foreach ($slides as $i => $slide)
                                 <button type="button" class="group flex h-11 items-center px-1.5" x-on:click="go({{ $i }})" :aria-current="index === {{ $i }} ? 'true' : 'false'" aria-label="Slide {{ $i + 1 }}: {{ $slide->headline }}">
-                                    <span class="block h-2 rounded-full transition-all duration-300 {{ $i === 0 ? 'w-8 bg-leaf' : 'w-2 bg-white/35' }}" :class="index === {{ $i }} ? 'w-8 bg-leaf' : 'w-2 bg-white/35 group-hover:bg-white/60'"></span>
+                                    <span class="block h-2 w-2 rounded-full bg-current opacity-35 transition-all duration-300 group-hover:opacity-60 data-[active=true]:w-8 data-[active=true]:opacity-100" data-active="{{ $i === 0 ? 'true' : 'false' }}" :data-active="index === {{ $i }} ? 'true' : 'false'"></span>
                                 </button>
                             @endforeach
                         </div>
-                        <div class="flex items-center gap-2">
-                            <button type="button" class="flex h-11 w-11 items-center justify-center rounded-full border border-white/25 hover:bg-white/10" x-on:click="toggle()" :aria-label="stopped ? 'Play the slides' : 'Pause the slides'" aria-label="Pause the slides">
+                        <div class="pointer-events-auto flex items-center gap-2">
+                            <button type="button" class="flex h-11 w-11 items-center justify-center rounded-full border border-current/30 hover:bg-current/10" x-on:click="toggle()" :aria-label="stopped ? 'Play the slides' : 'Pause the slides'" aria-label="Pause the slides">
                                 <x-icon name="pause" class="h-4 w-4" x-show="!stopped" />
                                 <x-icon name="play" class="h-4 w-4" x-show="stopped" x-cloak />
                             </button>
-                            <button type="button" class="flex h-11 w-11 items-center justify-center rounded-full border border-white/25 hover:bg-white/10" x-on:click="prev()" aria-label="Previous slide"><x-icon name="chevron-left" /></button>
-                            <button type="button" class="flex h-11 w-11 items-center justify-center rounded-full bg-white text-forest hover:bg-mint" x-on:click="next()" aria-label="Next slide"><x-icon name="chevron-right" /></button>
+                            <button type="button" class="flex h-11 w-11 items-center justify-center rounded-full border border-current/30 hover:bg-current/10" x-on:click="prev()" aria-label="Previous slide"><x-icon name="chevron-left" /></button>
+                            <button type="button" class="flex h-11 w-11 items-center justify-center rounded-full border border-current/30 hover:bg-current/10" x-on:click="next()" aria-label="Next slide"><x-icon name="chevron-right" /></button>
                         </div>
                     </div>
-                @endif
-            </div>
+                </div>
+            @endif
         </section>
 
         {{-- Election countdown, directly under the slider --}}

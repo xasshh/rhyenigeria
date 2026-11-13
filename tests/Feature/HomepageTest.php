@@ -33,14 +33,26 @@ class HomepageTest extends TestCase
             ->assertSee('aria-roledescription="carousel"', false);
     }
 
-    public function test_the_migration_seeds_the_flyer_and_four_placeholder_slides(): void
+    public function test_the_slides_start_with_the_original_hero_then_the_patron_then_the_event(): void
     {
         $slides = HeroSlide::query()->shown()->get();
 
         $this->assertCount(5, $slides);
-        $this->assertSame('images/slides/slide-1.webp', $slides->first()->image_path);
-        $this->assertFileExists(public_path($slides->first()->image_path));
-        $this->assertFileExists(public_path($slides->first()->image_original_path));
+        $this->assertSame(['classic', 'image', 'image', 'image', 'image'], $slides->pluck('layout')->all());
+        $this->assertSame(['images/hero-portrait.webp', 'images/slides/seyi-tinubu.webp', 'images/slides/slide-1.webp', null, null], $slides->pluck('image_path')->all());
+        foreach ($slides->pluck('image_path')->filter() as $path) {
+            $this->assertFileExists(public_path($path));
+        }
+
+        $this->get('/')->assertOk()
+            ->assertSeeInOrder(['Youth for PBAT', '5,000+ youth empowered', 'Seyi Tinubu', 'Education Empowerment Initiative', 'Headline for slide 4', 'Headline for slide 5']);
+    }
+
+    public function test_the_top_bar_shows_a_live_countdown(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2027-01-01 12:00:00', 'Africa/Lagos'));
+
+        $this->get('/')->assertOk()->assertSeeInOrder(['Election Day in', '2', 'w', '0', 'd', '12:00:00', 'Support Us']);
     }
 
     public function test_the_countdown_is_rendered_on_the_server_and_defaults_to_16_january_2027(): void
@@ -139,7 +151,7 @@ class HomepageTest extends TestCase
         $admin = User::factory()->superAdmin()->create();
 
         $this->actingAs($admin)->post('/admin/slides', [
-            'position' => 9, 'is_active' => '1', 'headline' => 'New rally', 'body' => 'Come along',
+            'position' => 9, 'is_active' => '1', 'layout' => 'image', 'headline' => 'New rally', 'body' => 'Come along',
             'button_label' => 'Join', 'button_url' => '/join', 'image' => UploadedFile::fake()->image('flyer.jpg', 2000, 2500),
         ])->assertRedirect(route('admin.slides.index'));
 
@@ -151,7 +163,7 @@ class HomepageTest extends TestCase
         $this->patch('/admin/slides/'.$slide->id.'/toggle')->assertRedirect();
         $this->assertFalse($slide->fresh()->is_active);
 
-        $this->post('/admin/slides', ['position' => 1, 'headline' => 'Bad link', 'button_label' => 'Go', 'button_url' => 'javascript:alert(1)'])
+        $this->post('/admin/slides', ['position' => 1, 'layout' => 'image', 'headline' => 'Bad link', 'button_label' => 'Go', 'button_url' => 'javascript:alert(1)'])
             ->assertSessionHasErrors('button_url');
 
         $this->delete('/admin/slides/'.$slide->id)->assertRedirect();
