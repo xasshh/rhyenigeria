@@ -6,6 +6,7 @@ use App\Http\Controllers\Web\Admin\DashboardController as AdminDashboardControll
 use App\Http\Controllers\Web\Admin\SettingsController;
 use App\Http\Controllers\Web\Admin\SlideController;
 use App\Http\Controllers\Web\AuthController;
+use App\Http\Controllers\Web\FieldWorkController;
 use App\Http\Controllers\Web\JoinController;
 use App\Http\Controllers\Web\LandingController;
 use App\Http\Controllers\Web\MapController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Web\PublicController;
 use App\Http\Controllers\Web\Staff\CanvasserController;
 use App\Http\Controllers\Web\Staff\DashboardController;
 use App\Http\Controllers\Web\Staff\EmpowermentController;
+use App\Http\Controllers\Web\Staff\LiveMapController;
 use App\Http\Controllers\Web\Staff\MemberController;
 use App\Http\Controllers\Web\Staff\PostController;
 use Illuminate\Support\Facades\Route;
@@ -70,6 +72,18 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('campaign-dp', 'dp')->name('dp');
     });
 
+    // Field work for approved canvassers: location sharing only between Start shift and End shift.
+    Route::middleware('role:member')->prefix('membership/field')->name('membership.field.')->controller(FieldWorkController::class)->group(function () {
+        Route::get('/', 'show')->name('show');
+        Route::post('consent', 'acceptConsent')->name('consent.accept');
+        Route::delete('consent', 'withdrawConsent')->name('consent.withdraw');
+        Route::post('shift', 'startShift')->name('shift.start');
+        Route::delete('shift', 'endShift')->name('shift.end');
+        Route::post('locations', 'locations')->middleware('throttle:locations')->name('locations');
+        Route::post('activities', 'storeActivity')->middleware('throttle:60,1')->name('activities.store');
+    });
+    Route::get('field/activities/{activity}/photo', [FieldWorkController::class, 'photo'])->name('field.activities.photo');
+
     // Pages coordinators and super admins share. Every query is scoped to the viewer.
     $staffRoutes = function () {
         Route::get('members', [MemberController::class, 'index'])->name('members.index');
@@ -83,6 +97,9 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::put('posts/events/{event}', [PostController::class, 'updateEvent'])->name('events.update');
         Route::put('posts/news/{news}', [PostController::class, 'updateNews'])->name('news.update');
         Route::get('map/lgas', [MapController::class, 'lgas'])->name('map.lgas');
+        Route::get('live', [LiveMapController::class, 'index'])->name('live');
+        Route::get('live/feed', [LiveMapController::class, 'feed'])->name('live.feed');
+        Route::get('live/{member}/trail', [LiveMapController::class, 'trail'])->name('live.trail');
         Route::delete('posts/events/{event}', [PostController::class, 'destroyEvent'])->name('events.destroy');
         Route::post('posts/news', [PostController::class, 'storeNews'])->name('news.store');
         Route::delete('posts/news/{news}', [PostController::class, 'destroyNews'])->name('news.destroy');

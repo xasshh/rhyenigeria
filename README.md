@@ -195,6 +195,35 @@ come from `/coordinator/map/lgas`, scoped like everything else), and **CSV expor
 (audit-logged as `members.exported`; never includes NIN/VIN). Viewing a member's
 detail page is logged as `member.viewed`.
 
+### Field work and the live map (canvasser tracking)
+
+Adapted from GeoVerify's live operations console. Only **approved canvassers** can share their location, and
+only by choice:
+
+- **Field work** (`/membership/field`, shown in the member menu to approved canvassers only). The canvasser
+  first agrees to a plain-language location notice (stored as `users.tracking_consent_*`, version
+  `TRACKING_CONSENT_VERSION`), then presses **Start shift**. While a shift runs *and the page is open*, the
+  phone's GPS is read with `watchPosition`, a fix is kept when the phone has moved 15 m or a minute has
+  passed, queued in the phone's storage, and sent in batches to `POST /membership/field/locations`, which uses
+  the same `LocationIngestor` as the field-agent API (points outside a shift are dropped, repeats are
+  ignored). The page asks the phone to keep the screen on. **End shift** or **Withdraw** stops it at once;
+  other member pages show a "Your shift is running" banner. Browsers cannot track with the page closed or
+  the screen locked; a native app would be needed for that.
+- **Activities** (`field_activities`): door-to-door visits (households reached and outcome), event check-ins
+  (events for their state or national) and reports, each with an optional photo on the private disk
+  (`/field/activities/{id}/photo`, the canvasser or staff who can see them only), stamped with GPS, time,
+  shift, state and the ward the point falls in. Retries are safe (each has a phone-generated UUID).
+- **Live map** (`/coordinator/live`, `/admin/live` with a state picker). A MapLibre map (style from
+  `MAP_STYLE_URL`, default OpenFreeMap, OpenStreetMap data, no key) with the state outline, each canvasser's
+  latest position today coloured active / on shift but quiet (no fix for 30 minutes) / off shift, today's
+  activities, and a side list with distance walked (PostGIS, ignoring impossible jumps), activities,
+  households, last seen and flags (impossible jumps over 160 km/h, weak GPS most of the day). Selecting a
+  canvasser draws today's route (`/live/{member}/trail`, simplified to 500 points); **every route view is
+  written to the audit log** as `trail.viewed`. The feed refreshes every 20 seconds. Everything starts from
+  `User::canvassersVisibleTo()`, so a coordinator sees only their own state.
+- Positions are deleted after `TRACKING_RETENTION_DAYS` (90) by `tracking:prune`; activities are kept. The
+  privacy notice explains all of this under **Location sharing for canvassers** (`/privacy#location`).
+
 ### Super admins (`/admin`, role `super_admin`)
 
 National overview (totals, registrations chart, sortable by-state table linking
@@ -569,6 +598,7 @@ php artisan geo:import polling-unit database/data/samples/polling_units.csv
 | `MEMBERSHIP_CONSENT_VERSION` | 1 | Raise when the data-consent wording changes; stored with each member. |
 | `EMPOWERMENT_PHOTO_MAX_KB` | 8192 | Largest empowerment photo. Photos are on the private disk (`storage/app/private/empowerment`). |
 | `SOCIAL_FACEBOOK_URL`, `SOCIAL_INSTAGRAM_URL`, `SOCIAL_TIKTOK_URL`, `SOCIAL_X_URL` | see `config/membership.php` | Social media links in the homepage top bar and footer. TikTok and X point at the profiles; Facebook and Instagram point at posts until the profile links are set here. Leave one empty (`=`) to hide its icon. |
+| `MAP_STYLE_URL` | OpenFreeMap "liberty" | MapLibre style for the live map's street background. |
 | `HELP_URL` | (empty) | Where "Get help" on the sign-in and join screens points, e.g. a WhatsApp link or `mailto:`. Empty uses the privacy notice. |
 | `MAIL_*` | `log` | Password-reset emails. See the SMTP block in `.env.example`. `APP_URL` must be the public `https://` address: QR codes, share links and reset links use it. |
 
@@ -633,6 +663,14 @@ tail -n 50 /var/www/rhyenigeria/storage/logs/laravel.log
   ```
 
   Without the boundary files the maps show "Boundaries for this map have not been loaded yet."
+
+### Release: canvasser field work and the live map
+
+- **New migration** `create_field_activities_table`. `deploy.sh` runs it.
+- **New npm dependency** `maplibre-gl` (6.16.0), bundled only into `resources/js/live-map.js`, loaded only on
+  the live map page. `deploy.sh` installs and builds it.
+- Optional `.env`: `MAP_STYLE_URL`.
+- The queue worker must be running (it already is under Supervisor): it works out the ward of each GPS point.
 
 ## Later
 

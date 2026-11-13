@@ -17,6 +17,9 @@ return [
     // Version of the tracking consent notice agents are asked to accept.
     'consent_version' => (string) env('TRACKING_CONSENT_VERSION', '1'),
 
+    // Street map behind the coordinators' live map (MapLibre style URL). OpenFreeMap: OpenStreetMap data, no key.
+    'map_style_url' => env('MAP_STYLE_URL', 'https://tiles.openfreemap.org/styles/liberty'),
+
     // Longest window a single trail request may cover.
     'max_trail_window_days' => 31,
 

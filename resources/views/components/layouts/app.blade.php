@@ -1,9 +1,10 @@
-@props(['title' => null, 'charts' => false, 'heading' => null])
+@props(['title' => null, 'charts' => false, 'heading' => null, 'map' => false])
 @php
     $user = auth()->user();
     $nav = match (true) {
         $user->isSuperAdmin() => [
             ['admin.dashboard', 'Overview', 'chart', 'admin.dashboard'],
+            ['admin.live', 'Live map', 'map', 'admin.live'],
             ['admin.members.index', 'Members', 'users', 'admin.members.*'],
             ['admin.canvassers.index', 'Canvassers', 'badge', 'admin.canvassers.*'],
             ['admin.coordinators.index', 'Coordinators', 'user-plus', 'admin.coordinators.*'],
@@ -13,26 +14,30 @@
         ],
         $user->isCoordinator() => [
             ['coordinator.dashboard', 'Dashboard', 'chart', 'coordinator.dashboard'],
+            ['coordinator.live', 'Live map', 'map', 'coordinator.live'],
             ['coordinator.members.index', 'Members', 'users', 'coordinator.members.*'],
             ['coordinator.canvassers.index', 'Canvassers', 'badge', 'coordinator.canvassers.*'],
             ['coordinator.empowerment.index', 'Empowerment', 'gift', 'coordinator.empowerment.*'],
             ['coordinator.posts.index', 'News & events', 'megaphone', 'coordinator.posts.*'],
         ],
-        default => [
+        default => array_values(array_filter([
             ['membership.home', 'Home', 'home', 'membership.home'],
             ['membership.card', 'My card', 'card', 'membership.card'],
+            $user->isApprovedCanvasser() ? ['membership.field.show', 'Field work', 'pin', 'membership.field.*'] : null,
             ['membership.events', 'Events & news', 'calendar', 'membership.events'],
             ['membership.empowerment', 'Empowerment', 'gift', 'membership.empowerment'],
             ['membership.dp', 'Campaign DP', 'camera', 'membership.dp'],
-        ],
+        ])),
     };
+    // A canvasser with a shift running, on any other page: tracking only runs on the Field work page.
+    $shiftRunning = $user->isMember() && ! request()->routeIs('membership.field.*') && $user->activeShift()->exists();
     $isMember = $user->isMember();
     $subtitle = $isMember
         ? ($user->memberProfile?->roleLabel() ?? 'Member').($user->state ? ', '.$user->state->name : '')
         : ($user->isSuperAdmin() ? 'Super admin' : 'Coordinator'.($user->state ? ', '.$user->state->name : ''));
     $initials = collect(preg_split('/\s+/', trim($user->name)))->filter()->take(2)->map(fn ($p) => mb_strtoupper(mb_substr($p, 0, 1)))->implode('');
 @endphp
-<x-layouts.base :title="$title" :charts="$charts" noindex>
+<x-layouts.base :title="$title" :charts="$charts" :map="$map" noindex>
     <div class="lg:flex">
         {{-- Sidebar (desktop) --}}
         <aside class="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-line bg-white lg:flex">
@@ -86,6 +91,13 @@
                 @if ($heading)
                     <h1 class="font-display text-2xl font-bold tracking-tight sm:text-[28px]">{{ $heading }}</h1>
                 @endif
+                @if ($shiftRunning)
+                    <a href="{{ route('membership.field.show') }}" class="mt-4 flex items-center gap-3 rounded-2xl border border-accent/50 bg-amber-soft p-4 text-sm text-amber-ink">
+                        <span class="h-2.5 w-2.5 animate-pulse rounded-full bg-accent"></span>
+                        <span class="flex-1"><strong>Your shift is running.</strong> Location is only shared while the Field work page is open. Tap to go back, or end your shift there.</span>
+                        <x-icon name="arrow-right" class="h-4 w-4" />
+                    </a>
+                @endif
                 <x-flash class="mt-4" />
                 {{ $slot }}
             </main>
@@ -94,11 +106,11 @@
 
     {{-- Bottom navigation (members, mobile) --}}
     @if ($isMember)
-        <nav class="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-white pb-[env(safe-area-inset-bottom)] lg:hidden" aria-label="Membership">
+        <nav @class(['fixed inset-x-0 bottom-0 z-30 grid border-t border-line bg-white pb-[env(safe-area-inset-bottom)] lg:hidden', 'grid-cols-6' => count($nav) === 6, 'grid-cols-5' => count($nav) !== 6]) aria-label="Membership">
             @foreach ($nav as [$route, $label, $icon, $pattern])
                 <a href="{{ route($route) }}" @class(['flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium', 'text-brand' => request()->routeIs($pattern), 'text-neutral-500' => ! request()->routeIs($pattern)]) @if (request()->routeIs($pattern)) aria-current="page" @endif>
                     <x-icon :name="$icon" class="h-[22px] w-[22px]" />
-                    <span class="leading-tight">{{ ['Events & news' => 'Events', 'Campaign DP' => 'My DP', 'Empowerment' => 'Empower'][$label] ?? $label }}</span>
+                    <span class="leading-tight">{{ ['Events & news' => 'Events', 'Campaign DP' => 'My DP', 'Empowerment' => 'Empower', 'Field work' => 'Field'][$label] ?? $label }}</span>
                 </a>
             @endforeach
         </nav>

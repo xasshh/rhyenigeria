@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\AreaLevel;
+use App\Enums\CanvasserStatus;
 use App\Enums\Role;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -133,6 +134,12 @@ class User extends Authenticatable
         return $this->role === Role::FieldAgent;
     }
 
+    /** A member whose canvasser application was approved: the only members who can share location. */
+    public function isApprovedCanvasser(): bool
+    {
+        return $this->isMember() && (bool) $this->memberProfile?->isApprovedCanvasser();
+    }
+
     public function hasAcceptedTrackingConsent(): bool
     {
         return $this->tracking_consent_accepted_at !== null;
@@ -260,6 +267,18 @@ class User extends Authenticatable
         }
 
         $query->whereRaw('1 = 0');
+    }
+
+    /** Approved canvassers the viewer may see on the live map: the same area rule as members. */
+    public function scopeCanvassersVisibleTo(Builder $query, User $viewer): void
+    {
+        $query->membersVisibleTo($viewer)
+            ->whereHas('memberProfile', fn (Builder $q) => $q->where('canvasser_status', CanvasserStatus::Approved->value));
+    }
+
+    public function fieldActivities(): HasMany
+    {
+        return $this->hasMany(FieldActivity::class);
     }
 
     public function canSeeMember(User $member): bool

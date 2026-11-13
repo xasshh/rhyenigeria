@@ -1,4 +1,4 @@
-@props(['title' => null, 'charts' => false, 'noindex' => false])
+@props(['title' => null, 'charts' => false, 'noindex' => false, 'map' => false])
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,7 +11,8 @@
     @if ($noindex)<meta name="robots" content="noindex, nofollow">@endif
     {{ $head ?? '' }}
     @fonts
-    @vite(array_values(array_filter(['resources/css/app.css', 'resources/js/site.js', $charts ? 'resources/js/charts.js' : null])))
+    {{-- The live map registers its Alpine component before site.js starts Alpine, so it comes first. --}}
+    @vite(array_values(array_filter(['resources/css/app.css', $map ? 'resources/js/live-map.js' : null, 'resources/js/site.js', $charts ? 'resources/js/charts.js' : null])))
 </head>
 <body {{ $attributes->merge(['class' => 'min-h-dvh bg-surface font-body text-ink antialiased']) }}>
     {{ $slot }}
