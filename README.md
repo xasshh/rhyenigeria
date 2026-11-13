@@ -155,13 +155,15 @@ Sign-up details:
 **Admin → Homepage slides** (`/admin/slides`) lists the header slides. Each has an image (JPEG, PNG or WebP, at
 least 600 px wide; a 1600 px WebP copy is made with GD and the original is kept, both on the `public` disk under
 `slides/`), an optional small line, a headline, short text, a button label and link (a path such as `/join` or a
-full `https://` link), an order number, an on/off switch and a **layout**: *Original hero* (the first landing design: round
+full `https://` link), an order number, an on/off switch and a **layout**: *Portrait in a circle* (photos of people), *Original hero* (the first landing design: round
 portrait from `public/images/hero-portrait.webp` and the three stat badges) or *Image beside
 the text*. Backgrounds alternate by position, whatever the layout: white, green, white, green… All "Join the
 Movement" buttons on the homepage use the site's yellow (`accent`, #f2b705). Current order: 1 the Plateau State
 Education Empowerment Initiative flyer (`slide-1.webp`, original `slide-1.jpeg`), 2 the original hero with
-President Tinubu, 3 the patron, Seyi Tinubu (`public/images/slides/seyi-tinubu.webp`), 4–5 placeholder frames
-waiting for content.
+President Tinubu, 3 the patron, Bar. Seyi Tinubu (`seyi-tinubu.webp`), 4 the Minister, Comrade Ayodele Olawande
+(`ayodele-olawande.webp`, original `.jpeg`), 5 a placeholder frame waiting for content. Slides 3 and 4 use the
+*Portrait in a circle* layout: the photo is cropped to a circle with a thin green ring in CSS, matching the
+President's portrait, so uploaded photos need no editing.
 
 The top announcement bar also shows a compact live countdown (weeks, days, h:m:s) that links to the big one.
 

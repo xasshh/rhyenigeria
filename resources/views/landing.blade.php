@@ -175,7 +175,11 @@
                                 </div>
                             </div>
                         @else
-                            <div class="mx-auto grid max-w-[1440px] items-center gap-8 px-5 pt-10 pb-28 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] lg:gap-14 lg:px-[66px] lg:pt-14 lg:pb-32">
+                            <div @class([
+                                'mx-auto grid max-w-[1440px] items-center gap-8 px-5 pt-10 pb-28 sm:px-8 lg:gap-14 lg:px-[66px] lg:pt-14 lg:pb-32',
+                                'lg:grid-cols-[minmax(0,1fr)_minmax(0,540px)]' => $slide->isPortrait(),
+                                'lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)]' => ! $slide->isPortrait(),
+                            ])>
                                 <div class="order-2 lg:order-1">
                                     @if ($slide->eyebrow)
                                         <p @class(['inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[12px] font-semibold tracking-[0.14em] uppercase sm:text-[13px]', 'bg-action/10 text-action' => $light, 'bg-white/15 text-white' => ! $light])>{{ $slide->eyebrow }}</p>
@@ -192,7 +196,12 @@
                                     </div>
                                 </div>
                                 <div class="order-1 lg:order-2">
-                                    @if ($slide->imageUrl())
+                                    @if ($slide->isPortrait() && $slide->imageUrl())
+                                        {{-- Same treatment as the President's portrait: a circle with a thin green ring. --}}
+                                        <div class="mx-auto aspect-square w-full max-w-[320px] overflow-hidden rounded-full border-[3px] border-brand bg-white sm:max-w-[440px] lg:max-w-[520px]">
+                                            <img src="{{ $slide->imageUrl() }}" alt="{{ $slide->image_alt ?? '' }}" class="h-full w-full object-cover object-top" width="900" height="900" @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif>
+                                        </div>
+                                    @elseif ($slide->imageUrl())
                                         <a href="{{ $slide->originalImageUrl() ?? $slide->imageUrl() }}" target="_blank" rel="noopener" @class(['mx-auto block w-full max-w-[340px] overflow-hidden rounded-[24px] bg-white sm:max-w-[400px] lg:max-w-none', 'shadow-[0_30px_60px_-25px_rgba(15,42,28,0.45)] ring-1 ring-line' => $light, 'shadow-[0_30px_60px_-25px_rgba(0,0,0,0.6)] ring-1 ring-white/10' => ! $light]) aria-label="Open the full image">
                                             <img src="{{ $slide->imageUrl() }}" alt="{{ $slide->image_alt ?? '' }}" class="aspect-[4/5] h-auto w-full object-cover object-top" width="1280" height="1600" @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif>
                                         </a>

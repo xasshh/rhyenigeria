@@ -33,19 +33,19 @@ class HomepageTest extends TestCase
             ->assertSee('aria-roledescription="carousel"', false);
     }
 
-    public function test_the_slides_start_with_the_event_then_the_original_hero_then_the_patron(): void
+    public function test_the_slides_run_event_president_patron_minister_then_placeholder(): void
     {
         $slides = HeroSlide::query()->shown()->get();
 
         $this->assertCount(5, $slides);
-        $this->assertSame(['image', 'classic', 'image', 'image', 'image'], $slides->pluck('layout')->all());
-        $this->assertSame(['images/slides/slide-1.webp', 'images/hero-portrait.webp', 'images/slides/seyi-tinubu.webp', null, null], $slides->pluck('image_path')->all());
+        $this->assertSame(['image', 'classic', 'portrait', 'portrait', 'image'], $slides->pluck('layout')->all());
+        $this->assertSame(['images/slides/slide-1.webp', 'images/hero-portrait.webp', 'images/slides/seyi-tinubu.webp', 'images/slides/ayodele-olawande.webp', null], $slides->pluck('image_path')->all());
         foreach ($slides->pluck('image_path')->filter() as $path) {
             $this->assertFileExists(public_path($path));
         }
 
         $this->get('/')->assertOk()
-            ->assertSeeInOrder(['Education Empowerment Initiative', 'Youth for PBAT', '5,000+ youth empowered', 'Seyi Tinubu', 'Headline for slide 4', 'Headline for slide 5'])
+            ->assertSeeInOrder(['Education Empowerment Initiative', 'Youth for PBAT', '5,000+ youth empowered', 'Bar. Seyi Tinubu', 'Comrade Ayodele Olawande', 'Headline for slide 5'])
             // Backgrounds alternate white, green, white… by position.
             ->assertSeeInOrder(['bg-white text-forest', 'bg-action text-white', 'bg-white text-forest', 'bg-action text-white', 'bg-white text-forest'], false);
     }
