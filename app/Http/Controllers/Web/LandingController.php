@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\HeroSlide;
+use App\Models\NewsPost;
 use App\Models\Setting;
 use App\Services\Geo\AreaMap;
 use App\Support\Countdown;
@@ -22,6 +23,7 @@ class LandingController extends Controller
             'electionLabel' => Setting::electionLabel(),
             'countdown' => Countdown::parts($electionDate),
             'map' => $map->states(),
+            'news' => NewsPost::query()->publicStories()->with('photos')->latest('published_at')->limit(3)->get(),
         ]);
     }
 }

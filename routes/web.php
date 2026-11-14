@@ -11,6 +11,7 @@ use App\Http\Controllers\Web\JoinController;
 use App\Http\Controllers\Web\LandingController;
 use App\Http\Controllers\Web\MapController;
 use App\Http\Controllers\Web\MembershipController;
+use App\Http\Controllers\Web\NewsController;
 use App\Http\Controllers\Web\PublicController;
 use App\Http\Controllers\Web\Staff\CanvasserController;
 use App\Http\Controllers\Web\Staff\DashboardController;
@@ -22,6 +23,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', LandingController::class)->name('home');
 Route::get('privacy', [PublicController::class, 'privacy'])->name('privacy');
+Route::get('news', [NewsController::class, 'index'])->name('news.index');
+Route::get('news/{slug}', [NewsController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('news.show');
 Route::get('verify/{token}', [PublicController::class, 'verify'])->middleware('throttle:60,1')->name('verify');
 
 // Public geography lookups for the sign-up form (the API versions need a token).
@@ -96,6 +99,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('posts/events', [PostController::class, 'storeEvent'])->name('events.store');
         Route::put('posts/events/{event}', [PostController::class, 'updateEvent'])->name('events.update');
         Route::put('posts/news/{news}', [PostController::class, 'updateNews'])->name('news.update');
+        Route::delete('posts/news/{news}/photos/{photo}', [PostController::class, 'destroyPhoto'])->name('news.photos.destroy');
         Route::get('map/lgas', [MapController::class, 'lgas'])->name('map.lgas');
         Route::get('live', [LiveMapController::class, 'index'])->name('live');
         Route::get('live/feed', [LiveMapController::class, 'feed'])->name('live.feed');

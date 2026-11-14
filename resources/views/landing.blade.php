@@ -1,15 +1,6 @@
 @php
-    // Drop the real files into public/images and they are picked up automatically.
-    $image = fn (string $name) => collect(['svg', 'png', 'webp', 'jpg'])
-        ->map(fn ($ext) => "images/{$name}.{$ext}")
-        ->first(fn ($path) => file_exists(public_path($path)));
-
-    $rhyeLogo = $image('logo-rhye');
-    $logo = $image('logo-renewed-hope');
-    $partyLogo = $image('logo-apc');
     $slogan = config('membership.slogan');
 
-    $links = ['Home' => '#top', 'Countdown' => '#countdown', 'Get Involved' => route('join'), 'Members map' => '#map', 'Contact' => '#contact'];
     $tz = config('membership.timezone');
     $localElection = $electionDate->setTimezone($tz);
     $units = ['weeks' => 'Weeks', 'days' => 'Days', 'hours' => 'Hours', 'minutes' => 'Minutes', 'seconds' => 'Seconds'];
@@ -31,75 +22,7 @@
     @vite(['resources/css/app.css', 'resources/js/site.js'])
 </head>
 <body id="top" class="bg-white font-display text-brand antialiased">
-    {{-- Announcement bar, with a compact live countdown --}}
-    <div class="bg-forest px-4 py-2.5 text-[13px] leading-snug text-white" x-data="countdown(@js($electionDate->toIso8601String()), @js($countdown))">
-        <div class="mx-auto flex max-w-[1440px] flex-wrap items-center justify-center gap-x-4 gap-y-1.5">
-            <span class="font-semibold text-mint">{{ $slogan }}</span>
-            <a href="#countdown" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 font-semibold tabular-nums hover:bg-white/15" aria-label="Time left until election day">
-                <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" aria-hidden="true"></span>
-                <span x-show="!done" @if ($countdown['done']) hidden @endif>
-                    <span class="text-white/70">Election Day in</span>
-                    <span x-text="weeks">{{ $countdown['weeks'] }}</span>w
-                    <span x-text="days">{{ $countdown['days'] }}</span>d
-                    <span x-text="pad(hours) + ':' + pad(minutes) + ':' + pad(seconds)">{{ $pad($countdown['hours']) }}:{{ $pad($countdown['minutes']) }}:{{ $pad($countdown['seconds']) }}</span>
-                </span>
-                <span x-show="done" @unless ($countdown['done']) x-cloak @endunless>Today is Election Day: go and vote</span>
-            </a>
-            <span class="hidden sm:inline">Renewed Hope Youth Engagement <a href="{{ route('join') }}" class="ml-1 font-bold text-accent hover:underline">Support Us</a></span>
-            <a href="{{ route('join') }}" class="font-bold text-accent hover:underline sm:hidden">Support Us</a>
-            <x-social-links size="sm" class="hidden lg:flex" />
-        </div>
-    </div>
-
-    {{-- Navigation --}}
-    <header class="mx-auto flex max-w-[1440px] items-center justify-between gap-6 px-5 py-4 sm:px-8 lg:px-[66px] lg:py-5">
-        <a href="#top" class="flex shrink-0 items-center gap-4 sm:gap-9" aria-label="Renewed Hope Youth Engagement home">
-            @if ($rhyeLogo)
-                <img src="{{ asset($rhyeLogo) }}" alt="RHYE — Renewed Hope Youth Engagement" class="h-[40px] w-auto sm:h-[56px]" width="600" height="272">
-                <span class="h-8 w-px bg-brand/20 sm:h-10" aria-hidden="true"></span>
-            @endif
-            @if ($logo)
-                <img src="{{ asset($logo) }}" alt="Renewed Hope" class="h-[30px] w-auto sm:h-[37.5px]" width="285" height="150">
-            @endif
-            @if ($partyLogo)
-                <img src="{{ asset($partyLogo) }}" alt="APC" class="h-[38px] w-auto sm:h-[45.5px]" width="200" height="182">
-            @endif
-        </a>
-
-        <nav class="hidden items-center gap-7 text-sm xl:flex" aria-label="Main">
-            @foreach ($links as $label => $href)
-                <a href="{{ $href }}" @class(['transition-colors hover:text-brand', 'font-bold text-brand' => $loop->first, 'text-brand-soft' => ! $loop->first]) @if ($loop->first) aria-current="page" @endif>{{ $label }}</a>
-            @endforeach
-        </nav>
-
-        <div class="hidden items-center gap-5 lg:flex">
-            @auth
-                <a href="{{ auth()->user()->homeRoute() }}" class="text-sm font-bold text-brand hover:underline">My dashboard</a>
-            @else
-                <a href="{{ route('login') }}" class="text-sm font-bold text-brand hover:underline">Sign in</a>
-            @endauth
-            <a href="{{ route('join') }}" class="rounded-[10px] bg-accent px-4 py-2.5 text-sm font-bold text-forest transition-colors hover:bg-[#d9a404]">Join the Movement</a>
-        </div>
-
-        {{-- Small screens: menu without JavaScript --}}
-        <details class="group relative lg:hidden">
-            <summary class="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-lg border border-brand/40 [&::-webkit-details-marker]:hidden" aria-label="Menu">
-                <svg class="h-5 w-5 group-open:hidden" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
-                <svg class="hidden h-5 w-5 group-open:block" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4l12 12M16 4L4 16"/></svg>
-            </summary>
-            <nav class="absolute right-0 z-30 mt-2 flex w-60 flex-col gap-1 rounded-xl border border-neutral-200 bg-white p-3 text-base shadow-lg" aria-label="Main">
-                @foreach ($links as $label => $href)
-                    <a href="{{ $href }}" class="rounded-lg px-3 py-2.5 hover:bg-brand/10">{{ $label }}</a>
-                @endforeach
-                @auth
-                    <a href="{{ auth()->user()->homeRoute() }}" class="rounded-lg px-3 py-2.5 font-bold hover:bg-brand/10">My dashboard</a>
-                @else
-                    <a href="{{ route('login') }}" class="rounded-lg px-3 py-2.5 font-bold hover:bg-brand/10">Sign in</a>
-                @endauth
-                <a href="{{ route('join') }}" class="mt-1 rounded-lg bg-accent px-3 py-2.5 text-center font-bold text-forest hover:bg-[#d9a404]">Join the Movement</a>
-            </nav>
-        </details>
-    </header>
+    @include('partials.public-header', ['current' => 'home'])
 
     <main>
         {{-- Header slider: backgrounds alternate white, green, white… by position; the layout decides what is on the slide. --}}
@@ -290,6 +213,26 @@
             </div>
         </section>
 
+        {{-- Latest public news --}}
+        @if ($news->isNotEmpty())
+            <section id="news" class="bg-surface" aria-labelledby="news-title">
+                <div class="mx-auto max-w-[1440px] px-5 py-16 sm:px-8 lg:px-[66px] lg:py-20">
+                    <div class="flex flex-wrap items-end justify-between gap-4">
+                        <div>
+                            <p class="eyebrow text-action">News &amp; gallery</p>
+                            <h2 id="news-title" class="mt-3 font-headline text-[36px] leading-[1.05] font-extrabold tracking-[-0.03em] text-forest sm:text-[48px]">From the field</h2>
+                        </div>
+                        <a href="{{ route('news.index') }}" class="inline-flex items-center gap-1.5 font-body text-[16px] font-bold text-action hover:underline">All news <x-icon name="arrow-right" class="h-4 w-4" /></a>
+                    </div>
+                    <div class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                        @foreach ($news as $post)
+                            @include('partials.news-card', ['post' => $post])
+                        @endforeach
+                    </div>
+                </div>
+            </section>
+        @endif
+
         {{-- Members across Nigeria --}}
         <section id="map" class="mx-auto grid max-w-[1440px] items-center gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)] lg:gap-16 lg:px-[66px] lg:py-24" aria-labelledby="map-title">
             <div>
@@ -314,22 +257,6 @@
         </section>
     </main>
 
-    <footer id="contact" class="bg-forest text-white">
-        <div class="mx-auto flex max-w-[1440px] flex-col gap-6 px-5 py-10 sm:px-8 lg:flex-row lg:items-center lg:justify-between lg:px-[66px]">
-            <div>
-                <p class="font-headline text-[26px] font-extrabold tracking-[-0.02em] text-mint">{{ $slogan }}</p>
-                <p class="mt-1 font-body text-white/70">Renewed Hope Youth Engagement · Youth for PBAT</p>
-            </div>
-            <div>
-                <p class="font-body text-sm font-semibold tracking-[0.14em] text-white/60 uppercase">Follow us</p>
-                <x-social-links class="mt-3" />
-            </div>
-            <nav class="flex flex-wrap gap-x-6 gap-y-2 font-body text-[15px] text-white/80" aria-label="Footer">
-                <a href="{{ route('join') }}" class="hover:text-white">Join the movement</a>
-                <a href="{{ route('login') }}" class="hover:text-white">Sign in</a>
-                <a href="{{ route('privacy') }}" class="hover:text-white">Privacy notice</a>
-            </nav>
-        </div>
-    </footer>
+    @include('partials.public-footer')
 </body>
 </html>

@@ -24,7 +24,6 @@
 <x-layouts.app title="Field work">
     <p class="text-sm text-neutral-500">Canvasser{{ $user->state ? ', '.$user->state->name : '' }}</p>
     <h1 class="font-display text-2xl font-bold tracking-tight sm:text-[28px]">Field work</h1>
-    <x-flash class="mt-4" />
 
     @unless ($consented)
         {{-- The location notice. Nothing is recorded until this is accepted and a shift is started. --}}

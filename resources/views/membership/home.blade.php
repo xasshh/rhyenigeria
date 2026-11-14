@@ -1,7 +1,6 @@
 <x-layouts.app title="Home">
     <p class="text-sm text-neutral-500">{{ $user->state?->name ? $user->state->name.' State' : '' }}</p>
     <h1 class="font-display text-2xl font-bold tracking-tight sm:text-[28px]">Hello, {{ $user->firstName() }}</h1>
-    <x-flash class="mt-4" />
 
     <div class="mt-5 grid gap-4 lg:grid-cols-2">
         {{-- Election countdown --}}

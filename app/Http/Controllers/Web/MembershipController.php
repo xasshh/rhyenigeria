@@ -41,7 +41,7 @@ class MembershipController extends Controller
             'electionDate' => Setting::electionDate(),
             'electionLabel' => Setting::electionLabel(),
             'nextEvent' => Event::query()->forState($user->state_id)->upcoming()->with('state')->first(),
-            'news' => NewsPost::query()->forMember($user->state_id, $user->ward_id)->with('state', 'ward')->latest('published_at')->limit(5)->get(),
+            'news' => NewsPost::query()->forMember($user->state_id, $user->ward_id)->with('state', 'ward', 'photos')->latest('published_at')->limit(5)->get(),
             'canvasserRoles' => CanvasserRole::cases(),
         ]);
     }
@@ -162,7 +162,7 @@ class MembershipController extends Controller
 
         $news = NewsPost::query()->forMember($user->state_id, $user->ward_id)
             ->when($mine, fn ($q) => $q->whereNotNull('state_id'))
-            ->with('state', 'ward')->latest('published_at')->paginate(15)->withQueryString();
+            ->with('state', 'ward', 'photos')->latest('published_at')->paginate(15)->withQueryString();
 
         return view('membership.events', compact('events', 'news', 'mine'));
     }

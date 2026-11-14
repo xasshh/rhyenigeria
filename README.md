@@ -175,6 +175,18 @@ The countdown counts to `Setting::electionDate()`: the date set under **Settings
 days, hours, minutes and seconds, rendered on the server first and then ticked by Alpine. Once it reaches zero
 it shows "Today is Election Day: go and vote." The member dashboard uses the same date.
 
+### Public news and gallery (`/news`)
+
+News posts stay inside the member dashboard unless a super admin ticks **Show on the public website** when
+posting or editing (`news_posts.is_public`; a readable `slug` is made from the title). Public stories appear on
+the homepage under **From the field** (latest three), at `/news`, and at `/news/{slug}` with their paragraphs,
+hashtags as tags, and a photo gallery with a full-screen viewer (arrows, swipe, keyboard). Photos
+(`news_photos`, up to 10 per upload, JPEG/PNG/WebP up to 10 MB) are stored on the `public` disk with a 1600 px
+WebP copy; staff remove one from the post's Edit panel. Coordinators can add photos to their state posts but
+cannot publish to the public site. The first story, the Plateau State Education Empowerment drive (13 November
+2026), and its five photos ship in `public/images/news/plateau-education-drive/` and are added by migration,
+which also points the event's homepage slide at it ("See the photos").
+
 ### Members (`/membership`, role `member`)
 
 Home (election countdown, next event, latest national/state/ward news, apply to
@@ -663,6 +675,11 @@ tail -n 50 /var/www/rhyenigeria/storage/logs/laravel.log
   ```
 
   Without the boundary files the maps show "Boundaries for this map have not been loaded yet."
+
+### Release: public news and gallery
+
+- **New migration** `add_public_news_and_photos`: `news_posts.slug` and `is_public`, the `news_photos` table, the
+  Plateau story with five photos, and the event slide's new button. `deploy.sh` runs it.
 
 ### Release: canvasser field work and the live map
 

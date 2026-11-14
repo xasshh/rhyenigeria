@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Web\Staff;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
+use App\Models\NewsPhoto;
 use App\Models\NewsPost;
 use App\Models\State;
 use App\Models\User;
 use App\Models\Ward;
+use App\Support\WebImage;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,7 +26,7 @@ class PostController extends Controller
 
         return view('staff.posts', [
             'events' => $scope(Event::query())->with('state:id,name', 'author:id,name')->latest('starts_at')->paginate(15, ['*'], 'events_page'),
-            'news' => $scope(NewsPost::query())->with('state:id,name', 'ward:id,name', 'author:id,name')->latest('published_at')->paginate(15, ['*'], 'news_page'),
+            'news' => $scope(NewsPost::query())->with('state:id,name', 'ward:id,name', 'author:id,name', 'photos')->latest('published_at')->paginate(15, ['*'], 'news_page'),
             'states' => $viewer->isSuperAdmin() ? State::orderBy('name')->get(['id', 'name']) : collect(),
             'wards' => $viewer->state_id
                 ? Ward::query()->join('lgas', 'lgas.id', '=', 'wards.lga_id')->where('lgas.state_id', $viewer->state_id)
@@ -65,7 +67,7 @@ class PostController extends Controller
             'source_label' => ['nullable', 'string', 'max:64'],
             'state_id' => ['nullable', 'integer', Rule::exists('states', 'id')],
             'ward_id' => ['nullable', 'integer'],
-        ]);
+        ] + self::photoRules());
 
         $post = new NewsPost([
             'title' => $data['title'],
@@ -82,9 +84,11 @@ class PostController extends Controller
         }
 
         $post->created_by = $viewer->id;
+        $this->applyPublic($request, $post);
         $post->save();
+        $this->storePhotos($request, $post);
 
-        return back()->with('status', 'Update posted.');
+        return back()->with('status', $post->is_public ? 'Update posted, and published on the website.' : 'Update posted.');
     }
 
     public function updateEvent(Request $request, Event $event): RedirectResponse
@@ -122,7 +126,7 @@ class PostController extends Controller
             'source_label' => ['nullable', 'string', 'max:64'],
             'state_id' => ['nullable', 'integer', Rule::exists('states', 'id')],
             'ward_id' => ['nullable', 'integer'],
-        ]);
+        ] + self::photoRules());
 
         $news->fill(['title' => $data['title'], 'body' => $data['body'], 'source_label' => $data['source_label'] ?? null]);
         $news->state_id = $this->targetState($viewer, $data['state_id'] ?? null);
@@ -132,7 +136,9 @@ class PostController extends Controller
             abort_unless($news->state_id !== null && $ward->lga->state_id === $news->state_id, 422, 'That ward is not in the chosen state.');
             $news->ward_id = $ward->id;
         }
+        $this->applyPublic($request, $news);
         $news->save();
+        $this->storePhotos($request, $news);
 
         return redirect()->to(staff_route('posts.index'))->with('status', 'Update saved.');
     }
@@ -148,9 +154,51 @@ class PostController extends Controller
     public function destroyNews(Request $request, NewsPost $news): RedirectResponse
     {
         $this->authorizePost($request->user(), $news->state_id);
+        $news->photos->each->deleteFiles();
         $news->delete();
 
         return back()->with('status', 'Update removed.');
+    }
+
+    public function destroyPhoto(Request $request, NewsPost $news, NewsPhoto $photo): RedirectResponse
+    {
+        $this->authorizePost($request->user(), $news->state_id);
+        abort_unless($photo->news_post_id === $news->id, 404);
+        $photo->deleteFiles();
+        $photo->delete();
+
+        return back()->with('status', 'Photo removed.');
+    }
+
+    /** @return array<string, mixed> */
+    private static function photoRules(): array
+    {
+        return [
+            'photos' => ['nullable', 'array', 'max:10'],
+            'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
+            'is_public' => ['nullable', 'boolean'],
+        ];
+    }
+
+    /** Only super admins put a post on the public website; it then needs a readable address. */
+    private function applyPublic(Request $request, NewsPost $post): void
+    {
+        if (! $request->user()->isSuperAdmin() || ! $request->has('is_public')) {
+            return;
+        }
+        $post->is_public = $request->boolean('is_public');
+        if ($post->is_public && ! $post->slug) {
+            $post->slug = NewsPost::uniqueSlug($post->title);
+        }
+    }
+
+    private function storePhotos(Request $request, NewsPost $post): void
+    {
+        $next = (int) $post->photos()->max('position');
+        foreach ($request->file('photos', []) as $file) {
+            [$original, $web] = WebImage::storeWithWebp($file, 'news/'.$post->id, 1600);
+            $post->photos()->create(['path' => $web, 'original_path' => $original, 'position' => ++$next]);
+        }
     }
 
     private function targetState(User $viewer, ?int $requested): ?int
