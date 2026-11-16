@@ -84,6 +84,8 @@
                 </form>
             </section>
 
+            @include('membership.partials.location-pin', ['profile' => $profile, 'prompt' => false])
+
             <section class="panel p-5" x-data="{ open: {{ $errors->has('current_password') || $errors->has('password') ? 'true' : 'false' }} }">
                 <div class="flex items-center justify-between">
                     <h2 class="font-display text-lg font-bold">Password</h2>

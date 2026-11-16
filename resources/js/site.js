@@ -7,6 +7,7 @@ import dpMaker from './components/dp-maker';
 import heroSlider from './components/hero-slider';
 import areaMap from './components/area-map';
 import fieldTracker from './components/field-tracker';
+import locationPin from './components/location-pin';
 
 Alpine.data('joinWizard', joinWizard);
 Alpine.data('memberCard', memberCard);
@@ -14,6 +15,7 @@ Alpine.data('dpMaker', dpMaker);
 Alpine.data('heroSlider', heroSlider);
 Alpine.data('areaMap', areaMap);
 Alpine.data('fieldTracker', fieldTracker);
+Alpine.data('locationPin', locationPin);
 
 // Counts down to `target`. `initial` is the server-rendered value, so the numbers
 // are right before this runs and nothing jumps when it starts.

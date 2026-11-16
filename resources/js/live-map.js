@@ -165,3 +165,108 @@ Alpine.data('liveMap', (config) => ({
     kindColour(kind) { return KIND_COLOURS[kind]; },
     memberUrl(id) { return config.member.replace('__ID__', id); },
 }));
+
+// The members map (staff/members-map.blade.php): one pin per member who shared where they are,
+// clustered when zoomed out. Shares this bundle so MapLibre is set up once.
+const PIN_COLOURS = { member: '#2563eb', canvasser: '#2e7d3f' };
+
+Alpine.data('membersMap', (config) => ({
+    map: null,
+    loading: true,
+    error: '',
+    shown: 0,
+    truncated: false,
+    show: { member: true, canvasser: true },
+    features: [],
+
+    init() {
+        this.map = new maplibregl.Map({
+            container: this.$refs.map,
+            style: config.style,
+            bounds: config.outline ? bbox(config.outline) : NIGERIA,
+            fitBoundsOptions: { padding: 30 },
+            attributionControl: { compact: true },
+        });
+        this.map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+        this.map.addControl(new maplibregl.FullscreenControl(), 'top-right');
+        this.map.on('load', () => { this.addLayers(); this.load(); });
+        this.$watch('show', () => this.draw(), { deep: true });
+    },
+
+    destroy() { this.map?.remove(); },
+
+    addLayers() {
+        const m = this.map;
+        if (config.outline) {
+            m.addSource('outline', { type: 'geojson', data: { type: 'Feature', geometry: config.outline, properties: {} } });
+            m.addLayer({ id: 'outline-fill', type: 'fill', source: 'outline', paint: { 'fill-color': '#2e7d3f', 'fill-opacity': 0.04 } });
+            m.addLayer({ id: 'outline-line', type: 'line', source: 'outline', paint: { 'line-color': '#2e7d3f', 'line-width': 2, 'line-dasharray': [2, 1] } });
+        }
+        m.addSource('pins', { type: 'geojson', data: { type: 'FeatureCollection', features: [] }, cluster: true, clusterRadius: 45, clusterMaxZoom: 14 });
+        m.addLayer({
+            id: 'clusters', type: 'circle', source: 'pins', filter: ['has', 'point_count'],
+            paint: {
+                'circle-color': ['step', ['get', 'point_count'], '#7fbf8e', 25, '#2e7d3f', 250, '#0f2a1c'],
+                'circle-radius': ['step', ['get', 'point_count'], 16, 25, 22, 250, 30],
+                'circle-stroke-width': 3, 'circle-stroke-color': '#fff', 'circle-opacity': 0.9,
+            },
+        });
+        m.addLayer({
+            id: 'cluster-count', type: 'symbol', source: 'pins', filter: ['has', 'point_count'],
+            layout: { 'text-field': ['get', 'point_count_abbreviated'], 'text-size': 12, 'text-font': ['Noto Sans Bold'] },
+            paint: { 'text-color': '#fff' },
+        });
+        m.addLayer({
+            id: 'pins', type: 'circle', source: 'pins', filter: ['!', ['has', 'point_count']],
+            paint: {
+                'circle-radius': 7, 'circle-stroke-width': 2, 'circle-stroke-color': '#fff',
+                'circle-color': ['case', ['get', 'canvasser'], PIN_COLOURS.canvasser, PIN_COLOURS.member],
+            },
+        });
+
+        m.on('click', 'clusters', async (e) => {
+            const f = e.features[0];
+            const zoom = await m.getSource('pins').getClusterExpansionZoom(f.properties.cluster_id);
+            m.easeTo({ center: f.geometry.coordinates, zoom });
+        });
+        m.on('click', 'pins', (e) => this.popup(e.features[0]));
+        ['clusters', 'pins'].forEach((id) => {
+            m.on('mouseenter', id, () => (m.getCanvas().style.cursor = 'pointer'));
+            m.on('mouseleave', id, () => (m.getCanvas().style.cursor = ''));
+        });
+    },
+
+    async load() {
+        try {
+            const res = await fetch(config.pins, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+            if (!res.ok) throw new Error(String(res.status));
+            const data = await res.json();
+            this.features = data.features;
+            this.truncated = data.truncated;
+            this.draw();
+        } catch {
+            this.error = 'Could not load the members map. Reload the page to try again.';
+        } finally {
+            this.loading = false;
+        }
+    },
+
+    draw() {
+        const features = this.features.filter((f) => this.show[f.properties.canvasser ? 'canvasser' : 'member']);
+        this.shown = features.length;
+        this.map.getSource('pins')?.setData({ type: 'FeatureCollection', features });
+    },
+
+    popup(feature) {
+        const p = feature.properties;
+        const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        new maplibregl.Popup({ offset: 10, maxWidth: '260px' }).setLngLat(feature.geometry.coordinates).setHTML(
+            `<p class="font-semibold">${esc(p.name)}</p>
+             <p class="text-xs text-neutral-500">${p.canvasser ? 'Canvasser' : 'Member'}${p.area ? ' · ' + esc(p.area) : ''}</p>
+             ${p.pinned ? `<p class="text-xs text-neutral-500">Pinned ${esc(p.pinned)}</p>` : ''}
+             <a href="${esc(config.member.replace('__ID__', p.id))}" class="mt-2 block font-semibold text-[#2e7d3f]">Open profile</a>`,
+        ).addTo(this.map);
+    },
+
+    colour(kind) { return PIN_COLOURS[kind]; },
+}));

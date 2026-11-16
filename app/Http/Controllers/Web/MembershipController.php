@@ -13,6 +13,7 @@ use App\Models\NewsPost;
 use App\Models\PollingUnit;
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\EventCalendar;
 use App\Support\NigerianPhone;
 use App\Support\Qr;
 use Illuminate\Http\RedirectResponse;
@@ -157,14 +158,43 @@ class MembershipController extends Controller
         $mine = $request->query('scope') === 'state';
 
         $events = Event::query()
-            ->when($mine, fn ($q) => $q->where('state_id', $user->state_id), fn ($q) => $q->forState($user->state_id))
-            ->upcoming()->with('state')->limit(30)->get();
+            ->when($mine, fn ($q) => $q->where('state_id', $user->state_id), fn ($q) => $q->forState($user->state_id));
+        $calendar = EventCalendar::for($events, $request->query('month'));
+        $upcoming = (clone $events)->upcoming()->with('state')->limit(5)->get();
 
         $news = NewsPost::query()->forMember($user->state_id, $user->ward_id)
             ->when($mine, fn ($q) => $q->whereNotNull('state_id'))
             ->with('state', 'ward', 'photos')->latest('published_at')->paginate(15)->withQueryString();
 
-        return view('membership.events', compact('events', 'news', 'mine'));
+        return view('membership.events', compact('calendar', 'upcoming', 'news', 'mine'));
+    }
+
+    /** Pin (or move) the member's location on the members map. One point, replaced each time; never a trail. */
+    public function updateLocation(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
+        ]);
+
+        $profile = $request->user()->memberProfile;
+        $profile->signup_lat = round((float) $data['latitude'], 6);
+        $profile->signup_lng = round((float) $data['longitude'], 6);
+        $profile->location_pinned_at = now();
+        $profile->save();
+
+        return back()->with('status', 'Your location is pinned. Thank you.');
+    }
+
+    public function destroyLocation(Request $request): RedirectResponse
+    {
+        $profile = $request->user()->memberProfile;
+        $profile->signup_lat = null;
+        $profile->signup_lng = null;
+        $profile->location_pinned_at = null;
+        $profile->save();
+
+        return back()->with('status', 'Your location pin has been removed.');
     }
 
     public function empowerment(Request $request): View

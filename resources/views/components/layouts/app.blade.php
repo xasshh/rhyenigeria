@@ -4,8 +4,11 @@
     $nav = match (true) {
         $user->isSuperAdmin() => [
             ['admin.dashboard', 'Overview', 'chart', 'admin.dashboard'],
+            ['admin.leaderboard', 'Leaderboard', 'trophy', 'admin.leaderboard'],
             ['admin.live', 'Live map', 'map', 'admin.live'],
-            ['admin.members.index', 'Members', 'users', 'admin.members.*'],
+            ['admin.members.index', 'Members', 'users', 'admin.members.index|admin.members.show'],
+            ['admin.members.map', 'Members map', 'pin', 'admin.members.map'],
+            ['admin.calendar', 'Calendar', 'calendar', 'admin.calendar'],
             ['admin.canvassers.index', 'Canvassers', 'badge', 'admin.canvassers.*'],
             ['admin.coordinators.index', 'Coordinators', 'user-plus', 'admin.coordinators.*'],
             ['admin.empowerment.index', 'Empowerment', 'gift', 'admin.empowerment.*'],
@@ -14,8 +17,11 @@
         ],
         $user->isCoordinator() => [
             ['coordinator.dashboard', 'Dashboard', 'chart', 'coordinator.dashboard'],
+            ['coordinator.leaderboard', 'Leaderboard', 'trophy', 'coordinator.leaderboard'],
             ['coordinator.live', 'Live map', 'map', 'coordinator.live'],
-            ['coordinator.members.index', 'Members', 'users', 'coordinator.members.*'],
+            ['coordinator.members.index', 'Members', 'users', 'coordinator.members.index|coordinator.members.show'],
+            ['coordinator.members.map', 'Members map', 'pin', 'coordinator.members.map'],
+            ['coordinator.calendar', 'Calendar', 'calendar', 'coordinator.calendar'],
             ['coordinator.canvassers.index', 'Canvassers', 'badge', 'coordinator.canvassers.*'],
             ['coordinator.empowerment.index', 'Empowerment', 'gift', 'coordinator.empowerment.*'],
             ['coordinator.posts.index', 'News & events', 'megaphone', 'coordinator.posts.*'],
@@ -46,9 +52,9 @@
                 @foreach ($nav as [$route, $label, $icon, $pattern])
                     <a href="{{ route($route) }}" @class([
                         'flex items-center gap-3 rounded-xl px-3 py-2.5 text-[15px] font-medium transition-colors',
-                        'bg-brand/10 text-brand-dark ring-1 ring-brand/30' => request()->routeIs($pattern),
-                        'text-neutral-700 hover:bg-surface' => ! request()->routeIs($pattern),
-                    ]) @if (request()->routeIs($pattern)) aria-current="page" @endif>
+                        'bg-brand/10 text-brand-dark ring-1 ring-brand/30' => request()->routeIs(...explode('|', $pattern)),
+                        'text-neutral-700 hover:bg-surface' => ! request()->routeIs(...explode('|', $pattern)),
+                    ]) @if (request()->routeIs(...explode('|', $pattern))) aria-current="page" @endif>
                         <x-icon :name="$icon" /> {{ $label }}
                     </a>
                 @endforeach
@@ -81,7 +87,7 @@
                 @unless ($isMember)
                     <nav class="flex gap-1 overflow-x-auto px-3 pb-2 [scrollbar-width:none]" aria-label="Dashboard">
                         @foreach ($nav as [$route, $label, $icon, $pattern])
-                            <a href="{{ route($route) }}" @class(['shrink-0 rounded-full px-3 py-1.5 text-sm font-medium', 'bg-brand text-white' => request()->routeIs($pattern), 'bg-surface text-neutral-700' => ! request()->routeIs($pattern)])>{{ $label }}</a>
+                            <a href="{{ route($route) }}" @class(['shrink-0 rounded-full px-3 py-1.5 text-sm font-medium', 'bg-brand text-white' => request()->routeIs(...explode('|', $pattern)), 'bg-surface text-neutral-700' => ! request()->routeIs(...explode('|', $pattern))])>{{ $label }}</a>
                         @endforeach
                     </nav>
                 @endunless
@@ -108,7 +114,7 @@
     @if ($isMember)
         <nav @class(['fixed inset-x-0 bottom-0 z-30 grid border-t border-line bg-white pb-[env(safe-area-inset-bottom)] lg:hidden', 'grid-cols-6' => count($nav) === 6, 'grid-cols-5' => count($nav) !== 6]) aria-label="Membership">
             @foreach ($nav as [$route, $label, $icon, $pattern])
-                <a href="{{ route($route) }}" @class(['flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium', 'text-brand' => request()->routeIs($pattern), 'text-neutral-500' => ! request()->routeIs($pattern)]) @if (request()->routeIs($pattern)) aria-current="page" @endif>
+                <a href="{{ route($route) }}" @class(['flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium', 'text-brand' => request()->routeIs(...explode('|', $pattern)), 'text-neutral-500' => ! request()->routeIs(...explode('|', $pattern))]) @if (request()->routeIs(...explode('|', $pattern))) aria-current="page" @endif>
                     <x-icon :name="$icon" class="h-[22px] w-[22px]" />
                     <span class="leading-tight">{{ ['Events & news' => 'Events', 'Campaign DP' => 'My DP', 'Empowerment' => 'Empower', 'Field work' => 'Field'][$label] ?? $label }}</span>
                 </a>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web\Staff;
 use App\Http\Controllers\Controller;
 use App\Models\State;
 use App\Services\Geo\AreaMap;
+use App\Services\Membership\Leaderboard;
 use App\Services\Membership\MemberDirectory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -13,11 +14,13 @@ use Illuminate\View\View;
 /** The state dashboard: a coordinator's own area, or any state for a super admin. */
 class DashboardController extends Controller
 {
-    public function coordinator(Request $request, MemberDirectory $directory, AreaMap $map): View
+    public function coordinator(Request $request, MemberDirectory $directory, AreaMap $map, Leaderboard $leaderboard): View
     {
         $viewer = $request->user()->load('state', 'lga', 'ward');
+        $states = $viewer->state_id ? $leaderboard->states() : [];
 
-        return $this->render($directory, $directory->query($viewer), $viewer->ward?->name ?? $viewer->lga?->name ?? $viewer->state?->name, $viewer->state_id === null, null, $viewer->state ? $map->lgas($viewer->state) : null);
+        return $this->render($directory, $directory->query($viewer), $viewer->ward?->name ?? $viewer->lga?->name ?? $viewer->state?->name, $viewer->state_id === null, null, $viewer->state ? $map->lgas($viewer->state) : null)
+            ->with('standing', (collect($states)->firstWhere('id', $viewer->state_id) ?? []) + ['of' => count($states)]);
     }
 
     public function state(Request $request, State $state, MemberDirectory $directory, AreaMap $map): View

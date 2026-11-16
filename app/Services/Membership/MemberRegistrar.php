@@ -52,6 +52,7 @@ class MemberRegistrar
             $profile->nin = $data['nin'] ?? null;
             $profile->signup_lat = $data['latitude'] ?? null;
             $profile->signup_lng = $data['longitude'] ?? null;
+            $profile->location_pinned_at = isset($data['latitude'], $data['longitude']) ? now() : null;
             $profile->consent_accepted_at = now();
             $profile->consent_version = (string) config('membership.consent_version');
 

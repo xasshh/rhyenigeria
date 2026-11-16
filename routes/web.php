@@ -13,11 +13,14 @@ use App\Http\Controllers\Web\MapController;
 use App\Http\Controllers\Web\MembershipController;
 use App\Http\Controllers\Web\NewsController;
 use App\Http\Controllers\Web\PublicController;
+use App\Http\Controllers\Web\Staff\CalendarController;
 use App\Http\Controllers\Web\Staff\CanvasserController;
 use App\Http\Controllers\Web\Staff\DashboardController;
 use App\Http\Controllers\Web\Staff\EmpowermentController;
+use App\Http\Controllers\Web\Staff\LeaderboardController;
 use App\Http\Controllers\Web\Staff\LiveMapController;
 use App\Http\Controllers\Web\Staff\MemberController;
+use App\Http\Controllers\Web\Staff\MemberMapController;
 use App\Http\Controllers\Web\Staff\PostController;
 use Illuminate\Support\Facades\Route;
 
@@ -70,6 +73,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::put('card/password', 'updatePassword')->name('password.update');
         Route::post('canvasser', 'applyCanvasser')->name('canvasser.apply');
         Route::get('events', 'events')->name('events');
+        Route::put('location', 'updateLocation')->middleware('throttle:20,1')->name('location.update');
+        Route::delete('location', 'destroyLocation')->name('location.destroy');
         Route::get('empowerment', 'empowerment')->name('empowerment');
         Route::post('empowerment', 'storeEmpowerment')->middleware('throttle:20,60')->name('empowerment.store');
         Route::get('campaign-dp', 'dp')->name('dp');
@@ -90,6 +95,10 @@ Route::middleware(['auth', 'active'])->group(function () {
     // Pages coordinators and super admins share. Every query is scoped to the viewer.
     $staffRoutes = function () {
         Route::get('members', [MemberController::class, 'index'])->name('members.index');
+        Route::get('members/map', [MemberMapController::class, 'index'])->name('members.map');
+        Route::get('members/map/pins', [MemberMapController::class, 'pins'])->middleware('throttle:30,1')->name('members.map.pins');
+        Route::get('leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard');
+        Route::get('calendar', [CalendarController::class, 'index'])->name('calendar');
         Route::get('members/export', [MemberController::class, 'export'])->middleware('throttle:10,1')->name('members.export');
         Route::get('members/{member}', [MemberController::class, 'show'])->name('members.show');
         Route::get('canvassers', [CanvasserController::class, 'index'])->name('canvassers.index');

@@ -55,6 +55,10 @@ export default (config) => ({
             // Passwords are never stored, so a reload past step 1 needs them again.
             if (this.step > 0 && !this.form.password) this.step = 0;
         }
+        // On reaching the location step, ask the phone once for a map pin (the person can still decline or remove it).
+        this.$watch('step', (step) => {
+            if (step === 2 && this.geo.status === 'idle' && this.form.latitude === null) this.locate();
+        });
         // ?state= from the homepage map, unless the person already chose one.
         if (!this.form.state_id && config.state) {
             this.form.state_id = String(config.state);
@@ -168,9 +172,9 @@ export default (config) => ({
             (pos) => {
                 this.form.latitude = Number(pos.coords.latitude.toFixed(6));
                 this.form.longitude = Number(pos.coords.longitude.toFixed(6));
-                this.geo = { status: 'done', message: 'Location added. Thank you.' };
+                this.geo = { status: 'done', message: 'Location pinned. Thank you.' };
             },
-            (e) => this.geo = { status: 'error', message: e.code === 1 ? 'You did not allow location access. That is fine: it is optional.' : 'We could not get your location. That is fine: it is optional.' },
+            (e) => this.geo = { status: 'error', message: e.code === 1 ? 'You did not allow location access. You can pin it later from your dashboard.' : 'We could not get your location. You can pin it later from your dashboard.' },
             { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 },
         );
     },

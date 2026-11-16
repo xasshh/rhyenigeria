@@ -12,6 +12,8 @@ class AuditLogger
 
     public const SUBMISSIONS_EXPORTED = 'submissions.exported';
 
+    public const MEMBERS_MAP_VIEWED = 'members.map_viewed';
+
     /**
      * Record who did what, and when.
      *

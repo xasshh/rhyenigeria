@@ -30,7 +30,7 @@
             <button class="btn-primary">Post update</button>
         </form>
 
-        <form method="POST" action="{{ staff_route('events.store') }}" class="panel space-y-4 p-5">
+        <form method="POST" action="{{ staff_route('events.store') }}" id="event" class="panel scroll-mt-24 space-y-4 p-5">
             @csrf
             <h2 class="font-display text-lg font-bold">Add an event</h2>
             <div><label class="label" for="e-title">Title</label><input id="e-title" name="title" class="field" required maxlength="255" placeholder="e.g. Youth rally"></div>

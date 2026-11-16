@@ -221,13 +221,13 @@
                     <div class="flex items-start gap-4">
                         <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white text-action"><x-icon name="pin" /></span>
                         <div class="min-w-0 flex-1">
-                            <p class="text-[17px] font-semibold">Share my current location <span class="font-normal text-neutral-500">(optional)</span></p>
-                            <p class="mt-1 text-[15px] leading-relaxed text-neutral-600">Helps your coordinator plan ward activities. We only ask your phone when you tap.</p>
+                            <p class="text-[17px] font-semibold">Pin my location on the map <span class="font-normal text-neutral-500">(optional)</span></p>
+                            <p class="mt-1 text-[15px] leading-relaxed text-neutral-600">Puts you on your coordinator's members map so they can plan activities near you. One point, saved once: never tracked, and you can change or remove it later.</p>
                             <p class="mt-2 text-sm" x-show="geo.message" x-text="geo.message" :class="geo.status === 'done' ? 'text-action-dark' : 'text-neutral-600'"></p>
                         </div>
                     </div>
-                    <button type="button" class="btn-ghost mt-4 min-h-12 px-5" x-on:click="locate" x-show="geo.status !== 'done'" :disabled="geo.status === 'busy'"><x-icon name="pin" class="h-4 w-4" /> Share location</button>
-                    <button type="button" class="btn-ghost mt-4 min-h-12 px-5" x-on:click="clearLocation" x-show="geo.status === 'done'">Remove location</button>
+                    <button type="button" class="btn-ghost mt-4 min-h-12 px-5" x-on:click="locate" x-show="geo.status !== 'done'" :disabled="geo.status === 'busy'"><x-icon name="pin" class="h-4 w-4" /> <span x-text="geo.status === 'error' ? 'Try again' : 'Pin my location'">Pin my location</span></button>
+                    <button type="button" class="btn-ghost mt-4 min-h-12 px-5" x-on:click="clearLocation" x-show="geo.status === 'done'">Remove pin</button>
                 </div>
             </div>
 

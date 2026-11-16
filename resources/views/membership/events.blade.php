@@ -1,31 +1,32 @@
 <x-layouts.app title="Events & news" heading="Events & news">
     <div class="mt-4 inline-flex rounded-xl border border-line bg-white p-1 text-sm font-medium">
-        <a href="{{ route('membership.events') }}" @class(['rounded-lg px-4 py-1.5', 'bg-brand text-white' => ! $mine, 'text-neutral-600' => $mine])>Everything</a>
-        <a href="{{ route('membership.events', ['scope' => 'state']) }}" @class(['rounded-lg px-4 py-1.5', 'bg-brand text-white' => $mine, 'text-neutral-600' => ! $mine])>My state</a>
+        <a href="{{ request()->fullUrlWithQuery(['scope' => null, 'page' => null]) }}" @class(['rounded-lg px-4 py-1.5', 'bg-brand text-white' => ! $mine, 'text-neutral-600' => $mine])>Everything</a>
+        <a href="{{ request()->fullUrlWithQuery(['scope' => 'state', 'page' => null]) }}" @class(['rounded-lg px-4 py-1.5', 'bg-brand text-white' => $mine, 'text-neutral-600' => ! $mine])>My state</a>
     </div>
 
-    <section class="mt-6">
-        <h2 class="font-display text-lg font-bold">Upcoming events</h2>
-        <div class="mt-3 grid gap-3 sm:grid-cols-2">
-            @forelse ($events as $event)
-                @php $at = $event->starts_at->setTimezone(config('membership.timezone')); @endphp
-                <article class="panel flex gap-4 p-4">
-                    <div class="flex h-16 w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-brand/10 text-brand-dark">
-                        <span class="text-[11px] font-semibold uppercase">{{ $at->format('M') }}</span>
-                        <span class="text-2xl leading-none font-bold">{{ $at->format('j') }}</span>
-                    </div>
-                    <div class="min-w-0">
-                        <span class="badge {{ $event->state_id ? 'bg-brand/10 text-brand-dark' : 'bg-accent/20 text-[#7a5b00]' }}">{{ $event->state?->name ?? 'National' }}</span>
-                        <h3 class="mt-1 font-display font-bold">{{ $event->title }}</h3>
-                        <p class="text-sm text-neutral-600">{{ $at->format('l, g:ia') }}{{ $event->venue ? ' · '.$event->venue : '' }}</p>
-                        @if ($event->description)<p class="mt-1 text-sm whitespace-pre-line text-neutral-700">{{ $event->description }}</p>@endif
-                    </div>
-                </article>
-            @empty
-                <p class="panel p-5 text-sm text-neutral-600 sm:col-span-2">No upcoming events{{ $mine ? ' in your state' : '' }} yet.</p>
-            @endforelse
-        </div>
-    </section>
+    @if ($upcoming->isNotEmpty())
+        <section class="mt-6">
+            <h2 class="font-display text-lg font-bold">Coming up</h2>
+            <div class="mt-3 flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none]">
+                @foreach ($upcoming as $event)
+                    @php $at = $event->starts_at->setTimezone(config('membership.timezone')); @endphp
+                    <a href="{{ route('membership.events', array_filter(['scope' => $mine ? 'state' : null, 'month' => $at->format('Y-m')])) }}" class="panel flex w-64 shrink-0 gap-3 p-3 hover:border-brand/40">
+                        <div class="flex h-14 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-brand/10 text-brand-dark">
+                            <span class="text-[11px] font-semibold uppercase">{{ $at->format('M') }}</span>
+                            <span class="text-xl leading-none font-bold">{{ $at->format('j') }}</span>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="truncate font-semibold">{{ $event->title }}</p>
+                            <p class="truncate text-sm text-neutral-600">{{ $at->format('D, g:ia') }}{{ $event->venue ? ' · '.$event->venue : '' }}</p>
+                            <p class="text-xs text-neutral-500">{{ $event->state?->name ?? 'National' }}</p>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
+    <x-event-calendar :calendar="$calendar" class="mt-6" />
 
     <section class="mt-8">
         <h2 class="font-display text-lg font-bold">News</h2>

@@ -12,7 +12,7 @@
             <li>Your name, email address, phone number, gender, age range and occupation.</li>
             <li>Your state, LGA, ward and (if you choose) polling unit.</li>
             <li>Whether you have a PVC and, if you give them, your VIN and NIN. These are encrypted when stored and are never shown in full.</li>
-            <li>Your current location, only if you tap "Share my current location".</li>
+            <li>One location pin, only if you allow it when you join or tap "Pin my location" on your dashboard (see <a href="#member-pin">below</a>).</li>
             <li>If you apply to canvass: how you would like to help and your WhatsApp number.</li>
             <li>If you report an empowerment programme: the details and the photo you upload.</li>
         </ul>
@@ -22,6 +22,9 @@
 
         <h2>Who can see it</h2>
         <p>Your state coordinator can see the members in their state, and a small national team can see everyone. Phone numbers are masked in lists, and NIN and VIN are never shown in full. Every export of member data is logged. The public page behind your card's QR code shows only your first name and last initial, your state and the month you joined.</p>
+
+        <h2 id="member-pin">Your location pin</h2>
+        <p>When you join, your phone asks whether to share your location; you can also pin it later from your dashboard. We save that single point (latitude and longitude) and the date. Your state coordinator and the national team see it as a pin on a map of members, to plan activities near members; opening that map is recorded in our audit log. It is not tracking: the pin never moves unless you pin again, and you can change or remove it at any time on your dashboard under <em>My card</em>.</p>
 
         <h2 id="location">Location sharing for canvassers</h2>
         <p>Approved canvassers can choose to share their location while they work. It is off until the canvasser agrees on their Field work page, and even then it is recorded only between a <em>Start shift</em> and <em>End shift</em> that they press themselves, while that page is open. We record the phone's GPS position about once a minute while they move, its accuracy and the time, and the visits, check-ins and reports they log, with an optional photo. Their state coordinator and the national team can see this to plan activities and keep canvassers safe. Positions are deleted after {{ config('tracking.retention_days') }} days; logged activities are kept as campaign records. Ordinary members are never tracked. A canvasser can withdraw at any time, which stops location sharing immediately.</p>

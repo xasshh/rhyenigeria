@@ -15,6 +15,12 @@
             <x-stat label="Canvassers" :value="$summary['canvassers_approved']" :hint="number_format($summary['canvassers_pending']).' pending'" :tone="$summary['canvassers_pending'] ? 'warn' : 'default'" />
         </div>
 
+        @if (! empty($standing['rank']))
+            <a href="{{ route('coordinator.leaderboard') }}#my-state" class="mt-4 flex items-center gap-3 rounded-2xl border border-brand/30 bg-brand/5 p-4 text-sm text-brand-dark hover:bg-brand/10">
+                <x-icon name="trophy" /> <span class="flex-1">{{ $standing['name'] }} is <strong>#{{ $standing['rank'] }} of {{ $standing['of'] }}</strong> states by members. See the leaderboard.</span> <x-icon name="arrow-right" class="h-4 w-4" />
+            </a>
+        @endif
+
         @if ($summary['canvassers_pending'] && ! $state)
             <a href="{{ staff_route('canvassers.index') }}" class="mt-4 flex items-center gap-3 rounded-2xl border border-accent/40 bg-accent/10 p-4 text-sm text-[#7a5b00]">
                 <x-icon name="badge" /> <span class="flex-1"><strong>{{ $summary['canvassers_pending'] }}</strong> canvasser {{ str('application')->plural($summary['canvassers_pending']) }} waiting for review</span> <x-icon name="arrow-right" class="h-4 w-4" />

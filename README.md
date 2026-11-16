@@ -236,6 +236,25 @@ only by choice:
 - Positions are deleted after `TRACKING_RETENTION_DAYS` (90) by `tracking:prune`; activities are kept. The
   privacy notice explains all of this under **Location sharing for canvassers** (`/privacy#location`).
 
+### Leaderboard, members map and calendar
+
+- **Leaderboard** (`/coordinator/leaderboard`, `/admin/leaderboard`; `App\Services\Membership\Leaderboard`). Every
+  state ranked by members, new this week/month, approved canvassers, PVC holders or field activities (30 days),
+  via `?by=`. Ties share a rank. The state table is aggregate counts only, so coordinators see every state with
+  their own highlighted and the gap to the state above; the coordinator dashboard shows "#N of 37". **Top
+  recruiters** (sign-ups through a referral link) and **top canvassers** start from the viewer's own scope, so a
+  coordinator only sees people in their state; super admins see them nationally.
+- **Members map** (`/coordinator/members/map`, `/admin/members/map` with a state picker). One pin per member who
+  shared a location (`member_profiles.signup_lat/lng`, `location_pinned_at`), clustered when zoomed out, members
+  and canvassers coloured separately. Scoped by `User::membersVisibleTo()`; loading the pins is audit-logged as
+  `members.map_viewed`. The join wizard asks the phone for location when the person reaches the Location step
+  (still optional); members without a pin see **Pin your location on the map** on their home page, and can
+  re-pin or remove it under **My card** (`PUT`/`DELETE /membership/location`). It is a single point, never tracking.
+- **Calendar** (`/coordinator/calendar`, `/admin/calendar`, and on the member **Events & news** page). A Monday-first
+  month grid in Nigerian time (`App\Support\EventCalendar`, `?month=YYYY-MM`) with past events greyed, national
+  and state events coloured differently, and a list of the month's events below (tap a day to filter). Members and
+  coordinators see national events plus their own state's; super admins see all, or one state plus national.
+
 ### Super admins (`/admin`, role `super_admin`)
 
 National overview (totals, registrations chart, sortable by-state table linking

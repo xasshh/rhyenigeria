@@ -39,6 +39,7 @@ class MemberProfile extends Model
             'canvasser_reviewed_at' => 'datetime',
             'signup_lat' => 'float',
             'signup_lng' => 'float',
+            'location_pinned_at' => 'datetime',
             'consent_accepted_at' => 'datetime',
             'empowerment_benefited' => 'boolean',
         ];
@@ -72,6 +73,12 @@ class MemberProfile extends Model
     public function roleLabel(): string
     {
         return $this->isApprovedCanvasser() ? 'Canvasser' : 'Member';
+    }
+
+    /** True when the member has put a pin on the members map (at sign-up or later). */
+    public function hasPinnedLocation(): bool
+    {
+        return $this->signup_lat !== null && $this->signup_lng !== null;
     }
 
     public function hasVin(): bool

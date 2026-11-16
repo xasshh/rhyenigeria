@@ -35,9 +35,13 @@
             @else
                 <p class="mt-2 text-neutral-600">No upcoming events yet. We'll post them here.</p>
             @endif
-            <a href="{{ route('membership.events') }}" class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand">All events & news <x-icon name="arrow-right" class="h-4 w-4" /></a>
+            <a href="{{ route('membership.events') }}" class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand">Calendar, events & news <x-icon name="arrow-right" class="h-4 w-4" /></a>
         </section>
     </div>
+
+    @unless ($profile->hasPinnedLocation())
+        <div class="mt-4">@include('membership.partials.location-pin', ['profile' => $profile, 'prompt' => true])</div>
+    @endunless
 
     @if ($profile->needsVin())
         <a href="{{ route('membership.card') }}#voter" class="mt-4 flex items-center gap-3 rounded-2xl border border-accent/40 bg-accent/10 p-4 text-sm text-[#7a5b00]">
