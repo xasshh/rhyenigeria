@@ -11,22 +11,20 @@ use App\Services\Geo\AreaMap;
 use App\Support\Countdown;
 use Illuminate\View\View;
 
-/** The public homepage: header slider (event flyers first), election countdown, upcoming events, news and the Nigeria map. */
+/** The public homepage: header slider (upcoming events first), election countdown, news and the Nigeria map. */
 class LandingController extends Controller
 {
-    public const MAX_EVENT_SLIDES = 3;
+    public const MAX_EVENT_SLIDES = 6;
 
     public function __invoke(AreaMap $map): View
     {
         $electionDate = Setting::electionDate();
-        $events = Event::query()->publicUpcoming()->with('state:id,name,code')->limit(6)->get();
-
-        // Upcoming events with a flyer lead the slider (soonest first) until they have passed.
-        $eventSlides = $events->filter(fn (Event $e) => $e->flyer_path)->take(self::MAX_EVENT_SLIDES)->map->toSlide();
+        // Every upcoming public event leads the slider (soonest first) until it has passed.
+        $eventSlides = Event::query()->publicUpcoming()->with('state:id,name,code')
+            ->limit(self::MAX_EVENT_SLIDES)->get()->map->toSlide();
 
         return view('landing', [
             'slides' => $eventSlides->concat(HeroSlide::query()->shown()->get())->values(),
-            'events' => $events,
             'electionDate' => $electionDate,
             'electionLabel' => Setting::electionLabel(),
             'countdown' => Countdown::parts($electionDate),

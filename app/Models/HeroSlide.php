@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
 use Database\Factories\HeroSlideFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -27,6 +28,11 @@ class HeroSlide extends Model
 
     /** A photo of a person, shown in the same rounded frame as flyers. */
     public const LAYOUT_PORTRAIT = 'portrait';
+
+    /** Set on the unsaved slides built from upcoming events; a flyer-less event shows a date card instead of a picture. */
+    public ?CarbonInterface $eventStartsAt = null;
+
+    public ?string $eventPlace = null;
 
     public const LAYOUTS = [
         self::LAYOUT_PORTRAIT => 'Photo of a person',

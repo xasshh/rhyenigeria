@@ -62,8 +62,8 @@ class Event extends Model
     }
 
     /**
-     * A homepage slide for this event (not saved): its flyer beside the title, date and venue.
-     * Only events with a flyer become slides.
+     * A homepage slide for this event (not saved): its flyer, or a date card when it has none, beside the
+     * title, date and venue.
      */
     public function toSlide(): HeroSlide
     {
@@ -79,6 +79,8 @@ class Event extends Model
         ]);
         $slide->image_path = $this->flyer_path;
         $slide->image_original_path = $this->flyer_original_path;
+        $slide->eventStartsAt = $at;
+        $slide->eventPlace = $this->venue ?: ($this->state?->name ? $this->state->name.' State' : 'Nationwide');
 
         return $slide;
     }

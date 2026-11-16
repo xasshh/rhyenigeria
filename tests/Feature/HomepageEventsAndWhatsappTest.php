@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
- * New events reach the public homepage (a list, and a slide when they have a flyer). The WhatsApp groups
+ * Every new upcoming public event becomes a homepage slide (its flyer, or a date card). The WhatsApp groups
  * page shows each state's coordinator to anyone, but the invite link only to signed-in members of that state.
  */
 class HomepageEventsAndWhatsappTest extends TestCase
@@ -47,10 +47,23 @@ class HomepageEventsAndWhatsappTest extends TestCase
         auth()->logout();
         $this->get('/')->assertOk()
             ->assertViewHas('slides', fn ($slides) => $slides->first()->headline === 'Jos Youth Townhall')
-            ->assertSee('Upcoming events')
+            ->assertDontSee('Upcoming events')
             ->assertSee('Tamarald Event Centre')
             ->assertSee(route('join', ['state' => 'PL']), false)
             ->assertDontSee('Private Planning Meeting');
+    }
+
+    public function test_an_event_without_a_flyer_still_gets_a_slide_with_a_date_card(): void
+    {
+        $state = State::factory()->create(['name' => 'Benue', 'code' => 'BE']);
+        $event = new Event(['title' => 'Makurdi Rally', 'starts_at' => now()->addDays(10), 'venue' => 'Aper Aku Stadium']);
+        $event->state()->associate($state)->save();
+
+        $this->get('/')->assertOk()
+            ->assertViewHas('slides', fn ($slides) => $slides->first()->headline === 'Makurdi Rally' && $slides->first()->eventStartsAt !== null)
+            ->assertSee('Register to attend')
+            ->assertSee($event->starts_at->setTimezone(config('membership.timezone'))->format('g:ia').' · Aper Aku Stadium')
+            ->assertDontSee('Image coming soon');
     }
 
     public function test_past_events_leave_the_homepage(): void

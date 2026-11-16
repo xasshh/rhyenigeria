@@ -30,7 +30,7 @@
             $themes = $slides->keys()->map(fn ($i) => $i % 2 === 0 ? 'light' : 'dark')->values()->all() ?: ['dark'];
             $yellow = 'bg-accent text-forest hover:bg-[#d9a404]';
         @endphp
-        <section class="relative isolate overflow-hidden"
+        <section id="events" class="relative isolate scroll-mt-20 overflow-hidden"
                  x-data="heroSlider({ count: {{ max($slides->count(), 1) }} })"
                  x-on:mouseenter="hovering = true" x-on:mouseleave="hovering = false"
                  x-on:focusin="focused = true" x-on:focusout="focused = $el.contains($event.relatedTarget)"
@@ -127,6 +127,18 @@
                                             <img src="{{ $slide->imageUrl() }}" alt="{{ $slide->image_alt ?? '' }}" class="aspect-[4/5] h-auto w-full object-cover object-top" width="1280" height="1600" @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif>
                                         </a>
                                         </div>
+                                    @elseif ($slide->eventStartsAt)
+                                        {{-- An event posted without a flyer: a date card in the same 4:5 frame. --}}
+                                        <div class="relative mx-auto w-full max-w-[340px] sm:max-w-[400px] lg:max-w-none">
+                                        <x-logo-tag class="-bottom-4 -left-3 sm:-left-5" />
+                                        <div @class(['relative flex aspect-[4/5] w-full flex-col items-center justify-center overflow-hidden rounded-[24px] p-8 text-center', 'bg-action text-white shadow-[0_30px_60px_-25px_rgba(15,42,28,0.45)]' => $light, 'bg-white text-forest shadow-[0_30px_60px_-25px_rgba(0,0,0,0.6)]' => ! $light])>
+                                            <x-fingerprint @class(['absolute -right-16 -bottom-20 w-[85%]', 'text-accent/25' => $light, 'text-brand/15' => ! $light]) />
+                                            <p class="relative text-[15px] font-semibold tracking-[0.2em] uppercase opacity-80">{{ $slide->eventStartsAt->format('l') }}</p>
+                                            <p class="relative mt-2 font-headline text-[120px] leading-none font-extrabold tracking-[-0.04em] sm:text-[150px]">{{ $slide->eventStartsAt->format('j') }}</p>
+                                            <p class="relative font-headline text-[34px] leading-none font-extrabold tracking-[-0.02em] uppercase sm:text-[40px]">{{ $slide->eventStartsAt->format('F') }}</p>
+                                            <p class="relative mt-6 rounded-full bg-accent px-4 py-2 text-[15px] font-semibold text-forest">{{ $slide->eventStartsAt->format('g:ia') }} · {{ $slide->eventPlace }}</p>
+                                        </div>
+                                        </div>
                                     @else
                                         <div @class(['relative mx-auto flex aspect-[4/5] w-full max-w-[340px] items-center justify-center overflow-hidden rounded-[24px] border border-dashed sm:max-w-[400px] lg:max-w-none', 'border-action/30 bg-action/[0.04]' => $light, 'border-white/30 bg-white/[0.06]' => ! $light])>
                                             <x-fingerprint @class(['absolute w-3/4', 'text-brand/20' => $light, 'text-accent/30' => ! $light]) />
@@ -212,43 +224,6 @@
                 </div>
             </div>
         </section>
-
-        {{-- Upcoming events: anything staff post with "Show on the public homepage" ticked appears here. --}}
-        @if ($events->isNotEmpty())
-            <section id="events" class="mx-auto max-w-[1440px] px-5 py-16 sm:px-8 lg:px-[66px] lg:py-20" aria-labelledby="events-title">
-                <div class="flex flex-wrap items-end justify-between gap-4">
-                    <div>
-                        <p class="eyebrow text-action">What's next</p>
-                        <h2 id="events-title" class="mt-3 font-headline text-[36px] leading-[1.05] font-extrabold tracking-[-0.03em] text-forest sm:text-[48px]">Upcoming events</h2>
-                    </div>
-                    <a href="{{ route('join') }}" class="inline-flex items-center gap-1.5 font-body text-[16px] font-bold text-action hover:underline">Join to get every update <x-icon name="arrow-right" class="h-4 w-4" /></a>
-                </div>
-                <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                    @foreach ($events as $event)
-                        @php($at = $event->starts_at->setTimezone(config('membership.timezone')))
-                        <article class="flex flex-col overflow-hidden rounded-[20px] border border-line bg-white font-body shadow-[0_20px_40px_-30px_rgba(15,42,28,0.4)]">
-                            @if ($event->flyerUrl())
-                                <a href="{{ $event->flyerOriginalUrl() ?? $event->flyerUrl() }}" target="_blank" rel="noopener" aria-label="Open the flyer for {{ $event->title }}">
-                                    <img src="{{ $event->flyerUrl() }}" alt="Flyer: {{ $event->title }}" class="aspect-[4/3] w-full object-cover object-top" loading="lazy" width="800" height="600">
-                                </a>
-                            @endif
-                            <div class="flex flex-1 gap-4 p-5">
-                                <div class="flex h-16 w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-action text-white">
-                                    <span class="text-[11px] font-semibold uppercase">{{ $at->format('M') }}</span>
-                                    <span class="text-2xl leading-none font-bold">{{ $at->format('j') }}</span>
-                                </div>
-                                <div class="min-w-0">
-                                    <p class="text-[12px] font-semibold tracking-[0.12em] text-action uppercase">{{ $event->state?->name ?? 'National' }}</p>
-                                    <h3 class="mt-1 font-headline text-[20px] leading-tight font-extrabold text-forest">{{ $event->title }}</h3>
-                                    <p class="mt-1 text-[15px] text-neutral-600">{{ $at->format('l, g:ia') }}{{ $event->venue ? ' · '.$event->venue : '' }}</p>
-                                    @if ($event->description)<p class="mt-2 line-clamp-3 text-[15px] text-neutral-700">{{ $event->description }}</p>@endif
-                                </div>
-                            </div>
-                        </article>
-                    @endforeach
-                </div>
-            </section>
-        @endif
 
         {{-- Latest public news --}}
         @if ($news->isNotEmpty())
