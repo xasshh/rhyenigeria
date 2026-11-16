@@ -248,6 +248,11 @@ only by choice:
   page: members see their own state's link on their dashboard (**Home → WhatsApp group**), the welcome screen and
   My card. Super admins set each state's coordinator name, photo (a 600 px WebP under `coordinators/`) and
   WhatsApp link under **Settings**.
+- **Bulk import from the coordinators' Google Form**: `php artisan coordinators:import <form.csv>
+  --photos=<"Passport photograph (File responses)" folder> [--photo="State=file name"] [--dry-run]`. Photos are
+  matched by the " - Full name" Google Forms adds to each file name; use `--photo` when the uploader's account
+  name differs. Entries that aren't WhatsApp invite links are skipped, and the state keeps its current link.
+  Safe to re-run.
 - The leaderboard numbers states 1, 2, 3… down the table; tied states are listed alphabetically.
 
 ### Leaderboard, members map and calendar
