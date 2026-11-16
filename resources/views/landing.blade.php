@@ -213,6 +213,43 @@
             </div>
         </section>
 
+        {{-- Upcoming events: anything staff post with "Show on the public homepage" ticked appears here. --}}
+        @if ($events->isNotEmpty())
+            <section id="events" class="mx-auto max-w-[1440px] px-5 py-16 sm:px-8 lg:px-[66px] lg:py-20" aria-labelledby="events-title">
+                <div class="flex flex-wrap items-end justify-between gap-4">
+                    <div>
+                        <p class="eyebrow text-action">What's next</p>
+                        <h2 id="events-title" class="mt-3 font-headline text-[36px] leading-[1.05] font-extrabold tracking-[-0.03em] text-forest sm:text-[48px]">Upcoming events</h2>
+                    </div>
+                    <a href="{{ route('join') }}" class="inline-flex items-center gap-1.5 font-body text-[16px] font-bold text-action hover:underline">Join to get every update <x-icon name="arrow-right" class="h-4 w-4" /></a>
+                </div>
+                <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    @foreach ($events as $event)
+                        @php($at = $event->starts_at->setTimezone(config('membership.timezone')))
+                        <article class="flex flex-col overflow-hidden rounded-[20px] border border-line bg-white font-body shadow-[0_20px_40px_-30px_rgba(15,42,28,0.4)]">
+                            @if ($event->flyerUrl())
+                                <a href="{{ $event->flyerOriginalUrl() ?? $event->flyerUrl() }}" target="_blank" rel="noopener" aria-label="Open the flyer for {{ $event->title }}">
+                                    <img src="{{ $event->flyerUrl() }}" alt="Flyer: {{ $event->title }}" class="aspect-[4/3] w-full object-cover object-top" loading="lazy" width="800" height="600">
+                                </a>
+                            @endif
+                            <div class="flex flex-1 gap-4 p-5">
+                                <div class="flex h-16 w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-action text-white">
+                                    <span class="text-[11px] font-semibold uppercase">{{ $at->format('M') }}</span>
+                                    <span class="text-2xl leading-none font-bold">{{ $at->format('j') }}</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-[12px] font-semibold tracking-[0.12em] text-action uppercase">{{ $event->state?->name ?? 'National' }}</p>
+                                    <h3 class="mt-1 font-headline text-[20px] leading-tight font-extrabold text-forest">{{ $event->title }}</h3>
+                                    <p class="mt-1 text-[15px] text-neutral-600">{{ $at->format('l, g:ia') }}{{ $event->venue ? ' · '.$event->venue : '' }}</p>
+                                    @if ($event->description)<p class="mt-2 line-clamp-3 text-[15px] text-neutral-700">{{ $event->description }}</p>@endif
+                                </div>
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+            </section>
+        @endif
+
         {{-- Latest public news --}}
         @if ($news->isNotEmpty())
             <section id="news" class="bg-surface" aria-labelledby="news-title">

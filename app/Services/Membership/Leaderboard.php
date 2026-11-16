@@ -27,7 +27,7 @@ class Leaderboard
     public const ACTIVITY_DAYS = 30;
 
     /**
-     * Every state, ranked by one metric. Ties share a rank (1, 2, 2, 4) and are listed by name.
+     * Every state, ranked by one metric and numbered 1 to N down the table. Ties are listed by name.
      *
      * @return list<array{id: int, name: string, code: string, rank: int, members: int, week: int, month: int, canvassers: int, pvc: int, activities: int}>
      */
@@ -79,8 +79,9 @@ class Leaderboard
             ->values()
             ->all();
 
+        // Positions run 1, 2, 3, 4… down the table; tied states are listed by name.
         foreach ($rows as $i => $row) {
-            $rows[$i]['rank'] = $i > 0 && $row[$metric] === $rows[$i - 1][$metric] ? $rows[$i - 1]['rank'] : $i + 1;
+            $rows[$i]['rank'] = $i + 1;
         }
 
         return $rows;

@@ -30,7 +30,7 @@
             <button class="btn-primary">Post update</button>
         </form>
 
-        <form method="POST" action="{{ staff_route('events.store') }}" id="event" class="panel scroll-mt-24 space-y-4 p-5">
+        <form method="POST" action="{{ staff_route('events.store') }}" id="event" enctype="multipart/form-data" class="panel scroll-mt-24 space-y-4 p-5">
             @csrf
             <h2 class="font-display text-lg font-bold">Add an event</h2>
             <div><label class="label" for="e-title">Title</label><input id="e-title" name="title" class="field" required maxlength="255" placeholder="e.g. Youth rally"></div>
@@ -43,6 +43,13 @@
                 <div><label class="label" for="e-state">Where</label>
                     <select id="e-state" name="state_id" class="field"><option value="">National</option>@foreach ($states as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach</select></div>
             @endif
+            <div>
+                <label class="label" for="e-flyer">Flyer <span class="font-normal text-neutral-500">(optional)</span></label>
+                <input id="e-flyer" name="flyer" type="file" accept="image/jpeg,image/png,image/webp" class="field py-2 text-sm">
+                <p class="hint">JPEG, PNG or WebP, at least 600 px wide. With a flyer, the event also gets its own slide at the top of the homepage until it has passed.</p>
+                @error('flyer')<p class="error">{{ $message }}</p>@enderror
+            </div>
+            <label class="flex items-center gap-2 text-sm"><input type="hidden" name="show_on_homepage" value="0"><input type="checkbox" name="show_on_homepage" value="1" class="accent-brand" checked> Show on the public homepage</label>
             <button class="btn-primary">Add event</button>
         </form>
     </div>
@@ -108,7 +115,7 @@
                     <li class="p-4">
                         <div class="flex items-start gap-3">
                             <div class="min-w-0 flex-1 text-sm">
-                                <p class="font-semibold">{{ $event->title }} @if ($event->starts_at->isPast())<span class="badge bg-neutral-100 text-neutral-500">Past</span>@endif</p>
+                                <p class="font-semibold">{{ $event->title }} @if ($event->starts_at->isPast())<span class="badge bg-neutral-100 text-neutral-500">Past</span>@elseif ($event->is_public)<span class="badge bg-brand/10 text-brand-dark">On homepage{{ $event->flyer_path ? ' · slide' : '' }}</span>@endif</p>
                                 <p class="text-xs text-neutral-500">{{ $event->state?->name ?? 'National' }} · {{ $event->starts_at->setTimezone($tz)->format('D j M Y, g:ia') }}{{ $event->venue ? ' · '.$event->venue : '' }}</p>
                             </div>
                             @if ($isAdmin || $event->state_id === auth()->user()->state_id)
@@ -118,7 +125,7 @@
                         @if ($isAdmin || $event->state_id === auth()->user()->state_id)
                             <details class="group mt-2">
                                 <summary class="cursor-pointer text-sm font-medium text-brand">Edit</summary>
-                                <form method="POST" action="{{ staff_route('events.update', $event) }}" class="mt-3 space-y-3">
+                                <form method="POST" action="{{ staff_route('events.update', $event) }}" enctype="multipart/form-data" class="mt-3 space-y-3">
                                     @csrf @method('PUT')
                                     <input name="title" class="field py-2 text-sm" maxlength="255" required value="{{ $event->title }}" aria-label="Title">
                                     <input name="starts_at" type="datetime-local" class="field py-2 text-sm" required value="{{ $event->starts_at->setTimezone($tz)->format('Y-m-d\TH:i') }}" aria-label="Date and time">
@@ -127,6 +134,14 @@
                                     @if ($isAdmin)
                                         <select name="state_id" class="field py-2 text-sm" aria-label="State"><option value="">National</option>@foreach ($states as $s)<option value="{{ $s->id }}" @selected($event->state_id === $s->id)>{{ $s->name }}</option>@endforeach</select>
                                     @endif
+                                    @if ($event->flyerUrl())
+                                        <div class="flex items-center gap-3">
+                                            <img src="{{ $event->flyerUrl() }}" alt="" class="h-20 w-16 rounded-lg object-cover ring-1 ring-line">
+                                            <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="remove_flyer" value="1" class="accent-brand"> Remove flyer</label>
+                                        </div>
+                                    @endif
+                                    <div><label class="text-xs text-neutral-500" for="flyer-{{ $event->id }}">{{ $event->flyerUrl() ? 'Replace flyer' : 'Add a flyer' }}</label><input id="flyer-{{ $event->id }}" name="flyer" type="file" accept="image/jpeg,image/png,image/webp" class="field py-2 text-sm"></div>
+                                    <label class="flex items-center gap-2 text-sm"><input type="hidden" name="show_on_homepage" value="0"><input type="checkbox" name="show_on_homepage" value="1" class="accent-brand" @checked($event->is_public)> Show on the public homepage</label>
                                     <button class="btn-primary btn-sm">Save changes</button>
                                 </form>
                             </details>

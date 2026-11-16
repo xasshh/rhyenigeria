@@ -10,6 +10,7 @@
             </div>
             <nav class="flex flex-wrap gap-x-6 gap-y-2 font-body text-[15px] text-white/80" aria-label="Footer">
                 <a href="{{ route('news.index') }}" class="hover:text-white">News</a>
+                <a href="{{ route('whatsapp') }}" class="hover:text-white">WhatsApp groups</a>
                 <a href="{{ route('join') }}" class="hover:text-white">Join the movement</a>
                 <a href="{{ route('login') }}" class="hover:text-white">Sign in</a>
                 <a href="{{ route('privacy') }}" class="hover:text-white">Privacy notice</a>

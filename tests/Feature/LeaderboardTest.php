@@ -52,7 +52,7 @@ class LeaderboardTest extends TestCase
         $this->get('/coordinator')->assertOk()->assertSee('#2 of 3');
     }
 
-    public function test_states_can_be_ranked_by_another_metric_and_ties_share_a_rank(): void
+    public function test_states_can_be_ranked_by_another_metric_and_are_numbered_in_order(): void
     {
         $a = State::factory()->create(['name' => 'Abia']);
         $b = State::factory()->create(['name' => 'Benue']);
@@ -64,7 +64,7 @@ class LeaderboardTest extends TestCase
         $this->actingAs(User::factory()->superAdmin()->create())
             ->get('/admin/leaderboard?by=canvassers')
             ->assertOk()
-            ->assertViewHas('states', fn (array $rows) => array_column($rows, 'rank', 'name') === ['Benue' => 1, 'Cross River' => 1, 'Abia' => 3]);
+            ->assertViewHas('states', fn (array $rows) => array_column($rows, 'rank', 'name') === ['Benue' => 1, 'Cross River' => 2, 'Abia' => 3]);
     }
 
     public function test_recruiter_and_canvasser_tables_stay_inside_the_coordinators_state(): void

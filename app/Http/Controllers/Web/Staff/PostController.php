@@ -43,7 +43,7 @@ class PostController extends Controller
             'starts_at' => ['required', 'date'],
             'venue' => ['nullable', 'string', 'max:255'],
             'state_id' => ['nullable', 'integer', Rule::exists('states', 'id')],
-        ]);
+        ] + self::eventExtrasRules());
 
         $event = new Event([
             'title' => $data['title'],
@@ -53,6 +53,7 @@ class PostController extends Controller
         ]);
         $event->state_id = $this->targetState($request->user(), $data['state_id'] ?? null);
         $event->created_by = $request->user()->id;
+        $this->applyEventExtras($request, $event);
         $event->save();
 
         return back()->with('status', 'Event posted.');
@@ -101,7 +102,7 @@ class PostController extends Controller
             'starts_at' => ['required', 'date'],
             'venue' => ['nullable', 'string', 'max:255'],
             'state_id' => ['nullable', 'integer', Rule::exists('states', 'id')],
-        ]);
+        ] + self::eventExtrasRules());
 
         $event->fill([
             'title' => $data['title'],
@@ -111,6 +112,7 @@ class PostController extends Controller
         ]);
         // Coordinators cannot move a post out of their state; super admins can retarget it.
         $event->state_id = $this->targetState($viewer, $data['state_id'] ?? null);
+        $this->applyEventExtras($request, $event);
         $event->save();
 
         return redirect()->to(staff_route('posts.index'))->with('status', 'Event updated.');
@@ -146,6 +148,7 @@ class PostController extends Controller
     public function destroyEvent(Request $request, Event $event): RedirectResponse
     {
         $this->authorizePost($request->user(), $event->state_id);
+        $event->deleteFlyer();
         $event->delete();
 
         return back()->with('status', 'Event removed.');
@@ -171,6 +174,31 @@ class PostController extends Controller
     }
 
     /** @return array<string, mixed> */
+    /** @return array<string, list<mixed>> */
+    private static function eventExtrasRules(): array
+    {
+        return [
+            'show_on_homepage' => ['nullable', 'boolean'],
+            'flyer' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240', 'dimensions:min_width=600'],
+            'remove_flyer' => ['nullable', 'boolean'],
+        ];
+    }
+
+    /** The homepage switch (on unless unticked) and the optional flyer, which makes the event a homepage slide. */
+    private function applyEventExtras(Request $request, Event $event): void
+    {
+        if ($request->has('show_on_homepage')) {
+            $event->is_public = $request->boolean('show_on_homepage');
+        }
+
+        if ($request->hasFile('flyer') || $request->boolean('remove_flyer')) {
+            $event->deleteFlyer();
+        }
+        if ($request->hasFile('flyer')) {
+            [$event->flyer_original_path, $event->flyer_path] = WebImage::storeWithWebp($request->file('flyer'), 'events');
+        }
+    }
+
     private static function photoRules(): array
     {
         return [

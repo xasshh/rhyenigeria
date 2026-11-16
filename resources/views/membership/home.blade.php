@@ -39,6 +39,30 @@
         </section>
     </div>
 
+    {{-- State WhatsApp group (the link is only ever shown to signed-in members). --}}
+    <section id="whatsapp" class="mt-4 scroll-mt-24 rounded-2xl border border-[#25d366]/40 bg-[#25d366]/10 p-5">
+        <div class="flex flex-wrap items-center gap-4">
+            @if ($user->state?->coordinatorPhotoUrl())
+                <img src="{{ $user->state->coordinatorPhotoUrl() }}" alt="" class="h-14 w-14 shrink-0 rounded-xl object-cover object-top">
+            @else
+                <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white text-[#128c4a]"><x-icon name="whatsapp" class="h-7 w-7" /></span>
+            @endif
+            <div class="min-w-0 flex-1">
+                <h2 class="font-display font-bold">{{ $user->state?->name }} WhatsApp group</h2>
+                <p class="text-sm text-neutral-700">
+                    @if ($user->state?->whatsapp_group_url)
+                        Chat with members in your state{{ $user->state->coordinator_name ? ' and your coordinator, '.$user->state->coordinator_name : '' }}.
+                    @else
+                        Your state's group is being set up. The link will appear here when it is ready.
+                    @endif
+                </p>
+            </div>
+            @if ($user->state?->whatsapp_group_url)
+                <a href="{{ $user->state->whatsapp_group_url }}" target="_blank" rel="noopener" class="btn w-full bg-[#25d366] font-bold text-white hover:bg-[#1fb457] sm:w-auto"><x-icon name="whatsapp" class="h-5 w-5" /> Join the group</a>
+            @endif
+        </div>
+    </section>
+
     @unless ($profile->hasPinnedLocation())
         <div class="mt-4">@include('membership.partials.location-pin', ['profile' => $profile, 'prompt' => true])</div>
     @endunless

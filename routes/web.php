@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', LandingController::class)->name('home');
 Route::get('privacy', [PublicController::class, 'privacy'])->name('privacy');
+Route::get('whatsapp', [PublicController::class, 'whatsapp'])->name('whatsapp');
 Route::get('news', [NewsController::class, 'index'])->name('news.index');
 Route::get('news/{slug}', [NewsController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('news.show');
 Route::get('verify/{token}', [PublicController::class, 'verify'])->middleware('throttle:60,1')->name('verify');

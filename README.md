@@ -236,6 +236,20 @@ only by choice:
 - Positions are deleted after `TRACKING_RETENTION_DAYS` (90) by `tracking:prune`; activities are kept. The
   privacy notice explains all of this under **Location sharing for canvassers** (`/privacy#location`).
 
+### Events on the homepage and state WhatsApp groups
+
+- **Events**: every event staff post has **Show on the public homepage** (ticked by default). Upcoming public
+  events are listed under **Upcoming events** on the homepage (`#events`, latest six). An event can carry a
+  **flyer** (JPEG/PNG/WebP, 600 px+, public disk under `events/` with a WebP copy); upcoming events with a flyer
+  also lead the header slider (up to three, soonest first) with a "Register to attend" button
+  (`/join?state=…`) until they have passed. Coordinators can post public events for their own state.
+- **WhatsApp groups** (`/whatsapp`, in the homepage menu and footer): pick a state, see its coordinator's name
+  and photo, then **Register in {state}** (`/join?state=XX`) or sign in. The invite link is never on the public
+  page: members see their own state's link on their dashboard (**Home → WhatsApp group**), the welcome screen and
+  My card. Super admins set each state's coordinator name, photo (a 600 px WebP under `coordinators/`) and
+  WhatsApp link under **Settings**.
+- The leaderboard numbers states 1, 2, 3… down the table; tied states are listed alphabetically.
+
 ### Leaderboard, members map and calendar
 
 - **Leaderboard** (`/coordinator/leaderboard`, `/admin/leaderboard`; `App\Services\Membership\Leaderboard`). Every

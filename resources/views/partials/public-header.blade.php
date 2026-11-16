@@ -12,8 +12,8 @@
     $pad = fn (int $n) => str_pad((string) $n, 2, '0', STR_PAD_LEFT);
     $current ??= 'home';
     $home = route('home');
-    $links = ['Home' => $home, 'Countdown' => $home.'#countdown', 'News' => route('news.index'), 'Get Involved' => route('join'), 'Members map' => $home.'#map', 'Contact' => '#contact'];
-    $currentLabel = ['home' => 'Home', 'news' => 'News'][$current] ?? null;
+    $links = ['Home' => $home, 'Countdown' => $home.'#countdown', 'Events' => $home.'#events', 'News' => route('news.index'), 'WhatsApp groups' => route('whatsapp'), 'Get Involved' => route('join'), 'Members map' => $home.'#map', 'Contact' => '#contact'];
+    $currentLabel = ['home' => 'Home', 'news' => 'News', 'whatsapp' => 'WhatsApp groups'][$current] ?? null;
 @endphp
     {{-- Announcement bar, with a compact live countdown --}}
     <div class="bg-forest px-4 py-2.5 text-[13px] leading-snug text-white" x-data="countdown(@js($electionDate->toIso8601String()), @js($countdown))">
@@ -50,19 +50,19 @@
             @endif
         </a>
 
-        <nav class="hidden items-center gap-7 text-sm xl:flex" aria-label="Main">
-            @foreach ($links as $label => $href)
-                <a href="{{ $href }}" @class(['transition-colors hover:text-brand', 'font-bold text-brand' => $label === $currentLabel, 'text-brand-soft' => $label !== $currentLabel]) @if ($label === $currentLabel) aria-current="page" @endif>{{ $label }}</a>
+        <nav class="hidden items-center gap-5 text-sm 2xl:gap-7 xl:flex" aria-label="Main">
+            @foreach (\Illuminate\Support\Arr::except($links, ['Countdown']) as $label => $href)
+                <a href="{{ $href }}" @class(['whitespace-nowrap transition-colors hover:text-brand', 'font-bold text-brand' => $label === $currentLabel, 'text-brand-soft' => $label !== $currentLabel]) @if ($label === $currentLabel) aria-current="page" @endif>{{ $label }}</a>
             @endforeach
         </nav>
 
         <div class="hidden items-center gap-5 lg:flex">
             @auth
-                <a href="{{ auth()->user()->homeRoute() }}" class="text-sm font-bold text-brand hover:underline">My dashboard</a>
+                <a href="{{ auth()->user()->homeRoute() }}" class="text-sm font-bold whitespace-nowrap text-brand hover:underline">My dashboard</a>
             @else
-                <a href="{{ route('login') }}" class="text-sm font-bold text-brand hover:underline">Sign in</a>
+                <a href="{{ route('login') }}" class="text-sm font-bold whitespace-nowrap text-brand hover:underline">Sign in</a>
             @endauth
-            <a href="{{ route('join') }}" class="rounded-[10px] bg-accent px-4 py-2.5 text-sm font-bold text-forest transition-colors hover:bg-[#d9a404]">Join the Movement</a>
+            <a href="{{ route('join') }}" class="rounded-[10px] bg-accent px-4 py-2.5 text-sm font-bold whitespace-nowrap text-forest transition-colors hover:bg-[#d9a404]">Join the Movement</a>
         </div>
 
         {{-- Small screens: menu without JavaScript --}}
