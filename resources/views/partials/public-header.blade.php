@@ -12,7 +12,15 @@
     $pad = fn (int $n) => str_pad((string) $n, 2, '0', STR_PAD_LEFT);
     $current ??= 'home';
     $home = route('home');
-    $links = ['Home' => $home, 'Countdown' => $home.'#countdown', 'Events' => $home.'#events', 'News' => route('news.index'), 'WhatsApp groups' => route('whatsapp'), 'Get Involved' => route('join'), 'Members map' => $home.'#map', 'Contact' => '#contact'];
+    // A label maps to a URL, or to a list of [label => URL] for a dropdown.
+    $links = [
+        'Home' => $home,
+        'Countdown' => $home.'#countdown',
+        'Events' => $home.'#events',
+        'News' => route('news.index'),
+        'WhatsApp groups' => ['State coordinators' => route('whatsapp')],
+        'Contact' => '#contact',
+    ];
     $currentLabel = ['home' => 'Home', 'news' => 'News', 'whatsapp' => 'WhatsApp groups'][$current] ?? null;
 @endphp
     {{-- Announcement bar, with a compact live countdown --}}
@@ -52,7 +60,23 @@
 
         <nav class="hidden items-center gap-5 text-sm 2xl:gap-7 xl:flex" aria-label="Main">
             @foreach (\Illuminate\Support\Arr::except($links, ['Countdown']) as $label => $href)
-                <a href="{{ $href }}" @class(['whitespace-nowrap transition-colors hover:text-brand', 'font-bold text-brand' => $label === $currentLabel, 'text-brand-soft' => $label !== $currentLabel]) @if ($label === $currentLabel) aria-current="page" @endif>{{ $label }}</a>
+                @if (is_array($href))
+                    <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false" @keydown.escape="open = false" @click.outside="open = false">
+                        <button type="button" @click="open = !open" :aria-expanded="open.toString()" aria-haspopup="true" @class(['inline-flex items-center gap-1 whitespace-nowrap transition-colors hover:text-brand', 'font-bold text-brand' => $label === $currentLabel, 'text-brand-soft' => $label !== $currentLabel])>
+                            {{ $label }}
+                            <svg class="h-3.5 w-3.5 transition-transform" :class="open && 'rotate-180'" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+                        </button>
+                        <div x-show="open" x-cloak x-transition.opacity class="absolute left-0 z-30 pt-2">
+                            <div class="flex w-56 flex-col rounded-xl border border-neutral-200 bg-white p-2 shadow-lg">
+                                @foreach ($href as $subLabel => $subHref)
+                                    <a href="{{ $subHref }}" class="rounded-lg px-3 py-2.5 whitespace-nowrap text-forest hover:bg-brand/10">{{ $subLabel }}</a>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <a href="{{ $href }}" @class(['whitespace-nowrap transition-colors hover:text-brand', 'font-bold text-brand' => $label === $currentLabel, 'text-brand-soft' => $label !== $currentLabel]) @if ($label === $currentLabel) aria-current="page" @endif>{{ $label }}</a>
+                @endif
             @endforeach
         </nav>
 
@@ -73,7 +97,14 @@
             </summary>
             <nav class="absolute right-0 z-30 mt-2 flex w-60 flex-col gap-1 rounded-xl border border-neutral-200 bg-white p-3 text-base shadow-lg" aria-label="Main">
                 @foreach ($links as $label => $href)
-                    <a href="{{ $href }}" class="rounded-lg px-3 py-2.5 hover:bg-brand/10">{{ $label }}</a>
+                    @if (is_array($href))
+                        <p class="px-3 pt-2.5 pb-1 text-xs font-semibold tracking-[0.12em] text-brand-soft uppercase">{{ $label }}</p>
+                        @foreach ($href as $subLabel => $subHref)
+                            <a href="{{ $subHref }}" class="rounded-lg py-2.5 pr-3 pl-6 hover:bg-brand/10">{{ $subLabel }}</a>
+                        @endforeach
+                    @else
+                        <a href="{{ $href }}" class="rounded-lg px-3 py-2.5 hover:bg-brand/10">{{ $label }}</a>
+                    @endif
                 @endforeach
                 @auth
                     <a href="{{ auth()->user()->homeRoute() }}" class="rounded-lg px-3 py-2.5 font-bold hover:bg-brand/10">My dashboard</a>
