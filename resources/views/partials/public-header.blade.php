@@ -18,10 +18,10 @@
         'Countdown' => $home.'#countdown',
         'Events' => $home.'#events',
         'News' => route('news.index'),
-        'WhatsApp groups' => ['State coordinators' => route('whatsapp')],
+        'States' => ['State coordinators' => route('whatsapp')],
         'Contact' => '#contact',
     ];
-    $currentLabel = ['home' => 'Home', 'news' => 'News', 'whatsapp' => 'WhatsApp groups'][$current] ?? null;
+    $currentLabel = ['home' => 'Home', 'news' => 'News', 'whatsapp' => 'States'][$current] ?? null;
 @endphp
     {{-- Announcement bar, with a compact live countdown --}}
     <div class="bg-forest px-4 py-2.5 text-[13px] leading-snug text-white" x-data="countdown(@js($electionDate->toIso8601String()), @js($countdown))">
