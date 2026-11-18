@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\GeographyController;
+use App\Http\Controllers\Web\Admin\AdminController;
 use App\Http\Controllers\Web\Admin\CoordinatorController;
 use App\Http\Controllers\Web\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Web\Admin\SettingsController;
@@ -136,6 +137,9 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('coordinators', [CoordinatorController::class, 'index'])->name('coordinators.index');
         Route::post('coordinators', [CoordinatorController::class, 'store'])->name('coordinators.store');
         Route::patch('coordinators/{coordinator}', [CoordinatorController::class, 'update'])->name('coordinators.update');
+        Route::get('admins', [AdminController::class, 'index'])->name('admins.index');
+        Route::post('admins', [AdminController::class, 'store'])->name('admins.store');
+        Route::patch('admins/{admin}', [AdminController::class, 'update'])->name('admins.update');
         Route::get('settings', [SettingsController::class, 'edit'])->name('settings.edit');
         Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
         Route::resource('slides', SlideController::class)->except('show');

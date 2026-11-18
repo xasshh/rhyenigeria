@@ -11,6 +11,7 @@
             ['admin.calendar', 'Calendar', 'calendar', 'admin.calendar'],
             ['admin.canvassers.index', 'Canvassers', 'badge', 'admin.canvassers.*'],
             ['admin.coordinators.index', 'Coordinators', 'user-plus', 'admin.coordinators.*'],
+            ['admin.admins.index', 'Admins', 'shield', 'admin.admins.*'],
             ['admin.empowerment.index', 'Empowerment', 'gift', 'admin.empowerment.*'],
             ['admin.posts.index', 'News & events', 'megaphone', 'admin.posts.*'],
             ['admin.settings.edit', 'Settings', 'cog', 'admin.settings.*'],

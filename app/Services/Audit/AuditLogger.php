@@ -14,6 +14,12 @@ class AuditLogger
 
     public const MEMBERS_MAP_VIEWED = 'members.map_viewed';
 
+    public const ADMIN_CREATED = 'admin.created';
+
+    public const ADMIN_DEACTIVATED = 'admin.deactivated';
+
+    public const ADMIN_REACTIVATED = 'admin.reactivated';
+
     /**
      * Record who did what, and when.
      *
