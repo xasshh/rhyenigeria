@@ -8,7 +8,7 @@
     $cardConfig = [
         'name' => $user->name, 'number' => $profile->member_number, 'place' => $place,
         'joined' => $profile->created_at->setTimezone(config('membership.timezone'))->format('j M Y'),
-        'role' => $profile->roleLabel(), 'logo' => asset('images/logo-renewed-hope.png'), 'slogan' => config('membership.slogan'),
+        'role' => $profile->roleLabel(), 'logo' => asset('images/logo-rhye.png'), 'slogan' => config('membership.slogan'),
     ];
 @endphp
 <x-layouts.base title="Welcome" noindex>

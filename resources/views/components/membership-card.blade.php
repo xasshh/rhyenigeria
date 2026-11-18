@@ -6,7 +6,7 @@
     ]));
     $joined = $profile->created_at->setTimezone(config('membership.timezone'))->format('j M Y');
 @endphp
-<div x-data="memberCard(@js(['name' => $user->name, 'number' => $profile->member_number, 'place' => $place, 'joined' => $joined, 'role' => $profile->roleLabel(), 'logo' => asset('images/logo-renewed-hope.png'), 'slogan' => config('membership.slogan')]))" {{ $attributes }}>
+<div x-data="memberCard(@js(['name' => $user->name, 'number' => $profile->member_number, 'place' => $place, 'joined' => $joined, 'role' => $profile->roleLabel(), 'logo' => asset('images/logo-rhye.png'), 'slogan' => config('membership.slogan')]))" {{ $attributes }}>
     <div class="relative mx-auto aspect-[1.586] w-full max-w-[400px] overflow-hidden rounded-[22px] bg-gradient-to-br from-brand-dark to-brand p-[5%] text-white shadow-xl shadow-brand/25">
         <div class="pointer-events-none absolute -top-16 -right-14 h-48 w-48 rounded-full bg-white/[0.07]"></div>
         <div class="pointer-events-none absolute -bottom-20 -left-6 h-44 w-44 rounded-full bg-accent/20"></div>
@@ -14,7 +14,7 @@
 
         <div class="relative flex h-full flex-col">
             <div class="flex items-start justify-between gap-2">
-                <span class="rounded-lg bg-white px-2 py-1"><img src="{{ asset('images/logo-renewed-hope.png') }}" alt="Renewed Hope" class="h-[clamp(20px,6vw,28px)] w-auto" width="285" height="150"></span>
+                <span class="rounded-lg bg-white px-2 py-1"><img src="{{ asset('images/logo-rhye.png') }}" alt="RHYE — Renewed Hope Youth Engagement" class="h-[clamp(28px,8vw,40px)] w-auto" width="600" height="272"></span>
                 <p class="text-right text-[clamp(7px,2.1vw,9px)] leading-tight font-semibold tracking-[0.14em] text-white/80 uppercase">Membership card<br>Renewed Hope Youth Engagement</p>
             </div>
 

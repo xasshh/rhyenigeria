@@ -14,7 +14,7 @@ export default (config) => ({
     logos: [],
 
     async init() {
-        // RHYE logo and the Renewed Hope mark, side by side; a logo that fails to load is left out.
+        // The RHYE logo (more can be listed); a logo that fails to load is left out.
         this.logos = (await Promise.allSettled(config.logos.map(loadImage)))
             .filter((r) => r.status === 'fulfilled').map((r) => r.value);
         this.canShare = !!(navigator.canShare && navigator.canShare({ files: [new File([''], 'x.png', { type: 'image/png' })] }));
