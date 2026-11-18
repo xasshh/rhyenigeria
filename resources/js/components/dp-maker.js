@@ -11,10 +11,12 @@ export default (config) => ({
     photo: null,
     busy: false,
     canShare: false,
-    logo: null,
+    logos: [],
 
     async init() {
-        try { this.logo = await loadImage(config.logo); } catch { /* draw without it */ }
+        // RHYE logo and the Renewed Hope mark, side by side; a logo that fails to load is left out.
+        this.logos = (await Promise.allSettled(config.logos.map(loadImage)))
+            .filter((r) => r.status === 'fulfilled').map((r) => r.value);
         this.canShare = !!(navigator.canShare && navigator.canShare({ files: [new File([''], 'x.png', { type: 'image/png' })] }));
         await document.fonts?.ready;
         this.draw();
@@ -57,11 +59,14 @@ export default (config) => ({
         ctx.strokeStyle = '#f2b705'; ctx.lineWidth = 14;
         roundRect(ctx, 26, 26, SIZE - 52, SIZE - 52, 36); ctx.stroke();
 
-        // Logo plate.
-        ctx.fillStyle = '#fff'; roundRect(ctx, 56, 56, 260, 120, 22); ctx.fill();
-        if (this.logo) {
-            const w = 220, h = w * this.logo.height / this.logo.width;
-            ctx.drawImage(this.logo, 76, 56 + (120 - h) / 2, w, h);
+        // Logo plate: each logo scaled to the plate's height, keeping its shape.
+        if (this.logos.length) {
+            const pad = 22, gap = 26, plateH = 130, logoH = plateH - 2 * pad;
+            const sizes = this.logos.map((img) => ({ img, w: logoH * img.width / img.height }));
+            const plateW = 2 * pad + sizes.reduce((sum, l) => sum + l.w, 0) + gap * (sizes.length - 1);
+            ctx.fillStyle = '#fff'; roundRect(ctx, 56, 56, plateW, plateH, 22); ctx.fill();
+            let lx = 56 + pad;
+            for (const l of sizes) { ctx.drawImage(l.img, lx, 56 + pad, l.w, logoH); lx += l.w + gap; }
         }
 
         // Message.

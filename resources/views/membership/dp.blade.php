@@ -1,7 +1,7 @@
 @php
     $electionYear = \App\Models\Setting::electionDate()->setTimezone(config('membership.timezone'))->format('Y');
     $messages = [
-        ['kicker' => "I'm a proud", 'headline' => 'Renewed Hope Youth member'],
+        ['kicker' => 'I am a proud member of the', 'headline' => 'Renewed Hope Youth Engagement movement'],
         ['kicker' => 'Youth for PBAT', 'headline' => config('membership.slogan')],
         ['kicker' => 'Renewed Hope Youth Engagement', 'headline' => 'Every ward. Every youth.'],
     ];
@@ -15,7 +15,7 @@
     </section>
 
     <div class="mt-6 grid gap-6 lg:grid-cols-[1fr_minmax(0,460px)]"
-        x-data="dpMaker(@js(['messages' => $messages, 'name' => trim($user->name.($place ? ' · '.$place : '')), 'logo' => asset('images/logo-renewed-hope.png'), 'year' => $electionYear, 'shareText' => config('membership.slogan').' Join me in the Renewed Hope Youth Engagement movement: '.route('join', ['ref' => $user->memberProfile->referral_code])]))">
+        x-data="dpMaker(@js(['messages' => $messages, 'name' => trim($user->name.($place ? ' · '.$place : '')), 'logos' => [asset('images/logo-rhye.png'), asset('images/logo-renewed-hope.png')], 'year' => $electionYear, 'shareText' => config('membership.slogan').' Join me in the Renewed Hope Youth Engagement movement: '.route('join', ['ref' => $user->memberProfile->referral_code])]))">
         <div class="order-2 space-y-4 lg:order-1">
             <section class="panel p-5">
                 <h2 class="font-display font-bold">1. Add your photo</h2>
