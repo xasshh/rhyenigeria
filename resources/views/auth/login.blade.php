@@ -14,15 +14,15 @@
 
     <div class="lg:pl-[50px]">
         <h2 class="font-headline text-[40px] leading-none font-extrabold tracking-[-0.03em] sm:text-[48px]">Sign in</h2>
-        <p class="mt-3 text-lg text-neutral-600">{{ $toEmpowerment ? 'Sign in to open Empowerment on your dashboard.' : 'Use the email you joined with.' }}</p>
+        <p class="mt-3 text-lg text-neutral-600">{{ $toEmpowerment ? 'Sign in to open Empowerment on your dashboard.' : 'Use the email or phone number you joined with.' }}</p>
 
         <x-flash class="mt-6" quiet />
 
         <form method="POST" action="{{ route('login') }}" class="mt-8 space-y-6" x-data="{ show: false }">
             @csrf
             <div>
-                <label class="label text-base font-semibold" for="email">Email address</label>
-                <input id="email" name="email" type="email" class="field-lg" value="{{ old('email') }}" placeholder="you@example.com" autocomplete="email" inputmode="email" required autofocus @error('email') aria-invalid="true" aria-describedby="email-error" @enderror>
+                <label class="label text-base font-semibold" for="email">Email or phone number</label>
+                <input id="email" name="email" type="text" class="field-lg" value="{{ old('email') }}" placeholder="you@example.com or 0803 000 0000" autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus @error('email') aria-invalid="true" aria-describedby="email-error" @enderror>
                 @error('email')<p class="error" id="email-error">{{ $message }}</p>@enderror
             </div>
             <div>

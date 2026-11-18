@@ -32,6 +32,7 @@ class User extends Authenticatable
     protected $attributes = [
         'role' => 'field_agent',
         'is_active' => true,
+        'must_change_password' => false,
     ];
 
     /**
@@ -44,6 +45,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => Role::class,
             'is_active' => 'boolean',
+            'must_change_password' => 'boolean',
             'tracking_consent_accepted_at' => 'datetime',
         ];
     }
@@ -91,6 +93,19 @@ class User extends Authenticatable
     public function isMember(): bool
     {
         return $this->role === Role::Member;
+    }
+
+    /** Imported members finish their profile (own password, gender, age range, consent) before anything else. */
+    public function needsSetup(): bool
+    {
+        if (! $this->isMember()) {
+            return false;
+        }
+
+        $profile = $this->memberProfile;
+
+        return $this->must_change_password
+            || ($profile !== null && ($profile->consent_accepted_at === null || $profile->gender === null || $profile->age_range === null));
     }
 
     public function firstName(): string

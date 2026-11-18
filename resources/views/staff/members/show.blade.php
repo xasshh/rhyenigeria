@@ -5,6 +5,8 @@
         <h1 class="font-display text-2xl font-bold tracking-tight">{{ $member->name }}</h1>
         <span class="badge bg-brand/10 text-brand-dark">{{ $profile->roleLabel() }}</span>
         @unless ($member->is_active)<span class="badge bg-red-50 text-red-700">Deactivated</span>@endunless
+        @if ($profile->import_source)<span class="badge bg-amber-soft text-amber-ink" title="Imported {{ $profile->imported_at?->setTimezone($tz)->format('j M Y') }}">Imported · {{ $profile->import_source }}</span>@endif
+        @if ($member->needsSetup())<span class="badge bg-neutral-100 text-neutral-700">{{ $profile->credentials_sent_at ? 'Sign-in SMS sent '.$profile->credentials_sent_at->setTimezone($tz)->format('j M') : 'Sign-in SMS not sent' }} · not set up yet</span>@endif
     </div>
     <p class="font-mono text-sm text-neutral-500">{{ $profile->member_number }}</p>
 
@@ -14,8 +16,8 @@
             <dl class="mt-3 grid grid-cols-[8rem_1fr] gap-x-3 gap-y-2 text-sm">
                 <dt class="text-neutral-500">Phone</dt><dd class="font-medium"><a href="tel:{{ $member->phone }}" class="text-brand-dark">{{ NigerianPhone::format($member->phone) }}</a></dd>
                 @if ($profile->whatsapp_phone)<dt class="text-neutral-500">WhatsApp</dt><dd><a class="font-medium text-brand-dark" href="https://wa.me/{{ ltrim($profile->whatsapp_phone, '+') }}" target="_blank" rel="noopener">{{ NigerianPhone::format($profile->whatsapp_phone) }}</a></dd>@endif
-                <dt class="text-neutral-500">Email</dt><dd class="font-medium break-all">{{ $member->email }}</dd>
-                <dt class="text-neutral-500">Gender / age</dt><dd>{{ $profile->gender?->label() }}, {{ $profile->age_range?->label() }}</dd>
+                <dt class="text-neutral-500">Email</dt><dd class="font-medium break-all">{{ $member->email ?? '—' }}</dd>
+                <dt class="text-neutral-500">Gender / age</dt><dd>{{ $profile->gender?->label() ?? '—' }}, {{ $profile->age_range?->label() ?? '—' }}</dd>
                 <dt class="text-neutral-500">Occupation</dt><dd>{{ $profile->occupation ?: '—' }}</dd>
                 <dt class="text-neutral-500">Joined</dt><dd>{{ $profile->created_at->setTimezone($tz)->format('j M Y, g:ia') }}</dd>
                 <dt class="text-neutral-500">Invited by</dt><dd>{{ $profile->referredBy ? $profile->referredBy->name.' ('.$profile->referredBy->memberProfile?->member_number.')' : '—' }}</dd>

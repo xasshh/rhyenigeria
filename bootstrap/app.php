@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureMemberSetup;
 use App\Http\Middleware\EnsureRole;
 use App\Http\Middleware\EnsureUserIsActive;
 use Illuminate\Foundation\Application;
@@ -26,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => EnsureRole::class,
             'active' => EnsureUserIsActive::class,
+            'member.setup' => EnsureMemberSetup::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -40,7 +40,7 @@
             <section class="panel p-5">
                 <h2 class="font-display text-lg font-bold">My details</h2>
                 <dl class="mt-3 grid gap-x-4 gap-y-2 text-sm sm:grid-cols-2">
-                    <div><dt class="text-neutral-500">Email</dt><dd class="font-medium break-all">{{ $user->email }}</dd></div>
+                    <div><dt class="text-neutral-500">Email</dt><dd class="font-medium break-all">{{ $user->email ?? '—' }}</dd></div>
                     <div><dt class="text-neutral-500">Phone</dt><dd class="font-medium">{{ \App\Support\NigerianPhone::format($user->phone) }}</dd></div>
                     <div class="sm:col-span-2"><dt class="text-neutral-500">Location</dt><dd class="font-medium">{{ collect([$user->ward?->name, $user->lga?->name, $user->state?->name])->filter()->implode(', ') }}</dd></div>
                 </dl>

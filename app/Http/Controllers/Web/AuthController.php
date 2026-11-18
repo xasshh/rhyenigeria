@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
+use App\Support\NigerianPhone;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,14 +25,21 @@ class AuthController extends Controller
 
     public function login(Request $request): RedirectResponse
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'string', 'email'],
+        // The "email" field takes an email address or a Nigerian phone number (imported members have no email).
+        $data = $request->validate([
+            'email' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
         ]);
-        $credentials['email'] = mb_strtolower(trim($credentials['email']));
+        $login = trim($data['email']);
+        $phone = str_contains($login, '@') ? null : NigerianPhone::normalise($login);
+        $credentials = $phone !== null
+            ? ['phone' => $phone, 'password' => $data['password']]
+            : ['email' => mb_strtolower($login), 'password' => $data['password']];
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
-            throw ValidationException::withMessages(['email' => 'That email and password do not match our records.']);
+            throw ValidationException::withMessages(['email' => $phone !== null
+                ? 'That phone number and password do not match our records.'
+                : 'That email or phone number and password do not match our records.']);
         }
 
         $user = $request->user();

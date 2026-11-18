@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    // Bulk SMS for sign-in details (php artisan members:send-credentials). Sender IDs must be approved first.
+    'bulksmsnigeria' => [
+        'token' => env('BULKSMSNIGERIA_API_TOKEN'),
+        'sender' => env('BULKSMSNIGERIA_SENDER_ID', 'RHYE'),
+        // direct-refund (default), corporate/direct-corporate (transactional, reaches DND numbers) or otp.
+        'gateway' => env('BULKSMSNIGERIA_GATEWAY', 'direct-corporate'),
+        'url' => env('BULKSMSNIGERIA_URL', 'https://www.bulksmsnigeria.com/api/v2'),
+    ],
+
 ];

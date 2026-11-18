@@ -65,7 +65,13 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('empowerment/{report}/photo', [EmpowermentController::class, 'photo'])->name('empowerment.photo');
 
     // Members (including canvassers).
-    Route::middleware('role:member')->prefix('membership')->name('membership.')->controller(MembershipController::class)->group(function () {
+    // Imported members land here first: own password, gender, age range and consent.
+    Route::middleware('role:member')->prefix('membership/setup')->name('membership.setup')->controller(MembershipController::class)->group(function () {
+        Route::get('/', 'setup');
+        Route::put('/', 'completeSetup')->name('.complete');
+    });
+
+    Route::middleware(['role:member', 'member.setup'])->prefix('membership')->name('membership.')->controller(MembershipController::class)->group(function () {
         Route::get('/', 'home')->name('home');
         Route::get('welcome', 'welcome')->name('welcome');
         Route::get('card', 'card')->name('card');
@@ -82,7 +88,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     });
 
     // Field work for approved canvassers: location sharing only between Start shift and End shift.
-    Route::middleware('role:member')->prefix('membership/field')->name('membership.field.')->controller(FieldWorkController::class)->group(function () {
+    Route::middleware(['role:member', 'member.setup'])->prefix('membership/field')->name('membership.field.')->controller(FieldWorkController::class)->group(function () {
         Route::get('/', 'show')->name('show');
         Route::post('consent', 'acceptConsent')->name('consent.accept');
         Route::delete('consent', 'withdrawConsent')->name('consent.withdraw');

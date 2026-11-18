@@ -47,6 +47,51 @@ class MembershipController extends Controller
         ]);
     }
 
+    public function setup(Request $request): View|RedirectResponse
+    {
+        $user = $request->user()->load('memberProfile', 'state', 'lga');
+        if (! $user->needsSetup()) {
+            return redirect()->route('membership.home');
+        }
+
+        return view('membership.setup', [
+            'user' => $user,
+            'profile' => $user->memberProfile,
+            'genders' => Gender::cases(),
+            'ageRanges' => AgeRange::cases(),
+        ]);
+    }
+
+    public function completeSetup(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        $data = $request->validate([
+            'name' => ['required', 'string', 'min:3', 'max:120'],
+            'gender' => ['required', new Enum(Gender::class)],
+            'age_range' => ['required', new Enum(AgeRange::class)],
+            'password' => [$user->must_change_password ? 'required' : 'nullable', 'confirmed', Password::min(8)],
+            'consent' => ['accepted'],
+        ], [
+            'consent.accepted' => 'Please tick the box to agree to how we use your data.',
+        ]);
+
+        $user->name = preg_replace('/\s+/', ' ', trim($data['name']));
+        if (filled($data['password'] ?? null)) {
+            $user->password = Hash::make($data['password']);
+            $user->must_change_password = false;
+        }
+        $user->save();
+
+        $profile = $user->memberProfile;
+        $profile->gender = $data['gender'];
+        $profile->age_range = $data['age_range'];
+        $profile->consent_accepted_at = now();
+        $profile->consent_version = (string) config('membership.consent_version');
+        $profile->save();
+
+        return redirect()->route('membership.welcome');
+    }
+
     public function card(Request $request): View
     {
         $user = $request->user();
@@ -121,7 +166,7 @@ class MembershipController extends Controller
             'password' => ['required', 'confirmed', Password::min(8)],
         ]);
 
-        $request->user()->update(['password' => Hash::make($data['password'])]);
+        $request->user()->forceFill(['password' => Hash::make($data['password']), 'must_change_password' => false])->save();
 
         return back()->with('status', 'Your password has been changed.');
     }
