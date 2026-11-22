@@ -292,7 +292,7 @@
 
                 <p x-show="canvasser" class="flex items-start gap-3 rounded-2xl bg-amber-soft p-5 text-[16px] leading-relaxed text-amber-ink">
                     <x-icon name="shield" class="mt-0.5" />
-                    <span>You'll become a member straight away. Your {{ site_term('canvasser') }} application goes to your <strong>coordinator</strong> for review.</span>
+                    <span>You'll become a member straight away. Your {{ site_term('canvasser') }} application goes to your @if (site_state_code())<strong>coordinator</strong>@else<strong x-text="(card.stateName ? card.stateName + ' ' : '') + 'state coordinator'">state coordinator</strong>@endif for review.</span>
                 </p>
             </div>
 

@@ -83,7 +83,7 @@
                                         @endif
                                     </div>
                                     <x-logo-tag class="-top-4 -right-3 sm:-right-5" />
-                                    @foreach (collect(config('site.stats'))->map(fn ($s) => $s[0].' '.$s[1])->zip([
+                                    @foreach (collect(config('site.hero_badges'))->zip([
                                         'top-[10%] -left-3 max-w-[11rem] sm:-left-10 sm:max-w-[13.5rem]',
                                         '-right-3 bottom-[22%] max-w-[11rem] sm:-right-10 sm:max-w-[13.5rem]',
                                         '-bottom-5 left-[8%]',

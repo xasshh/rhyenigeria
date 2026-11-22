@@ -22,7 +22,10 @@ $brands = [
         'logo_has_name' => true,
         // Folder (under public/) with favicon-32.png, apple-touch-icon.png and, optionally, favicon.ico / favicon-48.png.
         'icons' => '',
-        'partner_logos' => [['images/logo-renewed-hope.png', 285, 150, 'Renewed Hope'], ['images/logo-apc.png', 200, 182, 'APC']],
+        'partner_logos' => [
+            ['images/logo-renewed-hope.png', 285, 150, 'Renewed Hope', 'h-[30px] sm:h-[37.5px]'],
+            ['images/logo-apc.png', 200, 182, 'APC', 'h-[38px] sm:h-[45.5px]'],
+        ],
         // null: every state; a state code (e.g. KD): the whole site is about that one state.
         'state_code' => null,
         // What approved field volunteers are called.
@@ -44,6 +47,8 @@ $brands = [
         ],
         // The three figures beside the homepage map.
         'stats' => [['5,000+', 'youth empowered'], ['275+', 'events organised'], ['36+', 'states nationwide']],
+        // The three badges around the President's picture on the main homepage slide.
+        'hero_badges' => ['5,000+ youth empowered', '275+ Events Organized', '36+ Nationwide'],
     ],
 
     // ubasani2027.com: Kaduna State governorship campaign.
@@ -74,6 +79,7 @@ $brands = [
             ['kicker' => 'Uba Sani 2027 Movement', 'headline' => 'Every ward. Every polling unit.'],
         ],
         'stats' => [['23', 'local governments'], ['255', 'wards'], ['8,000+', 'polling units']],
+        'hero_badges' => ['23 local governments', '255 wards', '8,000+ polling units'],
         // Homepage slides for a new database (php artisan site:seed-slides). Admins edit them afterwards.
         'slides' => [
             [

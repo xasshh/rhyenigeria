@@ -17,7 +17,7 @@
         <div class="mt-9 space-y-4">
             @foreach ([
                 ['member', 'Member', 'Stay informed and counted.', 'card', null, ['Digital membership card with QR code', 'Event updates and news for your state', 'Invite friends with your member number']],
-                ['canvasser', site_term('Canvasser'), config('site.canvasser_roles') ? 'Become a member and represent your polling unit.' : 'Become a member and work in your ward.', 'shield', 'Reviewed', ['Everything a Member gets', config('site.canvasser_roles') ? 'Register voters door to door and stand for the movement at your polling unit' : 'Door-to-door, social media, events and more', 'Your coordinator reviews every application']],
+                ['canvasser', site_term('Canvasser'), config('site.canvasser_roles') ? 'Become a member and represent your polling unit.' : 'Become a member and work in your ward.', 'shield', 'Reviewed', ['Everything a Member gets', config('site.canvasser_roles') ? 'Register voters door to door and stand for the movement at your polling unit' : 'Door-to-door, social media, events and more', (site_state_code() ? 'Your coordinator' : 'Your state coordinator').' reviews every application']],
             ] as [$as, $label, $text, $icon, $tag, $points])
                 <a href="{{ route('join', array_filter(['as' => $as, 'ref' => $ref, 'state' => $stateCode])) }}" @class([
                     'group block rounded-2xl border-2 bg-white p-5 transition sm:p-7 focus-visible:ring-4 focus-visible:ring-action/25 focus-visible:outline-none',

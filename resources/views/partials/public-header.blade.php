@@ -48,9 +48,11 @@
             @unless (config('site.logo_has_name'))
                 <span class="-ml-2 font-headline text-[17px] leading-tight font-extrabold tracking-[-0.02em] text-forest sm:-ml-5 sm:text-[22px]">{{ config('site.name') }}</span>
             @endunless
-            @foreach (config('site.partner_logos') as $i => [$src, $w, $h, $alt])
-                @if ($i === 0)<span class="h-8 w-px bg-brand/20 sm:h-10" aria-hidden="true"></span>@endif
-                <img src="{{ asset($src) }}" alt="{{ $alt }}" class="h-[30px] w-auto sm:h-[40px]" width="{{ $w }}" height="{{ $h }}">
+            @foreach (config('site.partner_logos') as $i => [$src, $w, $h, $alt, $size])
+                @if ($i === 0)
+                    <span class="h-8 w-px bg-brand/20 sm:h-10" aria-hidden="true"></span>
+                @endif
+                <img src="{{ asset($src) }}" alt="{{ $alt }}" class="{{ $size }} w-auto" width="{{ $w }}" height="{{ $h }}">
             @endforeach
         </a>
 
