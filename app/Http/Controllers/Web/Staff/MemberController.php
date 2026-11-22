@@ -100,7 +100,7 @@ class MemberController extends Controller
                     $row = [
                         $p->member_number, $user->name, $user->email, $user->phone, $p->gender?->value, $p->age_range?->value,
                         $p->occupation, $user->state?->name, $user->lga?->name, $user->ward?->name,
-                        $p->pollingUnit?->code, $p->pollingUnit?->name, $p->has_pvc ? 'yes' : 'no', $p->hasVin() ? 'yes' : 'no',
+                        $p->pollingUnit?->code, $p->pollingUnit?->name ?? $p->polling_unit_name, $p->has_pvc ? 'yes' : 'no', $p->hasVin() ? 'yes' : 'no',
                         $p->canvasser_status?->value, implode('; ', $p->canvasser_roles ?? []), $p->whatsapp_phone,
                         $p->referredBy?->memberProfile?->member_number, $p->created_at->toIso8601String(),
                     ];

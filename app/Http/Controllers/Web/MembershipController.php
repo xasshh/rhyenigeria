@@ -116,6 +116,7 @@ class MembershipController extends Controller
             'age_range' => ['required', new Enum(AgeRange::class)],
             'occupation' => ['nullable', 'string', 'max:120'],
             'polling_unit_id' => ['nullable', 'integer', Rule::exists('polling_units', 'id')->where('ward_id', (int) $user->ward_id)],
+            'polling_unit_name' => ['nullable', 'string', 'max:120'],
         ]);
 
         $user->update(['name' => preg_replace('/\s+/', ' ', trim($data['name']))]);
@@ -124,6 +125,7 @@ class MembershipController extends Controller
         $profile->age_range = $data['age_range'];
         $profile->occupation = $data['occupation'] ?? null;
         $profile->polling_unit_id = $data['polling_unit_id'] ?? null;
+        $profile->polling_unit_name = $profile->polling_unit_id ? null : (trim((string) preg_replace('/\s+/', ' ', (string) ($data['polling_unit_name'] ?? ''))) ?: null);
         $profile->save();
 
         return back()->with('status', 'Your details have been saved.');

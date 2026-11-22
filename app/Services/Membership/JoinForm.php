@@ -49,10 +49,15 @@ final class JoinForm
         }
 
         foreach (['polling_unit_id', 'ward_id'] as $field) {
-            if (($input[$field] ?? null) === 'unsure' || ($input[$field] ?? null) === '') {
+            if (in_array($input[$field] ?? null, ['unsure', 'other', ''], true)) {
                 $input[$field] = null;
             }
         }
+
+        // A typed polling unit only counts when none was picked from the list.
+        $input['polling_unit_name'] = filled($input['polling_unit_id'] ?? null) || ! is_string($input['polling_unit_name'] ?? null)
+            ? null
+            : (trim((string) preg_replace('/\s+/', ' ', $input['polling_unit_name'])) ?: null);
 
         return $input;
     }
@@ -81,6 +86,7 @@ final class JoinForm
                     'nullable', 'integer', Rule::exists('wards', 'id')->where('lga_id', (int) ($input['lga_id'] ?? 0)),
                 ],
                 'polling_unit_id' => ['nullable', 'integer', Rule::exists('polling_units', 'id')->where('ward_id', (int) ($input['ward_id'] ?? 0))],
+                'polling_unit_name' => ['nullable', 'string', 'max:120'],
                 'has_pvc' => ['required', 'boolean'],
                 'vin' => ['nullable', 'string', 'regex:/^[A-Z0-9]{19}$/'],
                 'nin' => ['nullable', 'string', 'regex:/^\d{11}$/'],
@@ -149,7 +155,7 @@ final class JoinForm
     private static function attributes(): array
     {
         return [
-            'state_id' => 'state', 'lga_id' => 'LGA', 'ward_id' => 'ward', 'polling_unit_id' => 'polling unit',
+            'state_id' => 'state', 'lga_id' => 'LGA', 'ward_id' => 'ward', 'polling_unit_id' => 'polling unit', 'polling_unit_name' => 'polling unit',
             'has_pvc' => 'PVC answer', 'age_range' => 'age range', 'name' => 'full name',
         ];
     }

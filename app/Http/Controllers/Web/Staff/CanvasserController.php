@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web\Staff;
 
 use App\Enums\CanvasserStatus;
 use App\Http\Controllers\Controller;
+use App\Models\State;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Services\Membership\MemberDirectory;
@@ -20,20 +21,28 @@ class CanvasserController extends Controller
 
     public function index(Request $request, MemberDirectory $directory): View
     {
+        $viewer = $request->user();
         $status = CanvasserStatus::tryFrom((string) $request->query('status')) ?? CanvasserStatus::Pending;
+        // Super admins can narrow the list to one state; coordinators are already scoped to theirs.
+        $stateId = $viewer->isSuperAdmin() ? ($request->integer('state_id') ?: null) : null;
+        $scoped = fn () => $directory->query($viewer)->when($stateId, fn ($q, $id) => $q->where('users.state_id', $id));
 
-        $applications = $directory->query($request->user())
+        // Newest first: the latest applications (or decisions) on top.
+        $applications = $scoped()
             ->where('mp.canvasser_status', $status->value)
             ->select('users.*')
             ->with(['memberProfile.reviewer:id,name', 'state:id,name', 'lga:id,name', 'ward:id,name'])
-            ->orderBy($status === CanvasserStatus::Pending ? 'mp.canvasser_applied_at' : 'mp.canvasser_reviewed_at', $status === CanvasserStatus::Pending ? 'asc' : 'desc')
+            ->orderByRaw(($status === CanvasserStatus::Pending ? 'mp.canvasser_applied_at' : 'mp.canvasser_reviewed_at').' desc nulls last')
+            ->orderByDesc('users.id')
             ->paginate(25)->withQueryString();
 
         return view('staff.canvassers', [
             'applications' => $applications,
             'status' => $status,
-            'counts' => $directory->summary($directory->query($request->user())),
-            'canReview' => MemberController::canReviewCanvassers($request->user()),
+            'stateId' => $stateId,
+            'states' => $viewer->isSuperAdmin() ? State::orderBy('name')->get(['id', 'name']) : collect(),
+            'counts' => $directory->summary($scoped()),
+            'canReview' => MemberController::canReviewCanvassers($viewer),
         ]);
     }
 

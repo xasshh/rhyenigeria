@@ -41,6 +41,28 @@ class CoordinatorScopingTest extends TestCase
             ->assertOk()->assertSee('Far Away Member')->assertDontSee('Mine Member');
     }
 
+    public function test_super_admins_can_filter_canvassers_by_state_and_see_the_newest_first(): void
+    {
+        $w = $this->world();
+        $newer = User::factory()->member($w['wardB'])->create(['name' => 'Newest Applicant']);
+        MemberProfile::factory()->for($newer)->canvasser()->create(['canvasser_applied_at' => now()->addMinute()]);
+        $admin = User::factory()->superAdmin()->create();
+
+        $this->actingAs($admin)->get('/admin/canvassers')
+            ->assertOk()->assertSeeInOrder(['Newest Applicant', 'Mine Member'])->assertSee('Far Away Member');
+
+        $this->actingAs($admin)->get('/admin/canvassers?state_id='.$w['state']->id)
+            ->assertOk()->assertSee('Mine Member')->assertSee('Newest Applicant')->assertDontSee('Far Away Member');
+    }
+
+    public function test_a_coordinator_cannot_use_the_state_filter_to_see_another_state(): void
+    {
+        $w = $this->world();
+
+        $this->actingAs($w['coordinator'])->get('/coordinator/canvassers?state_id='.$w['otherState']->id)
+            ->assertOk()->assertSee('Mine Member')->assertDontSee('Far Away Member');
+    }
+
     public function test_a_coordinator_can_approve_their_states_canvasser_and_it_is_audited(): void
     {
         $w = $this->world();

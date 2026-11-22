@@ -70,16 +70,22 @@
                         <label class="label" for="occupation">Occupation</label>
                         <input id="occupation" name="occupation" class="field" value="{{ old('occupation', $profile->occupation) }}">
                     </div>
-                    @if ($pollingUnits->isNotEmpty())
-                        <div>
-                            <label class="label" for="polling_unit_id">Polling unit</label>
-                            <select id="polling_unit_id" name="polling_unit_id" class="field">
+                    @php $typedUnit = old('polling_unit_name', $profile->polling_unit_name); @endphp
+                    <div x-data="{ unit: @js((string) old('polling_unit_id', $profile->polling_unit_id ?? ($typedUnit ? 'other' : ''))) }">
+                        <label class="label" for="{{ $pollingUnits->isNotEmpty() ? 'polling_unit_id' : 'polling_unit_name' }}">Polling unit</label>
+                        @if ($pollingUnits->isNotEmpty())
+                            <select id="polling_unit_id" name="polling_unit_id" class="field" x-model="unit">
                                 <option value="">Not sure</option>
-                                @foreach ($pollingUnits as $unit)<option value="{{ $unit->id }}" @selected((int) old('polling_unit_id', $profile->polling_unit_id) === $unit->id)>{{ $unit->code }} · {{ $unit->name }}</option>@endforeach
+                                @foreach ($pollingUnits as $unit)<option value="{{ $unit->id }}">{{ $unit->code }} · {{ $unit->name }}</option>@endforeach
+                                <option value="other">My polling unit is not listed</option>
                             </select>
-                            @error('polling_unit_id')<p class="error">{{ $message }}</p>@enderror
-                        </div>
-                    @endif
+                        @endif
+                        <input id="polling_unit_name" name="polling_unit_name" class="field {{ $pollingUnits->isNotEmpty() ? 'mt-2' : '' }}" maxlength="120" value="{{ $typedUnit }}"
+                            placeholder="Type your polling unit, e.g. Central Primary School"
+                            @if ($pollingUnits->isNotEmpty()) x-show="unit === 'other'" x-bind:disabled="unit !== 'other'" @endif>
+                        @error('polling_unit_id')<p class="error">{{ $message }}</p>@enderror
+                        @error('polling_unit_name')<p class="error">{{ $message }}</p>@enderror
+                    </div>
                     <button class="btn-primary">Save details</button>
                 </form>
             </section>

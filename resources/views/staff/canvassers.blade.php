@@ -4,12 +4,23 @@
         <p class="mt-3 rounded-xl bg-surface px-4 py-3 text-sm text-neutral-600">Applications are approved by the state coordinator. You can see them here but not decide.</p>
     @endunless
 
-    <div class="mt-4 inline-flex rounded-xl border border-line bg-white p-1 text-sm font-medium">
+    <div class="mt-4 flex flex-wrap items-center gap-3">
+    <div class="inline-flex rounded-xl border border-line bg-white p-1 text-sm font-medium">
         @foreach (\App\Enums\CanvasserStatus::cases() as $s)
-            <a href="{{ staff_route('canvassers.index', ['status' => $s->value]) }}" @class(['rounded-lg px-3 py-1.5 sm:px-4', 'bg-brand text-white' => $status === $s, 'text-neutral-600' => $status !== $s])>
+            <a href="{{ staff_route('canvassers.index', array_filter(['status' => $s->value, 'state_id' => $stateId])) }}" @class(['rounded-lg px-3 py-1.5 sm:px-4', 'bg-brand text-white' => $status === $s, 'text-neutral-600' => $status !== $s])>
                 {{ $s->label() }} <span class="tabular-nums opacity-75">{{ number_format($counts['canvassers_'.$s->value]) }}</span>
             </a>
         @endforeach
+    </div>
+    @if ($states->isNotEmpty())
+        <form method="GET" action="{{ staff_route('canvassers.index') }}">
+            <input type="hidden" name="status" value="{{ $status->value }}">
+            <select name="state_id" class="field py-2 text-sm" aria-label="Show applications from one state" onchange="this.form.submit()">
+                <option value="">All states</option>
+                @foreach ($states as $s)<option value="{{ $s->id }}" @selected($stateId === $s->id)>{{ $s->name }}</option>@endforeach
+            </select>
+        </form>
+    @endif
     </div>
 
     <div class="mt-4 space-y-3">

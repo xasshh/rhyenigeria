@@ -140,6 +140,44 @@ class MemberRegistrationTest extends TestCase
         $this->postJson('/join/check/location', ['state_id' => $state->id, 'lga_id' => $lga->id, 'has_pvc' => 0])->assertJsonValidationErrors('ward_id');
     }
 
+    public function test_a_member_can_type_a_polling_unit_that_is_not_listed(): void
+    {
+        $geo = $this->geography();
+
+        $this->postJson('/join', $this->answers($geo, ['polling_unit_id' => 'other', 'polling_unit_name' => '  Kofar   Kaura Primary School ']))->assertCreated();
+
+        $profile = User::where('email', 'ada.obi@example.com')->firstOrFail()->memberProfile;
+        $this->assertNull($profile->polling_unit_id);
+        $this->assertSame('Kofar Kaura Primary School', $profile->polling_unit_name);
+        $this->assertSame('Kofar Kaura Primary School', $profile->pollingUnitLabel());
+    }
+
+    public function test_a_listed_polling_unit_wins_over_a_typed_one(): void
+    {
+        $geo = $this->geography();
+
+        $this->postJson('/join', $this->answers($geo, ['polling_unit_name' => 'Something else']))->assertCreated();
+
+        $profile = User::where('email', 'ada.obi@example.com')->firstOrFail()->memberProfile;
+        $this->assertSame($geo['unitA']->id, $profile->polling_unit_id);
+        $this->assertNull($profile->polling_unit_name);
+    }
+
+    public function test_a_member_can_type_their_polling_unit_later_on_their_card_page(): void
+    {
+        $geo = $this->geography();
+        $member = User::factory()->member($geo['wardA'])->create();
+        MemberProfile::factory()->for($member)->create();
+
+        $this->actingAs($member)->get('/membership/card')->assertOk()->assertSee('My polling unit is not listed');
+
+        $this->actingAs($member)->put('/membership/card/details', [
+            'name' => 'Ada Obi', 'gender' => 'female', 'age_range' => '25-34', 'polling_unit_name' => 'Tudun Wada Market Square',
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame('Tudun Wada Market Square', $member->memberProfile->fresh()->polling_unit_name);
+    }
+
     public function test_the_honeypot_rejects_bots(): void
     {
         $geo = $this->geography();

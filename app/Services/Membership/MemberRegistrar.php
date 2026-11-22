@@ -47,6 +47,7 @@ class MemberRegistrar
             $profile->age_range = $data['age_range'];
             $profile->occupation = $data['occupation'] ?? null;
             $profile->polling_unit_id = $data['polling_unit_id'] ?? null;
+            $profile->polling_unit_name = $profile->polling_unit_id ? null : ($data['polling_unit_name'] ?? null);
             $profile->has_pvc = (bool) $data['has_pvc'];
             $profile->vin = $data['vin'] ?? null;
             $profile->nin = $data['nin'] ?? null;

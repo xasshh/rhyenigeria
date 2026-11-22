@@ -30,7 +30,7 @@
                 <dt class="text-neutral-500">State</dt><dd>{{ $member->state?->name }}</dd>
                 <dt class="text-neutral-500">LGA</dt><dd>{{ $member->lga?->name ?? '—' }}</dd>
                 <dt class="text-neutral-500">Ward</dt><dd>{{ $member->ward?->name ?? '—' }}</dd>
-                <dt class="text-neutral-500">Polling unit</dt><dd>{{ $profile->pollingUnit ? $profile->pollingUnit->code.' · '.$profile->pollingUnit->name : 'Not sure' }}</dd>
+                <dt class="text-neutral-500">Polling unit</dt><dd>{{ $profile->pollingUnitLabel() ?? 'Not sure' }}@if (! $profile->pollingUnit && $profile->polling_unit_name) <span class="text-xs text-neutral-500">(typed by member)</span>@endif</dd>
                 <dt class="text-neutral-500">PVC</dt><dd>{{ $profile->has_pvc ? 'Yes' : 'Not yet' }}</dd>
                 <dt class="text-neutral-500">VIN</dt><dd class="font-mono">{{ Mask::identifier($profile->vin) }}</dd>
                 <dt class="text-neutral-500">NIN</dt><dd class="font-mono">{{ Mask::identifier($profile->nin) }}</dd>

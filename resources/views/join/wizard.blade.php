@@ -185,13 +185,18 @@
                     </div>
                 </div>
                 <div>
-                    <label class="label text-base font-semibold" for="polling_unit_id">Polling unit <span class="font-normal text-neutral-500">(optional)</span></label>
-                    <select id="polling_unit_id" class="field-lg" x-model="form.polling_unit_id" :disabled="loading.units || !units.length" :aria-invalid="!!err('polling_unit_id')">
+                    <label class="label text-base font-semibold" :for="units.length ? 'polling_unit_id' : 'polling_unit_name'">Polling unit <span class="font-normal text-neutral-500">(optional)</span></label>
+                    <select id="polling_unit_id" class="field-lg" x-show="units.length || loading.units" x-model="form.polling_unit_id" :disabled="loading.units" :aria-invalid="!!err('polling_unit_id')">
                         <option value="" x-text="loading.units ? 'Loading…' : 'Not sure yet'"></option>
                         <template x-for="unit in units" :key="unit.id"><option :value="String(unit.id)" x-text="unit.code + ' · ' + unit.name" :selected="String(unit.id) === String(form.polling_unit_id)"></option></template>
+                        <option value="other" :selected="form.polling_unit_id === 'other'">My polling unit is not listed</option>
                     </select>
-                    <p class="hint text-sm">Where you vote. Choose “Not sure yet” if you don't know.</p>
+                    <input id="polling_unit_name" type="text" class="field-lg" :class="units.length ? 'mt-2' : ''" maxlength="120" x-model="form.polling_unit_name"
+                        x-show="!loading.units && (!units.length || form.polling_unit_id === 'other')"
+                        placeholder="Type your polling unit, e.g. Central Primary School" :aria-invalid="!!err('polling_unit_name')">
+                    <p class="hint text-sm" x-text="units.length ? 'Where you vote. Choose “Not sure yet” if you don\'t know, or “not listed” to type it.' : 'Where you vote. Type its name, or leave it empty if you don\'t know.'"></p>
                     <p class="error" x-show="err('polling_unit_id')" x-text="err('polling_unit_id')"></p>
+                    <p class="error" x-show="err('polling_unit_name')" x-text="err('polling_unit_name')"></p>
                 </div>
 
                 <fieldset>

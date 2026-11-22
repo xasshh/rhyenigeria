@@ -7,7 +7,7 @@ const NEVER_STORED = ['password', 'password_confirmation', 'nin', 'vin', 'websit
 const FIELD_STEP = {
     email: 0, phone: 0, password: 0,
     name: 1, gender: 1, age_range: 1, occupation: 1, state_id: 1,
-    lga_id: 2, ward_id: 2, polling_unit_id: 2, has_pvc: 2, vin: 2, nin: 2, latitude: 2, longitude: 2,
+    lga_id: 2, ward_id: 2, polling_unit_id: 2, polling_unit_name: 2, has_pvc: 2, vin: 2, nin: 2, latitude: 2, longitude: 2,
 };
 
 const ASIDE = [
@@ -30,7 +30,7 @@ export default (config) => ({
     form: {
         email: '', phone: '', password: '', password_confirmation: '',
         name: '', gender: '', age_range: '', occupation: '',
-        state_id: '', lga_id: '', ward_id: '', polling_unit_id: '', has_pvc: null, vin: '', nin: '',
+        state_id: '', lga_id: '', ward_id: '', polling_unit_id: '', polling_unit_name: '', has_pvc: null, vin: '', nin: '',
         latitude: null, longitude: null,
         referrer: config.ref || '', consent: false, website: '',
         canvasser_roles: [], whatsapp_phone: '',

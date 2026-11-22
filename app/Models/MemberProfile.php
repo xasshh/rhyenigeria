@@ -55,6 +55,12 @@ class MemberProfile extends Model
         return $this->belongsTo(PollingUnit::class);
     }
 
+    /** "012 · Central School" from our list, the name the member typed, or null. */
+    public function pollingUnitLabel(): ?string
+    {
+        return $this->pollingUnit ? $this->pollingUnit->code.' · '.$this->pollingUnit->name : $this->polling_unit_name;
+    }
+
     public function referredBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'referred_by_user_id');
