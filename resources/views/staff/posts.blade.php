@@ -1,6 +1,6 @@
 @php $isAdmin = auth()->user()->isSuperAdmin(); $tz = config('membership.timezone'); @endphp
 <x-layouts.app title="News & events" heading="News & events">
-    <p class="mt-1 text-sm text-neutral-600">{{ $isAdmin ? 'Post nationally, or to one state.' : 'Posts go to members in '.(auth()->user()->state?->name ?? 'your state').'.' }}</p>
+    <p class="mt-1 text-sm text-neutral-600">{{ $isAdmin ? (site_state_code() ? 'Post to every member, or to one ward.' : 'Post nationally, or to one state.') : 'Posts go to members in '.(auth()->user()->state?->name ?? 'your state').'.' }}</p>
 
     <div class="mt-5 grid gap-4 lg:grid-cols-2">
         <form method="POST" action="{{ staff_route('news.store') }}" enctype="multipart/form-data" class="panel space-y-4 p-5">

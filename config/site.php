@@ -46,6 +46,8 @@ $brands = [
             ['kicker' => 'Renewed Hope Youth Engagement', 'headline' => 'Every ward. Every youth.'],
         ],
         // The three figures beside the homepage map.
+        // The example membership card on the sign-in and join screens: [name, state, ward].
+        'sample_card' => ['Adaeze Okafor', 'Lagos', 'Ikeja · Ward 04'],
         'stats' => [['5,000+', 'youth empowered'], ['275+', 'events organised'], ['36+', 'states nationwide']],
         // The three badges around the President's picture on the main homepage slide.
         'hero_badges' => ['5,000+ youth empowered', '275+ Events Organized', '36+ Nationwide'],
@@ -78,6 +80,7 @@ $brands = [
             ['kicker' => 'Kaduna State', 'headline' => 'Tinubu, Uba Sau Biyu ne!'],
             ['kicker' => 'Uba Sani 2027 Movement', 'headline' => 'Every ward. Every polling unit.'],
         ],
+        'sample_card' => ['Aisha Bello', 'Kaduna', 'Kaduna North · Ward 04'],
         'stats' => [['23', 'local governments'], ['255', 'wards'], ['8,000+', 'polling units']],
         'hero_badges' => ['23 local governments', '255 wards', '8,000+ polling units'],
         // Homepage slides for a new database (php artisan site:seed-slides). Admins edit them afterwards.

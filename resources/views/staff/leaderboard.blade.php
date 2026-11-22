@@ -4,7 +4,7 @@
     $count = count($states);
 @endphp
 <x-layouts.app title="Leaderboard">
-    <p class="text-sm text-neutral-500">{{ $isAdmin ? 'Every state, nationally' : 'How your state compares' }}</p>
+    <p class="text-sm text-neutral-500">{{ $isAdmin ? (site_state_code() ? 'Across the state' : 'Every state, nationally') : 'How your state compares' }}</p>
     <h1 class="font-display text-2xl font-bold tracking-tight sm:text-[28px]">Leaderboard</h1>
 
     {{-- Metric picker --}}
@@ -78,7 +78,7 @@
             {{-- Top recruiters --}}
             <section class="panel p-5">
                 <h2 class="font-display font-bold">Top recruiters</h2>
-                <p class="text-xs text-neutral-500">{{ $isAdmin ? 'Nationally' : 'In your state' }} · sign-ups through their invite link</p>
+                <p class="text-xs text-neutral-500">{{ $isAdmin ? (site_state_code() ? 'Across the state' : 'Nationally') : 'In your state' }} · sign-ups through their invite link</p>
                 <ol class="mt-3 space-y-2">
                     @forelse ($recruiters as $i => $r)
                         <li class="flex items-center gap-3 text-sm">
@@ -95,7 +95,7 @@
             {{-- Top canvassers --}}
             <section class="panel p-5">
                 <h2 class="font-display font-bold">Top {{ site_term('canvassers') }}</h2>
-                <p class="text-xs text-neutral-500">{{ $isAdmin ? 'Nationally' : 'In your state' }} · field activities, last {{ $activityDays }} days</p>
+                <p class="text-xs text-neutral-500">{{ $isAdmin ? (site_state_code() ? 'Across the state' : 'Nationally') : 'In your state' }} · field activities, last {{ $activityDays }} days</p>
                 <ol class="mt-3 space-y-2">
                     @forelse ($canvassers as $i => $c)
                         <li class="flex items-center gap-3 text-sm">
