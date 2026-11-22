@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\GeographyController;
+use App\Http\Controllers\Web\AccountPasswordController;
 use App\Http\Controllers\Web\Admin\AdminController;
 use App\Http\Controllers\Web\Admin\CoordinatorController;
 use App\Http\Controllers\Web\Admin\DashboardController as AdminDashboardController;
@@ -23,6 +24,7 @@ use App\Http\Controllers\Web\Staff\LiveMapController;
 use App\Http\Controllers\Web\Staff\MemberController;
 use App\Http\Controllers\Web\Staff\MemberMapController;
 use App\Http\Controllers\Web\Staff\PostController;
+use App\Http\Controllers\Web\Staff\TeamController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', LandingController::class)->name('home');
@@ -59,6 +61,10 @@ Route::middleware('guest')->group(function () {
 Route::post('logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
 Route::middleware(['auth', 'active'])->group(function () {
+    // Staff given a temporary password choose their own first.
+    Route::get('account/password', [AccountPasswordController::class, 'edit'])->name('account.password');
+    Route::put('account/password', [AccountPasswordController::class, 'update'])->name('account.password.update');
+
     // The homepage "Empowerment" button. Guests are sent to sign in first and come back here.
     Route::get('empowerment', [PublicController::class, 'empowerment'])->name('empowerment');
 
@@ -97,6 +103,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::delete('shift', 'endShift')->name('shift.end');
         Route::post('locations', 'locations')->middleware('throttle:locations')->name('locations');
         Route::post('activities', 'storeActivity')->middleware('throttle:60,1')->name('activities.store');
+        Route::post('members', 'registerMember')->middleware('throttle:field-register')->name('members.store');
     });
     Route::get('field/activities/{activity}/photo', [FieldWorkController::class, 'photo'])->name('field.activities.photo');
 
@@ -123,15 +130,19 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('live/{member}/trail', [LiveMapController::class, 'trail'])->name('live.trail');
         Route::delete('posts/events/{event}', [PostController::class, 'destroyEvent'])->name('events.destroy');
         Route::post('posts/news', [PostController::class, 'storeNews'])->name('news.store');
+        Route::get('team', [TeamController::class, 'index'])->name('team.index');
+        Route::post('team', [TeamController::class, 'store'])->name('team.store');
+        Route::patch('team/{person}', [TeamController::class, 'update'])->name('team.update');
+        Route::post('team/{person}/password', [TeamController::class, 'resetPassword'])->name('team.password');
         Route::delete('posts/news/{news}', [PostController::class, 'destroyNews'])->name('news.destroy');
     };
 
-    Route::middleware('role:coordinator')->prefix('coordinator')->name('coordinator.')->group(function () use ($staffRoutes) {
+    Route::middleware(['role:coordinator', 'password.changed'])->prefix('coordinator')->name('coordinator.')->group(function () use ($staffRoutes) {
         Route::get('/', [DashboardController::class, 'coordinator'])->name('dashboard');
         $staffRoutes();
     });
 
-    Route::middleware('role:super_admin')->prefix('admin')->name('admin.')->group(function () use ($staffRoutes) {
+    Route::middleware(['role:super_admin', 'password.changed'])->prefix('admin')->name('admin.')->group(function () use ($staffRoutes) {
         Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
         Route::get('states/{state}', [DashboardController::class, 'state'])->name('states.show');
         Route::get('coordinators', [CoordinatorController::class, 'index'])->name('coordinators.index');

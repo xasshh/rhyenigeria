@@ -30,6 +30,10 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('join-check', fn (Request $request) => Limit::perMinute((int) config('membership.join_check_rate_limit_per_minute'))->by('join-check:'.$request->ip()));
 
+        RateLimiter::for('field-register', fn (Request $request) => Limit::perHour((int) config('membership.field_registrations_per_hour'))
+            ->by('field-register:'.$request->user()?->id)
+            ->response(fn () => response()->json(['message' => 'You have registered a lot of people in the last hour. Please wait a little before adding more.'], 429)));
+
         RateLimiter::for('geo', fn (Request $request) => Limit::perMinute((int) config('membership.geo_rate_limit_per_minute'))->by('geo:'.$request->ip()));
 
         RateLimiter::for('password-reset', fn (Request $request) => Limit::perMinute(5)->by('reset:'.$request->ip()));

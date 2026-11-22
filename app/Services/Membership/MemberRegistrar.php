@@ -9,6 +9,8 @@ use App\Models\MemberProfile;
 use App\Models\State;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class MemberRegistrar
 {
@@ -68,6 +70,53 @@ class MemberRegistrar
                 $profile->canvasser_applied_at = now();
             }
 
+            $profile->save();
+
+            return $user->setRelation('memberProfile', $profile);
+        });
+    }
+
+    /**
+     * A member signed up in person by a canvasser on shift, usually someone without a smartphone.
+     * They have no email and no password yet (they get one by SMS later). The canvasser read them the
+     * data notice and records that they agreed, so the canvasser is kept as the witness.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function registerInField(User $canvasser, array $data): User
+    {
+        return DB::transaction(function () use ($canvasser, $data) {
+            $user = new User(['name' => preg_replace('/\s+/', ' ', trim($data['name'])), 'phone' => $data['phone']]);
+            // Nobody knows this password; the member gets their own by SMS (members:send-credentials).
+            $user->password = Hash::make(Str::random(64));
+            $user->role = Role::Member;
+            $user->is_active = true;
+            $user->must_change_password = true;
+            $user->assignArea(
+                isset($data['ward_id']) ? AreaLevel::Ward : AreaLevel::Lga,
+                (int) ($data['ward_id'] ?? $data['lga_id']),
+            );
+            $user->save();
+
+            $number = MemberProfile::newMemberNumber(State::findOrFail($user->state_id));
+
+            $profile = new MemberProfile;
+            $profile->user_id = $user->id;
+            $profile->member_number = $number;
+            $profile->referral_code = $number;
+            $profile->verify_token = MemberProfile::newVerifyToken();
+            $profile->gender = $data['gender'];
+            $profile->age_range = $data['age_range'];
+            $profile->polling_unit_id = $data['polling_unit_id'] ?? null;
+            $profile->polling_unit_name = $profile->polling_unit_id ? null : ($data['polling_unit_name'] ?? null);
+            $profile->has_pvc = (bool) $data['has_pvc'];
+            $profile->signup_lat = $data['latitude'];
+            $profile->signup_lng = $data['longitude'];
+            $profile->location_pinned_at = now();
+            $profile->consent_accepted_at = now();
+            $profile->consent_version = (string) config('membership.consent_version');
+            $profile->referred_by_user_id = $canvasser->id;
+            $profile->registered_by_user_id = $canvasser->id;
             $profile->save();
 
             return $user->setRelation('memberProfile', $profile);

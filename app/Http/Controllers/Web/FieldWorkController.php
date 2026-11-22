@@ -2,13 +2,21 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Enums\AgeRange;
 use App\Enums\DoorOutcome;
 use App\Enums\FieldActivityKind;
+use App\Enums\Gender;
 use App\Http\Controllers\Api\ShiftController;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\FieldActivity;
+use App\Models\Lga;
+use App\Models\MemberProfile;
+use App\Models\Ward;
+use App\Services\Membership\JoinForm;
+use App\Services\Membership\MemberRegistrar;
 use App\Services\Tracking\LocationIngestor;
+use App\Support\NigerianPhone;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -42,6 +50,10 @@ class FieldWorkController extends Controller
             'today' => FieldActivity::query()->where('user_id', $user->id)->where('recorded_at', '>=', now()->startOfDay())
                 ->with('event:id,title')->latest('recorded_at')->limit(30)->get(),
             'outcomes' => DoorOutcome::cases(),
+            'lgas' => $user->state_id ? Lga::where('state_id', $user->state_id)->orderBy('name')->get(['id', 'name']) : collect(),
+            'genders' => Gender::cases(),
+            'ageRanges' => AgeRange::cases(),
+            'registeredToday' => MemberProfile::where('registered_by_user_id', $user->id)->where('created_at', '>=', now(config('membership.timezone'))->startOfDay())->count(),
         ]);
     }
 
@@ -168,6 +180,57 @@ class FieldWorkController extends Controller
         DB::update('UPDATE field_activities fa SET ward_id = (SELECT w.id FROM wards w WHERE ST_Covers(w.boundary, fa.location) ORDER BY w.id LIMIT 1) WHERE fa.id = ?', [$activity->id]);
 
         return response()->json(['activity' => $this->present($activity->fresh('event:id,title'))], 201);
+    }
+
+    /**
+     * Sign up someone the canvasser meets in the field (often without a smartphone) without leaving the page.
+     * Only during a shift, inside the canvasser's own state, stamped with where it happened.
+     */
+    public function registerMember(Request $request, MemberRegistrar $registrar): JsonResponse
+    {
+        $user = $this->canvasser($request);
+        abort_if($user->activeShift()->doesntExist(), 409, 'Start a shift before registering people.');
+
+        $request->merge([
+            'phone' => NigerianPhone::normalise((string) $request->input('phone')) ?? $request->input('phone'),
+            'ward_id' => in_array($request->input('ward_id'), ['', null], true) ? null : $request->input('ward_id'),
+            'polling_unit_id' => in_array($request->input('polling_unit_id'), ['', 'other', null], true) ? null : $request->input('polling_unit_id'),
+            'polling_unit_name' => trim((string) preg_replace('/\s+/', ' ', (string) $request->input('polling_unit_name'))) ?: null,
+        ]);
+        $lgaId = (int) $request->input('lga_id');
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'min:3', 'max:120', 'regex:/\S+\s+\S+/u'],
+            'phone' => ['required', 'string', JoinForm::nigerianPhone(), Rule::unique('users', 'phone')],
+            'gender' => ['required', new Enum(Gender::class)],
+            'age_range' => ['required', new Enum(AgeRange::class)],
+            'lga_id' => ['required', 'integer', Rule::exists('lgas', 'id')->where('state_id', (int) $user->state_id)],
+            'ward_id' => [
+                Rule::requiredIf(fn () => Ward::where('lga_id', $lgaId)->exists()),
+                'nullable', 'integer', Rule::exists('wards', 'id')->where('lga_id', $lgaId),
+            ],
+            'polling_unit_id' => ['nullable', 'integer', Rule::exists('polling_units', 'id')->where('ward_id', (int) $request->input('ward_id'))],
+            'polling_unit_name' => ['nullable', 'string', 'max:120'],
+            'has_pvc' => ['required', 'boolean'],
+            'consent' => ['accepted'],
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
+        ], [
+            'name.regex' => 'Enter their first name and surname.',
+            'phone.unique' => 'This phone number is already registered.',
+            'lga_id.exists' => 'Choose an LGA in your state.',
+            'ward_id.required' => 'Choose their ward.',
+            'consent.accepted' => 'Read them the notice and tick the box once they agree.',
+            'latitude.required' => 'We could not get your location. Turn on location and try again.',
+        ]);
+
+        $member = $registrar->registerInField($user, $data);
+
+        return response()->json(['member' => [
+            'name' => $member->name,
+            'member_number' => $member->memberProfile->member_number,
+            'phone' => NigerianPhone::format($member->phone),
+        ]], 201);
     }
 
     /** An activity photo: the canvasser themselves, or staff who may see that member. */

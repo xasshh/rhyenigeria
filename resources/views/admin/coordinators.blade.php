@@ -8,7 +8,7 @@
                         <div class="min-w-0 flex-1">
                             <p class="font-semibold">{{ $c->name }} @unless ($c->is_active)<span class="badge bg-red-50 text-red-700">Deactivated</span>@endunless</p>
                             <p class="text-sm break-all text-neutral-600">{{ $c->email }} · {{ NigerianPhone::format($c->phone) }}</p>
-                            <p class="text-xs text-neutral-500">{{ $c->ward?->name ?? $c->lga?->name ?? $c->state?->name ?? 'No area' }}{{ $c->lga_id ? ' (LGA/ward-level: API only)' : '' }}</p>
+                            <p class="text-xs text-neutral-500">{{ $c->ward?->name ?? $c->lga?->name ?? $c->state?->name ?? 'No area' }}</p>
                         </div>
                         <form method="POST" action="{{ route('admin.coordinators.update', $c) }}" class="flex items-center gap-2">
                             @csrf @method('PATCH')

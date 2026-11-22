@@ -30,5 +30,8 @@ return [
     'join_check_rate_limit_per_minute' => (int) env('JOIN_CHECK_RATE_LIMIT_PER_MINUTE', 600),
     'geo_rate_limit_per_minute' => (int) env('GEO_RATE_LIMIT_PER_MINUTE', 1200),
 
+    // Members one canvasser can sign up from the field page per hour (people without a smartphone).
+    'field_registrations_per_hour' => (int) env('FIELD_REGISTRATIONS_PER_HOUR', 40),
+
     'empowerment_photo_max_kb' => (int) env('EMPOWERMENT_PHOTO_MAX_KB', 8192),
 ];

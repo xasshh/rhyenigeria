@@ -125,7 +125,7 @@ final class JoinForm
         return Validator::make($input, $rules, self::messages(), self::attributes())->validate();
     }
 
-    private static function nigerianPhone(): Closure
+    public static function nigerianPhone(): Closure
     {
         return function (string $attribute, mixed $value, Closure $fail) {
             if (! is_string($value) || NigerianPhone::normalise($value) !== $value) {

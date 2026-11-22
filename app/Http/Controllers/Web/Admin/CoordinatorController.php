@@ -19,7 +19,7 @@ class CoordinatorController extends Controller
     public function index(): View
     {
         return view('admin.coordinators', [
-            'coordinators' => User::where('role', Role::Coordinator->value)->with('state:id,name', 'lga:id,name', 'ward:id,name')->orderBy('name')->get(),
+            'coordinators' => User::where('role', Role::Coordinator->value)->whereNull('lga_id')->with('state:id,name', 'lga:id,name', 'ward:id,name')->orderBy('name')->get(),
             'states' => State::orderBy('name')->get(['id', 'name']),
         ]);
     }

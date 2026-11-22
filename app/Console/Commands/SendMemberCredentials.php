@@ -15,12 +15,13 @@ use Throwable;
 
 #[Signature('members:send-credentials
     {--source= : Only members imported from this group, e.g. --source="Team Kaka"}
+    {--field : Members a canvasser registered in person on the field page}
     {--phone=* : Only these phone numbers (use this to resend to someone who lost their SMS)}
     {--limit= : Send at most this many (try a handful first)}
     {--resend : Include members who were already sent their details}
     {--pause=700 : Milliseconds between messages (the API allows about 100 requests a minute)}
     {--dry-run : Show who would get an SMS and one sample message, without sending or changing passwords}')]
-#[Description('Give imported members a temporary password and SMS it to them with their sign-in details')]
+#[Description('Give imported or field-registered members a temporary password and SMS it to them with their sign-in details')]
 class SendMemberCredentials extends Command
 {
     /** No 0/o, 1/l/i: easy to read off an SMS and type on a phone keypad. */
@@ -37,8 +38,8 @@ class SendMemberCredentials extends Command
 
             return self::FAILURE;
         }
-        if ($this->option('source') === null && $phones->isEmpty()) {
-            $this->components->error('Pass --source="<group>" or --phone=<number>.');
+        if ($this->option('source') === null && ! $this->option('field') && $phones->isEmpty()) {
+            $this->components->error('Pass --source="<group>", --field or --phone=<number>.');
 
             return self::FAILURE;
         }
@@ -48,8 +49,10 @@ class SendMemberCredentials extends Command
             ->where('is_active', true)
             ->whereNotNull('phone')
             ->whereHas('memberProfile', function (Builder $q) {
-                $q->whereNotNull('import_source');
+                // Only accounts nobody has a password for: imported, or registered in person by a canvasser.
+                $q->where(fn (Builder $w) => $w->whereNotNull('import_source')->orWhereNotNull('registered_by_user_id'));
                 $this->option('source') !== null && $q->where('import_source', (string) $this->option('source'));
+                $this->option('field') && $q->whereNotNull('registered_by_user_id');
                 $this->option('resend') || $this->option('phone') || $q->whereNull('credentials_sent_at');
             })
             ->when($phones->isNotEmpty(), fn ($q) => $q->whereIn('phone', $phones->all()))

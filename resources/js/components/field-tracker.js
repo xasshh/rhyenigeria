@@ -39,6 +39,11 @@ export default (config) => ({
     photo: null,
     errors: {},
     formMessage: '',
+    // Registering someone in person (often without a smartphone).
+    reg: { name: '', phone: '', gender: '', age_range: '', lga_id: '', ward_id: '', polling_unit_id: '', polling_unit_name: '', has_pvc: null, consent: false },
+    regWards: [], regUnits: [], regLoading: false, regBusy: false, regErrors: {}, regMessage: '',
+    registered: config.registered || [],
+    registeredToday: config.registeredToday || 0,
 
     init() {
         try { this.queue = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); } catch { this.queue = []; }
@@ -203,4 +208,48 @@ export default (config) => ({
     },
 
     err(field) { return this.errors[field]?.[0] || ''; },
+
+    regErr(field) { return this.regErrors[field]?.[0] || ''; },
+
+    async regGet(url) {
+        const res = await fetch(url, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+        if (!res.ok) throw new Error('lookup failed');
+        return (await res.json()).data || [];
+    },
+
+    async regLoadWards() {
+        this.reg.ward_id = ''; this.reg.polling_unit_id = ''; this.regWards = []; this.regUnits = [];
+        if (!this.reg.lga_id) return;
+        this.regLoading = true;
+        try { this.regWards = await this.regGet(config.urls.wards.replace('__ID__', this.reg.lga_id)); } catch { this.regMessage = 'Could not load the wards. Check your signal and choose the LGA again.'; }
+        finally { this.regLoading = false; }
+    },
+
+    async regLoadUnits() {
+        this.reg.polling_unit_id = ''; this.regUnits = [];
+        if (!this.reg.ward_id) return;
+        this.regLoading = true;
+        try { this.regUnits = await this.regGet(config.urls.units.replace('__ID__', this.reg.ward_id)); } catch { /* optional: they can type it */ }
+        finally { this.regLoading = false; }
+    },
+
+    async registerMember() {
+        if (this.regBusy) return;
+        this.regBusy = true; this.regErrors = {}; this.regMessage = 'Getting your location…';
+        try {
+            const at = await this.currentPosition().catch(() => null);
+            if (!at) { this.regMessage = 'We could not get your location. Turn on location and try again.'; return; }
+            this.regMessage = 'Saving…';
+            const { ok, status, data } = await this.send(config.urls.register, 'POST', { ...this.reg, latitude: at.latitude, longitude: at.longitude });
+            if (status === 422) { this.regErrors = data.errors || {}; this.regMessage = 'Please check the highlighted answers.'; return; }
+            if (!ok) { this.regMessage = data.message || 'Could not save. Try again.'; return; }
+            this.registered.unshift(data.member);
+            this.registeredToday++;
+            // Keep the area: the next door is usually in the same ward.
+            this.reg = { ...this.reg, name: '', phone: '', gender: '', age_range: '', has_pvc: null, consent: false };
+            this.regMessage = `${data.member.name} is registered: ${data.member.member_number}.`;
+            this.$refs.regName?.focus();
+        } catch { this.regMessage = 'No connection. Try again when you have signal.'; }
+        finally { this.regBusy = false; }
+    },
 });
