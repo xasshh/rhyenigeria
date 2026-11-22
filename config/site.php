@@ -73,7 +73,7 @@ $brands = [
             'facebook' => env('SOCIAL_FACEBOOK_URL'),
             'instagram' => env('SOCIAL_INSTAGRAM_URL'),
             'tiktok' => env('SOCIAL_TIKTOK_URL'),
-            'x' => env('SOCIAL_X_URL'),
+            'x' => env('SOCIAL_X_URL', 'https://x.com/ubasanius'),
         ],
         'dp_messages' => [
             ['kicker' => 'I am a proud member of the', 'headline' => 'Uba Sani 2027 Movement'],
@@ -95,6 +95,12 @@ $brands = [
                 'layout' => 'portrait', 'eyebrow' => 'Governor of Kaduna State', 'headline' => 'Senator Uba Sani',
                 'body' => 'Executive Governor of Kaduna State.',
                 'image_path' => 'images/slides/governor-placeholder.svg', 'image_alt' => 'Senator Uba Sani',
+                'button_label' => 'Join the Movement', 'button_url' => '/join',
+            ],
+            [
+                'layout' => 'portrait', 'eyebrow' => 'Kaduna State APC Campaign Council', 'headline' => 'Abdulazeez Kaka',
+                'body' => 'Director, Contact and Mobilization Directorate, Kaduna State APC Campaign Council.',
+                'image_path' => 'images/slides/abdulazeez-kaka.webp', 'image_alt' => 'Abdulazeez Kaka',
                 'button_label' => 'Join the Movement', 'button_url' => '/join',
             ],
         ],

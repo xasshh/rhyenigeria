@@ -78,6 +78,6 @@ class SingleStateSiteTest extends TestCase
 
         $this->artisan('site:setup', ['--force' => true])->assertSuccessful();
 
-        $this->assertSame(['Tinubu, Uba Sau Biyu ne!', 'Senator Uba Sani'], HeroSlide::orderBy('position')->pluck('headline')->all());
+        $this->assertSame(['Tinubu, Uba Sau Biyu ne!', 'Senator Uba Sani', 'Abdulazeez Kaka'], HeroSlide::orderBy('position')->pluck('headline')->all());
     }
 }
