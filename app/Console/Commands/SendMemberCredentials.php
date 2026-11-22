@@ -142,7 +142,7 @@ class SendMemberCredentials extends Command
     {
         $site = preg_replace('#^https?://(www\.)?#', '', rtrim((string) config('app.url'), '/'));
         $phone = '0'.substr((string) $user->phone, 4);
-        $body = "your RHYE account is ready. Sign in at {$site}/login Phone: {$phone} Password: {$password} Then choose your own password.";
+        $body = 'your '.config('site.short')." account is ready. Sign in at {$site}/login Phone: {$phone} Password: {$password} Then choose your own password.";
 
         $first = $this->gsmSafe(strtok((string) $user->name, ' ') ?: '');
         $message = "Hi {$first}, {$body}";

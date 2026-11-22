@@ -71,7 +71,7 @@
                     </tbody>
                 </table>
             </div>
-            <p class="px-5 py-3 text-xs text-neutral-500">Weeks start on Monday, Nigerian time. Activities are canvassers' door-to-door visits, event check-ins and reports in the last {{ $activityDays }} days.</p>
+            <p class="px-5 py-3 text-xs text-neutral-500">Weeks start on Monday, Nigerian time. Activities are {{ site_term('canvassers') }}' door-to-door visits, event check-ins and reports in the last {{ $activityDays }} days.</p>
         </section>
 
         <div class="space-y-4">
@@ -94,7 +94,7 @@
 
             {{-- Top canvassers --}}
             <section class="panel p-5">
-                <h2 class="font-display font-bold">Top canvassers</h2>
+                <h2 class="font-display font-bold">Top {{ site_term('canvassers') }}</h2>
                 <p class="text-xs text-neutral-500">{{ $isAdmin ? 'Nationally' : 'In your state' }} · field activities, last {{ $activityDays }} days</p>
                 <ol class="mt-3 space-y-2">
                     @forelse ($canvassers as $i => $c)

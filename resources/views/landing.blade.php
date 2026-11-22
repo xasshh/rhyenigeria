@@ -1,5 +1,5 @@
 @php
-    $slogan = config('membership.slogan');
+    $slogan = config('site.slogan');
 
     $tz = config('membership.timezone');
     $localElection = $electionDate->setTimezone($tz);
@@ -12,10 +12,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#0f2a1c">
-    <title>Renewed Hope Youth Engagement — {{ $slogan }}</title>
-    <meta name="description" content="Renewed Hope Youth Engagement (RHYE): {{ $slogan }} Join the movement, get your digital membership card and count down to election day.">
-    <meta property="og:title" content="Renewed Hope Youth Engagement — {{ $slogan }}">
-    <meta property="og:description" content="Join the movement. Get your digital membership card and updates from your state.">
+    <title>{{ config('site.name') }} — {{ $slogan }}</title>
+    <meta name="description" content="{{ config('site.name') }} ({{ config('site.short') }}): {{ $slogan }} Join the movement, get your digital membership card and count down to election day.">
+    <meta property="og:title" content="{{ config('site.name') }} — {{ $slogan }}">
+    <meta property="og:description" content="{{ config('site.description') }}">
     @if ($slides->first()?->imageUrl())<meta property="og:image" content="{{ $slides->first()->imageUrl() }}">@endif
     @include('partials.head-icons')
     @fonts
@@ -37,7 +37,7 @@
                  x-on:touchstart.passive="touchStart($event)" x-on:touchend.passive="touchEnd($event)"
                  x-on:keydown="key($event)"
                  role="region" aria-roledescription="carousel" aria-label="Highlights">
-            <h1 class="sr-only">Renewed Hope Youth Engagement — {{ $slogan }}</h1>
+            <h1 class="sr-only">{{ config('site.name') }} — {{ $slogan }}</h1>
 
             <div class="grid" aria-live="off">
                 @forelse ($slides as $i => $slide)
@@ -83,11 +83,11 @@
                                         @endif
                                     </div>
                                     <x-logo-tag class="-top-4 -right-3 sm:-right-5" />
-                                    @foreach ([
-                                        ['5,000+ youth empowered', 'top-[10%] -left-3 max-w-[11rem] sm:-left-10 sm:max-w-[13.5rem]'],
-                                        ['275+ Events Organized', '-right-3 bottom-[22%] max-w-[11rem] sm:-right-10 sm:max-w-[13.5rem]'],
-                                        ['36+ Nationwide', '-bottom-5 left-[8%]'],
-                                    ] as [$stat, $position])
+                                    @foreach (collect(config('site.stats'))->map(fn ($s) => $s[0].' '.$s[1])->zip([
+                                        'top-[10%] -left-3 max-w-[11rem] sm:-left-10 sm:max-w-[13.5rem]',
+                                        '-right-3 bottom-[22%] max-w-[11rem] sm:-right-10 sm:max-w-[13.5rem]',
+                                        '-bottom-5 left-[8%]',
+                                    ]) as [$stat, $position])
                                         <p class="font-stat absolute {{ $position }} rounded-xl border-2 border-[#b3b3b3] bg-white px-3.5 py-2 text-sm leading-tight text-black sm:rounded-[20px] sm:px-6 sm:py-4 sm:text-xl sm:leading-[28px]">
                                             {{ $stat }}
                                             @if ($loop->iteration === 2)
@@ -245,14 +245,14 @@
             </section>
         @endif
 
-        {{-- Members across Nigeria --}}
+        {{-- Members across Nigeria (or across the site's one state) --}}
         <section id="map" class="mx-auto grid max-w-[1440px] items-center gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)] lg:gap-16 lg:px-[66px] lg:py-24" aria-labelledby="map-title">
             <div>
-                <p class="eyebrow text-action">Every state. Every ward.</p>
-                <h2 id="map-title" class="mt-3 font-headline text-[36px] leading-[1.05] font-extrabold tracking-[-0.03em] text-forest sm:text-[48px]">The movement across Nigeria</h2>
-                <p class="mt-4 font-body text-lg leading-relaxed text-neutral-700">Darker states have more members. Hover or tap a state to see how many have joined, then tap again to join from there.</p>
+                <p class="eyebrow text-action">{{ $siteState ? 'Every LGA. Every ward.' : 'Every state. Every ward.' }}</p>
+                <h2 id="map-title" class="mt-3 font-headline text-[36px] leading-[1.05] font-extrabold tracking-[-0.03em] text-forest sm:text-[48px]">The movement across {{ $siteState ? $siteState->name.' State' : 'Nigeria' }}</h2>
+                <p class="mt-4 font-body text-lg leading-relaxed text-neutral-700">{{ $siteState ? 'Darker LGAs have more members. Hover or tap an LGA to see how many have joined.' : 'Darker states have more members. Hover or tap a state to see how many have joined, then tap again to join from there.' }}</p>
                 <dl class="mt-8 grid grid-cols-3 gap-4 border-t border-line pt-6">
-                    @foreach ([['5,000+', 'youth empowered'], ['275+', 'events organised'], ['36+', 'states nationwide']] as [$n, $label])
+                    @foreach (config('site.stats') as [$n, $label])
                         <div>
                             <dt class="sr-only">{{ $label }}</dt>
                             <dd class="font-headline text-[28px] leading-none font-extrabold text-forest sm:text-[34px]">{{ $n }}</dd>
@@ -260,11 +260,16 @@
                         </div>
                     @endforeach
                 </dl>
-                <a href="{{ route('join') }}" class="mt-8 inline-flex min-h-[52px] items-center gap-2 rounded-xl bg-action px-6 text-[17px] font-bold text-white hover:bg-action-dark">Join from your state <x-icon name="arrow-right" class="h-4 w-4" /></a>
+                <a href="{{ route('join') }}" class="mt-8 inline-flex min-h-[52px] items-center gap-2 rounded-xl bg-action px-6 text-[17px] font-bold text-white hover:bg-action-dark">{{ $siteState ? 'Join the movement' : 'Join from your state' }} <x-icon name="arrow-right" class="h-4 w-4" /></a>
             </div>
             <div class="rounded-[28px] bg-surface p-4 sm:p-8">
-                <x-area-map :map="$map" :url="route('map.states')" key="code" :href="route('join', ['state' => '__KEY__'])"
-                            action="Join from :name" label="Map of Nigeria's 36 states and the FCT, coloured by number of members" />
+                @if ($siteState)
+                    <x-area-map :map="$map" :url="route('map.site-lgas')" key="id" :href="route('join')"
+                                action="Join from :name" :label="'Map of '.$siteState->name.' State\'s local government areas, coloured by number of members'" />
+                @else
+                    <x-area-map :map="$map" :url="route('map.states')" key="code" :href="route('join', ['state' => '__KEY__'])"
+                                action="Join from :name" label="Map of Nigeria's 36 states and the FCT, coloured by number of members" />
+                @endif
             </div>
         </section>
     </main>

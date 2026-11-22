@@ -4,9 +4,9 @@
         <x-stat label="Today" :value="$summary['today']" />
         <x-stat label="This week" :value="$summary['week']" />
         <x-stat label="This month" :value="$summary['month']" />
-        <x-stat label="Canvassers approved" :value="$summary['canvassers_approved']" />
-        <x-stat label="Canvassers pending" :value="$summary['canvassers_pending']" :tone="$summary['canvassers_pending'] ? 'warn' : 'default'" />
-        <x-stat label="Canvassers rejected" :value="$summary['canvassers_rejected']" />
+        <x-stat :label="site_term('Canvassers').' approved'" :value="$summary['canvassers_approved']" />
+        <x-stat :label="site_term('Canvassers').' pending'" :value="$summary['canvassers_pending']" :tone="$summary['canvassers_pending'] ? 'warn' : 'default'" />
+        <x-stat :label="site_term('Canvassers').' rejected'" :value="$summary['canvassers_rejected']" />
         <x-stat label="PVC holders" :value="$summary['pvc']" :hint="number_format($summary['vin']).' with VIN'" />
     </div>
 
@@ -56,7 +56,7 @@
             <table class="w-full min-w-[560px] text-sm">
                 <thead class="bg-surface text-left text-xs text-neutral-500 uppercase">
                     <tr>
-                        @foreach (['name' => 'State', 'total' => 'Members', 'today' => 'Today', 'pvc' => 'PVC', 'canvassers' => 'Canvassers', 'pending' => 'Pending'] as $k => $label)
+                        @foreach (['name' => 'State', 'total' => 'Members', 'today' => 'Today', 'pvc' => 'PVC', 'canvassers' => site_term('Canvassers'), 'pending' => 'Pending'] as $k => $label)
                             <th class="px-4 py-2.5 font-medium {{ $k === 'name' ? 'pl-5' : 'text-right' }}">
                                 <button type="button" class="inline-flex items-center gap-1 uppercase" x-on:click="sort('{{ $k }}')">{{ $label }} <span x-show="key === '{{ $k }}'" x-text="dir > 0 ? '↑' : '↓'"></span></button>
                             </th>

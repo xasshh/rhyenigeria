@@ -38,7 +38,7 @@ export default (card) => ({
             ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.textAlign = 'right';
             ctx.font = `600 ${10 * S}px DM Sans, sans-serif`;
             ctx.fillText('MEMBERSHIP CARD', W - 24 * S, 38 * S);
-            ctx.fillText('RENEWED HOPE YOUTH ENGAGEMENT', W - 24 * S, 52 * S);
+            ctx.fillText(String(card.siteName || '').toUpperCase(), W - 24 * S, 52 * S);
             ctx.textAlign = 'left';
 
             // Text block.

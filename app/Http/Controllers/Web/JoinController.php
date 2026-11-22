@@ -27,10 +27,9 @@ class JoinController extends Controller
 
         $ref = strtoupper((string) preg_replace('/[^A-Za-z0-9-]/', '', (string) $request->query('ref')));
         $as = $request->query('as');
-        // ?state=LA (from the homepage map) pre-selects the state.
-        $preselected = $request->filled('state')
-            ? State::query()->where('code', strtoupper((string) $request->query('state')))->first(['id', 'code'])
-            : null;
+        // ?state=LA (from the homepage map) pre-selects the state; a single-state site always uses its own.
+        $stateCode = site_state_code() ?? ($request->filled('state') ? strtoupper((string) $request->query('state')) : null);
+        $preselected = $stateCode ? State::query()->where('code', $stateCode)->first(['id', 'code']) : null;
 
         if (! in_array($as, ['member', 'canvasser'], true)) {
             return view('join.choose', ['ref' => $ref, 'stateCode' => $preselected?->code]);
@@ -40,7 +39,7 @@ class JoinController extends Controller
             'canvasser' => $as === 'canvasser',
             'ref' => $ref,
             'preselectedStateId' => $preselected?->id,
-            'states' => State::query()->orderBy('name')->get(['id', 'name']),
+            'states' => State::query()->when(site_state_code(), fn ($q, $code) => $q->where('code', $code))->orderBy('name')->get(['id', 'name']),
             'genders' => Gender::cases(),
             'ageRanges' => AgeRange::cases(),
             'canvasserRoles' => CanvasserRole::cases(),

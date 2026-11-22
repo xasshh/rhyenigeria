@@ -6,18 +6,18 @@
             Nigeria's youth, <br class="hidden lg:block">organised <br class="hidden lg:block"><span class="text-mint">ward <br class="hidden lg:block">by ward.</span>
         </h1>
         <p class="mt-4 hidden max-w-[390px] text-[19px] leading-relaxed text-white/80 sm:block lg:mt-6">Sign up once and get a digital membership card, updates from your state, and a direct line to your ward team.</p>
-        <x-card-preview class="mt-12 hidden lg:block" name="Adaeze Okafor" state="Lagos" ward="Ikeja · Ward 04" number="RHYE-LA-004821" />
+        <x-card-preview class="mt-12 hidden lg:block" name="Adaeze Okafor" state="Lagos" ward="Ikeja · Ward 04" :number="config('site.member_prefix').'-'.(site_state_code() ?? 'LA').'-004821'" />
     </x-slot:aside>
 
     <div class="lg:-ml-[50px] lg:w-[calc(100%+100px)]">
         <p class="eyebrow text-action">Join the movement</p>
         <h2 class="mt-3 font-headline text-[36px] leading-[1.05] font-extrabold tracking-[-0.03em] sm:text-[48px]">How would you like to take part?</h2>
-        <p class="mt-4 text-lg leading-relaxed text-neutral-600">It takes about two minutes. You can upgrade from Member to Canvasser later.</p>
+        <p class="mt-4 text-lg leading-relaxed text-neutral-600">It takes about two minutes. You can upgrade from Member to {{ site_term('Canvasser') }} later.</p>
 
         <div class="mt-9 space-y-4">
             @foreach ([
                 ['member', 'Member', 'Stay informed and counted.', 'card', null, ['Digital membership card with QR code', 'Event updates and news for your state', 'Invite friends with your member number']],
-                ['canvasser', 'Canvasser', 'Become a member and work in your ward.', 'shield', 'Reviewed', ['Everything a Member gets', 'Door-to-door, social media, events and more', 'Your state coordinator reviews every application']],
+                ['canvasser', site_term('Canvasser'), config('site.canvasser_roles') ? 'Become a member and represent your polling unit.' : 'Become a member and work in your ward.', 'shield', 'Reviewed', ['Everything a Member gets', config('site.canvasser_roles') ? 'Register voters door to door and stand for the movement at your polling unit' : 'Door-to-door, social media, events and more', 'Your coordinator reviews every application']],
             ] as [$as, $label, $text, $icon, $tag, $points])
                 <a href="{{ route('join', array_filter(['as' => $as, 'ref' => $ref, 'state' => $stateCode])) }}" @class([
                     'group block rounded-2xl border-2 bg-white p-5 transition sm:p-7 focus-visible:ring-4 focus-visible:ring-action/25 focus-visible:outline-none',

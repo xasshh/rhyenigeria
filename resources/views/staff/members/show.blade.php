@@ -41,7 +41,7 @@
 
     @if ($profile->canvasser_status)
         <section class="panel mt-4 p-5">
-            <h2 class="font-display font-bold">Canvasser application</h2>
+            <h2 class="font-display font-bold">{{ site_term('Canvasser') }} application</h2>
             @include('staff.partials.canvasser-review', ['m' => $member, 'p' => $profile, 'canReview' => $canReview])
         </section>
     @endif

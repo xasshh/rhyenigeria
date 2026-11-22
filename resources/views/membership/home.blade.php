@@ -77,24 +77,25 @@
     <section id="canvass" class="panel mt-4 scroll-mt-24 p-5">
         @switch($profile->canvasser_status?->value)
             @case('approved')
-                <div class="flex items-center gap-3"><span class="badge bg-brand text-white">Canvasser</span><h2 class="font-display font-bold">You're an approved canvasser</h2></div>
+                <div class="flex items-center gap-3"><span class="badge bg-brand text-white">{{ site_term('Canvasser') }}</span><h2 class="font-display font-bold">You're an approved {{ site_term('canvasser') }}</h2></div>
                 <p class="mt-2 text-sm text-neutral-600">Door-to-door tools, your invite leaderboard and ward targets are coming soon. Your coordinator will be in touch on WhatsApp.</p>
                 @break
             @case('pending')
-                <div class="flex items-center gap-3"><span class="badge bg-accent/20 text-[#7a5b00]">Pending</span><h2 class="font-display font-bold">Canvasser application received</h2></div>
+                <div class="flex items-center gap-3"><span class="badge bg-accent/20 text-[#7a5b00]">Pending</span><h2 class="font-display font-bold">{{ site_term('Canvasser') }} application received</h2></div>
                 <p class="mt-2 text-sm text-neutral-600">Your state coordinator is reviewing it.</p>
                 @break
             @default
                 <div x-data="{ open: {{ $errors->has('canvasser_roles') || $errors->has('whatsapp_phone') ? 'true' : 'false' }} }">
-                    <h2 class="font-display font-bold">Want to do more? Become a canvasser</h2>
+                    <h2 class="font-display font-bold">Want to do more? Become a {{ site_term('canvasser') }}</h2>
                     @if ($profile->canvasser_status?->value === 'rejected')
                         <p class="mt-1 text-sm text-neutral-600">Your last application was not approved{{ $profile->canvasser_review_note ? ': “'.$profile->canvasser_review_note.'”' : '.' }} You can apply again.</p>
                     @else
                         <p class="mt-1 text-sm text-neutral-600">Work with your ward team. Your state coordinator reviews every application.</p>
                     @endif
-                    <button type="button" class="btn-secondary btn-sm mt-3" x-show="!open" x-on:click="open = true">Apply to canvass</button>
+                    <button type="button" class="btn-secondary btn-sm mt-3" x-show="!open" x-on:click="open = true">Apply now</button>
                     <form method="POST" action="{{ route('membership.canvasser.apply') }}" class="mt-4 space-y-4" x-show="open" x-cloak>
                         @csrf
+                        @unless (config('site.canvasser_roles'))
                         <fieldset>
                             <legend class="label">How would you like to help?</legend>
                             <div class="flex flex-wrap gap-2">
@@ -104,6 +105,7 @@
                             </div>
                             @error('canvasser_roles')<p class="error">{{ $message }}</p>@enderror
                         </fieldset>
+                        @endunless
                         <div class="max-w-sm">
                             <label class="label" for="whatsapp_phone">WhatsApp number</label>
                             <input id="whatsapp_phone" name="whatsapp_phone" type="tel" class="field" value="{{ old('whatsapp_phone') }}" placeholder="Leave blank to use {{ \App\Support\NigerianPhone::format($user->phone) }}">

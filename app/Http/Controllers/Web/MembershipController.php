@@ -182,13 +182,13 @@ class MembershipController extends Controller
             $request->merge(['whatsapp_phone' => NigerianPhone::normalise($request->input('whatsapp_phone')) ?? $request->input('whatsapp_phone')]);
         }
         $data = $request->validate([
-            'canvasser_roles' => ['required', 'array', 'min:1'],
+            'canvasser_roles' => config('site.canvasser_roles') ? ['nullable', 'array'] : ['required', 'array', 'min:1'],
             'canvasser_roles.*' => ['distinct', new Enum(CanvasserRole::class)],
             'whatsapp_phone' => ['nullable', 'regex:/^\+234[789][01]\d{8}$/'],
         ], ['canvasser_roles.required' => 'Choose at least one way you would like to help.', 'whatsapp_phone.regex' => 'Enter a Nigerian mobile number.']);
 
         $profile->canvasser_status = CanvasserStatus::Pending;
-        $profile->canvasser_roles = array_values($data['canvasser_roles']);
+        $profile->canvasser_roles = config('site.canvasser_roles') ?? array_values($data['canvasser_roles']);
         $profile->whatsapp_phone = $data['whatsapp_phone'] ?? $request->user()->phone;
         $profile->canvasser_applied_at = now();
         $profile->canvasser_reviewed_by = null;
@@ -299,7 +299,7 @@ class MembershipController extends Controller
         $profile = $user->memberProfile;
         $verifyUrl = route('verify', $profile->verify_token);
         $inviteUrl = route('join', ['ref' => $profile->referral_code]);
-        $message = 'I just joined the Renewed Hope Youth Engagement movement. '.config('membership.slogan').' Join me: '.$inviteUrl;
+        $message = 'I just joined the '.config('site.name').'. '.config('site.slogan').' Join me: '.$inviteUrl;
 
         return [
             'user' => $user,

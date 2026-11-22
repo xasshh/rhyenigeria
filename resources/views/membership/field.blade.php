@@ -26,21 +26,21 @@
     ];
 @endphp
 <x-layouts.app title="Field work">
-    <p class="text-sm text-neutral-500">Canvasser{{ $user->state ? ', '.$user->state->name : '' }}</p>
+    <p class="text-sm text-neutral-500">{{ site_term('Canvasser') }}{{ $user->state ? ', '.$user->state->name : '' }}</p>
     <h1 class="font-display text-2xl font-bold tracking-tight sm:text-[28px]">Field work</h1>
 
     @unless ($consented)
         {{-- The location notice. Nothing is recorded until this is accepted and a shift is started. --}}
         <section class="panel mt-5 p-5 sm:p-6">
             <h2 class="font-display text-lg font-bold">Before you start: location sharing</h2>
-            <p class="mt-2 text-neutral-700">When you canvass, your state coordinator can see where you are working so they can plan, support and keep you safe. Here is exactly how it works:</p>
+            <p class="mt-2 text-neutral-700">When you do field work, your coordinator can see where you are working so they can plan, support and keep you safe. Here is exactly how it works:</p>
             <ul class="mt-4 space-y-3 text-[15px] text-neutral-700">
                 @foreach ([
                     ['clock', '<strong>Only during a shift.</strong> Your location is recorded only after you tap <em>Start shift</em>, and stops when you tap <em>End shift</em>, close this page or withdraw. Never at any other time.'],
                     ['pin', '<strong>What is recorded:</strong> your phone\'s GPS position about once a minute while you move, its accuracy and the time, plus the visits, check-ins and reports you choose to log.'],
                     ['users', '<strong>Who sees it:</strong> your state coordinator and the national team. Nobody else, and it is never sold or published.'],
                     ['lock', '<strong>How long:</strong> positions are deleted after '.config('tracking.retention_days').' days. The activities you log are kept as campaign records.'],
-                    ['x', '<strong>Your choice:</strong> you can withdraw at any time on this page. Location sharing stops at once, and you stay a canvasser.'],
+                    ['x', '<strong>Your choice:</strong> you can withdraw at any time on this page. Location sharing stops at once, and you stay a '.site_term('canvasser').'.'],
                 ] as [$icon, $text])
                     <li class="flex gap-3"><x-icon :name="$icon" class="mt-0.5 text-brand" /><span>{!! $text !!}</span></li>
                 @endforeach
@@ -49,7 +49,7 @@
                 @csrf
                 <label class="flex items-start gap-3 rounded-xl border border-brand/25 bg-brand/5 p-4">
                     <input type="checkbox" name="accepted" value="1" class="mt-1 h-5 w-5 shrink-0 rounded accent-brand" required>
-                    <span class="text-sm text-neutral-700">I agree to share my location with Renewed Hope Youth Engagement during the shifts I start, as described above and in the <a href="{{ route('privacy') }}#location" class="font-semibold text-brand underline" target="_blank">privacy notice</a>.</span>
+                    <span class="text-sm text-neutral-700">I agree to share my location with {{ config('site.name') }} during the shifts I start, as described above and in the <a href="{{ route('privacy') }}#location" class="font-semibold text-brand underline" target="_blank">privacy notice</a>.</span>
                 </label>
                 @error('accepted')<p class="error">{{ $message }}</p>@enderror
                 <button class="btn-primary">I agree</button>
@@ -72,7 +72,7 @@
                         <span x-show="gps.status === 'ok'">GPS accurate to about <span x-text="gps.accuracy"></span> m.</span>
                         <span x-show="queue.length">· <span x-text="queue.length"></span> waiting to send</span>
                     </p>
-                    <p class="mt-2 text-sm text-white/85" x-show="!onShift">Tap Start shift when you begin canvassing. Your coordinator sees where you work only while a shift is running.</p>
+                    <p class="mt-2 text-sm text-white/85" x-show="!onShift">Tap Start shift when you begin field work. Your coordinator sees where you work only while a shift is running.</p>
                     <p class="mt-2 text-sm font-semibold text-accent" x-show="gps.message" x-text="gps.message"></p>
 
                     <div class="mt-5">
@@ -213,7 +213,7 @@
                     </fieldset>
                     <div class="rounded-xl bg-surface p-4 text-sm">
                         <p class="font-semibold">Read this to them:</p>
-                        <p class="mt-1 text-neutral-700">“Renewed Hope Youth Engagement will store your details to coordinate the movement, under the Nigeria Data Protection Act 2023. Your data will never be sold, and you can ask for it to be deleted at any time.”</p>
+                        <p class="mt-1 text-neutral-700">“{{ config('site.name') }} will store your details to coordinate the movement, under the Nigeria Data Protection Act 2023. Your data will never be sold, and you can ask for it to be deleted at any time.”</p>
                         <label class="mt-3 flex items-start gap-2">
                             <input type="checkbox" class="mt-1" x-model="reg.consent">
                             <span>I read this to them and they agreed to join.</span>

@@ -34,7 +34,9 @@ class TemporaryCredentials
     {
         $site = preg_replace('#^https?://(www\.)?#', '', rtrim((string) config('app.url'), '/'));
 
-        return "Hello {$user->firstName()}, you are now {$roleLabel} on RHYE. Sign in at {$site}/login with your phone number "
+        $short = config('site.short');
+
+        return "Hello {$user->firstName()}, you are now {$roleLabel} on {$short}. Sign in at {$site}/login with your phone number "
             .NigerianPhone::format($user->phone)." and this temporary password: {$password}. You will choose your own password after signing in.";
     }
 
@@ -55,7 +57,7 @@ class TemporaryCredentials
         $site = preg_replace('#^https?://(www\.)?#', '', rtrim((string) config('app.url'), '/'));
 
         try {
-            $this->sms->send($user->phone, "RHYE: sign in at {$site}/login with ".NigerianPhone::format($user->phone)." and password {$password}, then choose your own.");
+            $this->sms->send($user->phone, config('site.short').": sign in at {$site}/login with ".NigerianPhone::format($user->phone)." and password {$password}, then choose your own.");
 
             return null;
         } catch (Throwable $e) {

@@ -43,6 +43,7 @@ Route::middleware(['throttle:geo', 'cache.headers:public;max_age=600'])->prefix(
 
 // Homepage map: members per state (aggregate counts only), cached.
 Route::get('map/states.json', [MapController::class, 'states'])->middleware('throttle:geo')->name('map.states');
+Route::get('map/lgas.json', [MapController::class, 'siteLgas'])->middleware('throttle:geo')->name('map.site-lgas');
 
 // Sign-up.
 Route::get('join', [JoinController::class, 'show'])->name('join');

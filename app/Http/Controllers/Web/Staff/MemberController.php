@@ -82,7 +82,7 @@ class MemberController extends Controller
             'include_identifiers' => $identifiers,
         ]);
 
-        $filename = 'rhye-members-'.now()->setTimezone(config('membership.timezone'))->format('Y-m-d-His').'.csv';
+        $filename = strtolower(config('site.short')).'-members-'.now()->setTimezone(config('membership.timezone'))->format('Y-m-d-His').'.csv';
 
         return response()->streamDownload(function () use ($query, $identifiers) {
             $out = fopen('php://output', 'w');

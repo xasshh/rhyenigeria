@@ -2,10 +2,10 @@
     <article class="panel space-y-5 p-6 leading-relaxed text-neutral-700 sm:p-8 [&_h2]:font-display [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-ink">
         <header>
             <h1 class="font-display text-[28px] font-bold tracking-tight text-ink">Privacy notice</h1>
-            <p class="mt-1 text-sm text-neutral-500">Renewed Hope Youth Engagement · version {{ config('membership.consent_version') }}</p>
+            <p class="mt-1 text-sm text-neutral-500">{{ config('site.name') }} · version {{ config('membership.consent_version') }}</p>
         </header>
 
-        <p>When you join Renewed Hope Youth Engagement we collect personal data under the <strong>Nigeria Data Protection Act 2023</strong>, on the basis of your consent. This notice explains what we collect, why, and your rights.</p>
+        <p>When you join {{ config('site.name') }} we collect personal data under the <strong>Nigeria Data Protection Act 2023</strong>, on the basis of your consent. This notice explains what we collect, why, and your rights.</p>
 
         <h2>What we collect</h2>
         <ul class="list-disc space-y-1 pl-5">
@@ -13,7 +13,7 @@
             <li>Your state, LGA, ward and (if you choose) polling unit.</li>
             <li>Whether you have a PVC and, if you give them, your VIN and NIN. These are encrypted when stored and are never shown in full.</li>
             <li>One location pin, only if you allow it when you join or tap "Pin my location" on your dashboard (see <a href="#member-pin">below</a>).</li>
-            <li>If you apply to canvass: how you would like to help and your WhatsApp number.</li>
+            <li>If you apply to be a {{ site_term('canvasser') }}: how you would like to help and your WhatsApp number.</li>
             <li>If you report an empowerment programme: the details and the photo you upload.</li>
         </ul>
 
@@ -26,8 +26,8 @@
         <h2 id="member-pin">Your location pin</h2>
         <p>When you join, your phone asks whether to share your location; you can also pin it later from your dashboard. We save that single point (latitude and longitude) and the date. Your state coordinator and the national team see it as a pin on a map of members, to plan activities near members; opening that map is recorded in our audit log. It is not tracking: the pin never moves unless you pin again, and you can change or remove it at any time on your dashboard under <em>My card</em>.</p>
 
-        <h2 id="location">Location sharing for canvassers</h2>
-        <p>Approved canvassers can choose to share their location while they work. It is off until the canvasser agrees on their Field work page, and even then it is recorded only between a <em>Start shift</em> and <em>End shift</em> that they press themselves, while that page is open. We record the phone's GPS position about once a minute while they move, its accuracy and the time, and the visits, check-ins and reports they log, with an optional photo. Their state coordinator and the national team can see this to plan activities and keep canvassers safe. Positions are deleted after {{ config('tracking.retention_days') }} days; logged activities are kept as campaign records. Ordinary members are never tracked. A canvasser can withdraw at any time, which stops location sharing immediately.</p>
+        <h2 id="location">Location sharing for {{ site_term('canvassers') }}</h2>
+        <p>Approved {{ site_term('canvassers') }} can choose to share their location while they work. It is off until the {{ site_term('canvasser') }} agrees on their Field work page, and even then it is recorded only between a <em>Start shift</em> and <em>End shift</em> that they press themselves, while that page is open. We record the phone's GPS position about once a minute while they move, its accuracy and the time, and the visits, check-ins and reports they log, with an optional photo. Their state coordinator and the national team can see this to plan activities and keep canvassers safe. Positions are deleted after {{ config('tracking.retention_days') }} days; logged activities are kept as campaign records. Ordinary members are never tracked. A canvasser can withdraw at any time, which stops location sharing immediately.</p>
 
         <h2>What we never do</h2>
         <p>We <strong>never sell</strong> your data, and we do not share it with third parties for their own purposes.</p>

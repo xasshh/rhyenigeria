@@ -1,4 +1,4 @@
-<x-layouts.public title="News" description="News and photos from Renewed Hope Youth Engagement events across Nigeria." current="news">
+<x-layouts.public title="News" :description="'News and photos from '.config('site.name').' events'.(site_state_code() ? ' across Kaduna State.' : ' across Nigeria.')" current="news">
     <section class="relative isolate overflow-hidden bg-forest text-white">
         <x-fingerprint class="absolute -top-24 -right-24 -z-10 w-[420px] text-accent/[0.2]" />
         <div class="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 lg:px-[66px] lg:py-20">

@@ -6,13 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\State;
 use App\Services\Geo\AreaMap;
 use App\Services\Membership\MemberDirectory;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request, MemberDirectory $directory, AreaMap $map): View
+    public function index(Request $request, MemberDirectory $directory, AreaMap $map): View|RedirectResponse
     {
+        // A single-state site has no national picture: its overview is the state page (LGAs and wards).
+        if (site_state_code() && ($state = State::where('code', site_state_code())->first())) {
+            return redirect()->route('admin.states.show', $state);
+        }
+
         $members = $directory->query($request->user());
         $byState = $directory->byArea($members, 'state')->keyBy('id');
 

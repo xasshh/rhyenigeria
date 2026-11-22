@@ -2,7 +2,7 @@
     <div x-data="liveMap(@js($config))">
         <div class="flex flex-wrap items-end justify-between gap-3">
             <div>
-                <p class="text-sm text-neutral-500">Canvassers in the field today</p>
+                <p class="text-sm text-neutral-500">{{ site_term('Canvassers') }} in the field today</p>
                 <h1 class="font-display text-2xl font-bold tracking-tight sm:text-[28px]">Live map{{ $stateName ? ' · '.$stateName : '' }}</h1>
             </div>
             @if ($states->isNotEmpty())
@@ -46,7 +46,7 @@
                 <div class="flex items-center justify-between gap-2 border-b border-line p-3">
                     <div class="inline-flex rounded-lg border border-line p-0.5 text-sm">
                         <button type="button" class="rounded-md px-3 py-1" :class="filter === 'on_shift' ? 'bg-brand text-white' : 'text-neutral-600'" x-on:click="filter = 'on_shift'">On shift</button>
-                        <button type="button" class="rounded-md px-3 py-1" :class="filter === 'all' ? 'bg-brand text-white' : 'text-neutral-600'" x-on:click="filter = 'all'">All canvassers</button>
+                        <button type="button" class="rounded-md px-3 py-1" :class="filter === 'all' ? 'bg-brand text-white' : 'text-neutral-600'" x-on:click="filter = 'all'">All {{ site_term('canvassers') }}</button>
                     </div>
                     <span class="text-xs text-neutral-500" x-text="updatedAt ? 'Updated ' + updatedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : ''"></span>
                 </div>
@@ -68,7 +68,7 @@
                             </div>
                         </li>
                     </template>
-                    <li class="p-4 text-sm text-neutral-500" x-show="!loading && !list.length" x-text="filter === 'on_shift' ? 'Nobody is on shift right now.' : 'No approved canvassers yet.'"></li>
+                    <li class="p-4 text-sm text-neutral-500" x-show="!loading && !list.length" x-text="filter === 'on_shift' ? 'Nobody is on shift right now.' : 'No approved {{ site_term('canvassers') }} yet.'"></li>
                 </ul>
             </aside>
         </div>
@@ -92,6 +92,6 @@
             </ul>
         </section>
 
-        <p class="mt-4 text-xs text-neutral-500">Canvassers share their location only during shifts they start themselves, after agreeing to it. Opening a route is recorded in the audit log. Map data © OpenStreetMap contributors.</p>
+        <p class="mt-4 text-xs text-neutral-500">{{ site_term('Canvassers') }} share their location only during shifts they start themselves, after agreeing to it. Opening a route is recorded in the audit log. Map data © OpenStreetMap contributors.</p>
     </div>
 </x-layouts.app>

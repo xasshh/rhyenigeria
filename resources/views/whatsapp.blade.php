@@ -1,4 +1,4 @@
-<x-layouts.public title="State WhatsApp groups" description="Join your state's RHYE WhatsApp group: choose your state, meet your coordinator, register, and get the link on your dashboard." current="whatsapp">
+<x-layouts.public title="State WhatsApp groups" description="Join your state's {{ config('site.short') }} WhatsApp group: choose your state, meet your coordinator, register, and get the link on your dashboard." current="whatsapp">
     <section class="relative isolate overflow-hidden bg-forest text-white">
         <x-fingerprint class="absolute -top-24 -right-24 -z-10 w-[420px] text-accent/[0.2]" />
         <div class="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 lg:px-[66px] lg:py-20">

@@ -8,7 +8,7 @@
     $cardConfig = [
         'name' => $user->name, 'number' => $profile->member_number, 'place' => $place,
         'joined' => $profile->created_at->setTimezone(config('membership.timezone'))->format('j M Y'),
-        'role' => $profile->roleLabel(), 'logo' => asset('images/logo-rhye.png'), 'slogan' => config('membership.slogan'),
+        'role' => $profile->roleLabel(), 'logo' => asset(config('site.logo.0')), 'slogan' => config('site.slogan'), 'siteName' => config('site.name'),
     ];
 @endphp
 <x-layouts.base title="Welcome" noindex>
@@ -17,7 +17,7 @@
         <x-fingerprint class="absolute -top-24 -right-24 -z-10 hidden w-[360px] rotate-180 text-accent/[0.12] lg:block" />
 
         <header class="flex items-center justify-between px-5 py-5 sm:px-8 lg:px-14 lg:py-7">
-            <a href="{{ route('home') }}" class="rounded-2xl bg-white px-4 py-2.5"><img src="{{ asset('images/logo-rhye.png') }}" alt="RHYE — Renewed Hope Youth Engagement" class="h-9 w-auto" width="600" height="272"></a>
+            <a href="{{ route('home') }}" class="rounded-2xl bg-white px-4 py-2.5"><img src="{{ asset(config('site.logo.0')) }}" alt="{{ config('site.short') }} — {{ config('site.name') }}" class="h-9 w-auto" width="{{ config('site.logo.1') }}" height="{{ config('site.logo.2') }}"></a>
             <form method="POST" action="{{ route('logout') }}">@csrf<button class="text-[17px] font-medium text-white/90 hover:text-white">Sign out</button></form>
         </header>
 
@@ -33,11 +33,11 @@
                 </h1>
                 <p class="mt-5 max-w-[510px] text-[19px] leading-relaxed text-white/80">
                     {{ $applying
-                        ? "Your card works right away. We'll let you know as soon as your state coordinator reviews your canvasser application."
+                        ? "Your card works right away. We'll let you know as soon as your state coordinator reviews your ".site_term('canvasser')." application."
                         : 'Your digital membership card is ready. Show it at events or save it to your phone.' }}
                 </p>
 
-                <x-card-preview class="mt-10 max-w-[482px]" :name="$user->name" :badge="$applying ? 'Canvasser · in review' : $profile->roleLabel().' · Active'" :tone="$applying ? 'canvasser' : 'member'"
+                <x-card-preview class="mt-10 max-w-[482px]" :name="$user->name" :badge="$applying ? site_term('Canvasser').' · in review' : $profile->roleLabel().' · Active'" :tone="$applying ? 'canvasser' : 'member'"
                     :state="$user->state?->name ?? '—'" :ward="$wardLine" :number="$profile->member_number" :qr="$qrSvg" />
 
                 <div class="mt-8 flex flex-wrap gap-3">
@@ -53,7 +53,7 @@
             <section class="rounded-[28px] bg-white p-6 text-ink sm:p-9">
                 @if ($applying)
                     <div class="flex items-center justify-between gap-3">
-                        <h2 class="font-headline text-[28px] font-bold tracking-[-0.02em]">Canvasser application</h2>
+                        <h2 class="font-headline text-[28px] font-bold tracking-[-0.02em]">{{ site_term('Canvasser') }} application</h2>
                         <span class="rounded-full bg-amber-soft px-3 py-1 text-sm font-semibold text-amber-ink">In review</span>
                     </div>
                     @php

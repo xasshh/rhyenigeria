@@ -4,7 +4,7 @@
     'tone' => 'member',
     'state' => 'State',
     'ward' => 'LGA · Ward',
-    'number' => 'RHYE-PENDING',
+    'number' => config('site.member_prefix').'-PENDING',
     'qr' => null,
     // Alpine expressions; when given, the values follow the sign-up form as it is filled in.
     'bind' => [],
@@ -20,7 +20,7 @@
 
     <div class="py-5 pr-5 pl-9">
         <div class="flex items-start justify-between gap-3">
-            <img src="{{ asset('images/logo-rhye.png') }}" alt="RHYE" class="h-9 w-auto" width="600" height="272">
+            <img src="{{ asset(config('site.logo.0')) }}" alt="{{ config('site.short') }}" class="h-9 w-auto" width="{{ config('site.logo.1') }}" height="{{ config('site.logo.2') }}">
             <p class="pt-2 text-[10.5px] font-medium tracking-[0.18em] text-neutral-600 uppercase">Membership card</p>
         </div>
 

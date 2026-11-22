@@ -9,7 +9,7 @@
         </h1>
         <p class="mt-4 hidden max-w-[380px] text-[19px] leading-relaxed text-white/80 sm:block">
             @if ($profile->import_source)
-                {{ $profile->import_source }} added you to RHYE{{ $user->lga ? ' in '.$user->lga->name : '' }}. One minute and your membership card is ready.
+                {{ $profile->import_source }} added you to {{ config('site.short') }}{{ $user->lga ? ' in '.$user->lga->name : '' }}. One minute and your membership card is ready.
             @else
                 One minute and your membership card is ready.
             @endif
@@ -69,7 +69,7 @@
             <label class="flex cursor-pointer items-start gap-3.5 rounded-2xl bg-[#f1f4f1] p-5">
                 <input type="checkbox" name="consent" value="1" class="mt-1 h-5 w-5 shrink-0 rounded accent-action" @checked(old('consent')) required>
                 <span class="text-[16px] leading-relaxed text-neutral-700">
-                    I agree that Renewed Hope Youth Engagement may store my details to coordinate the movement under the Nigeria Data Protection Act 2023. My data will never be sold and I can ask for it to be deleted at any time.
+                    I agree that {{ config('site.name') }} may store my details to coordinate the movement under the Nigeria Data Protection Act 2023. My data will never be sold and I can ask for it to be deleted at any time.
                     <a href="{{ route('privacy') }}" target="_blank" class="font-semibold text-action underline-offset-2 hover:underline">Read the privacy notice</a>
                 </span>
             </label>

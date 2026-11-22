@@ -13,12 +13,14 @@
             'units' => route('geo.polling-units', '__ID__'),
         ],
     ];
+    $helpHeading = config('site.canvasser_roles') ? 'Last step' : 'How would you like to help?';
+    $helpText = config('site.canvasser_roles') ? 'Your coordinator reviews your application and assigns you to your polling unit.' : 'Pick as many as you like. Your coordinator will match you to ward activities.';
     $roleIcons = [
         'door_to_door' => 'door', 'social_media' => 'megaphone', 'event_mobilisation' => 'users', 'driving_logistics' => 'car',
         'womens_groups' => 'sparkle', 'youth_groups' => 'grid', 'religious_community_leaders' => 'columns', 'polling_unit_agent' => 'flag',
     ];
 @endphp
-<x-layouts.split :title="$canvasser ? 'Join as a Canvasser' : 'Join as a Member'" :alpine="'joinWizard('.Js::from($config).')'">
+<x-layouts.split :title="$canvasser ? 'Join as a '.site_term('Canvasser') : 'Join as a Member'" :alpine="'joinWizard('.Js::from($config).')'">
     <x-slot:top>Already a member? <a href="{{ route('login') }}" class="font-semibold text-action hover:underline">Sign in</a></x-slot:top>
 
     <x-slot:aside>
@@ -49,7 +51,7 @@
         {{-- Progress --}}
         <div class="flex items-baseline justify-between gap-3 text-[15px]">
             <p class="font-semibold text-action-dark">Step <span x-text="step + 1">1</span> of 4 · <span x-text="stepList[step][0]">Account</span></p>
-            <p class="text-neutral-600">Joining as a <span x-text="canvasser ? 'Canvasser' : 'Member'"></span></p>
+            <p class="text-neutral-600">Joining as a <span x-text="canvasser ? '{{ site_term('Canvasser') }}' : 'Member'"></span></p>
         </div>
         <div class="mt-3 grid grid-cols-4 gap-2" aria-hidden="true">
             <template x-for="i in 4"><span class="h-1.5 rounded-full transition-colors" :class="i - 1 <= step ? 'bg-action' : 'bg-[#dfe5e0]'"></span></template>
@@ -72,7 +74,7 @@
                 <fieldset>
                     <legend class="label text-base font-semibold">Joining as</legend>
                     <div class="grid grid-cols-2 gap-1 rounded-2xl bg-[#f1f3f1] p-1.5">
-                        @foreach ([['member', 'Member', 'card'], ['canvasser', 'Canvasser', 'shield']] as [$value, $label, $icon])
+                        @foreach ([['member', 'Member', 'card'], ['canvasser', site_term('Canvasser'), 'shield']] as [$value, $label, $icon])
                             <label class="flex min-h-12 cursor-pointer items-center justify-center gap-2.5 rounded-xl text-[17px] text-neutral-600 transition has-[:checked]:bg-white has-[:checked]:font-semibold has-[:checked]:text-action-dark has-[:checked]:shadow-sm has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-action/30">
                                 <input type="radio" class="sr-only" name="joining_as" value="{{ $value }}" :checked="canvasser === {{ $value === 'canvasser' ? 'true' : 'false' }}" x-on:change="setCanvasser({{ $value === 'canvasser' ? 'true' : 'false' }})">
                                 <x-icon :name="$icon" class="h-[18px] w-[18px]" /> {{ $label }}
@@ -148,7 +150,7 @@
                     <label class="label text-base font-semibold" for="occupation">Occupation <span class="font-normal text-neutral-500">(optional)</span></label>
                     <input id="occupation" type="text" class="field-lg" placeholder="e.g. Student, trader, nurse" x-model="form.occupation">
                 </div>
-                <div>
+                <div @if (site_state_code()) hidden @endif>
                     <label class="label text-base font-semibold" for="state_id">State</label>
                     <select id="state_id" class="field-lg" x-model="form.state_id" x-on:change="loadLgas()" :aria-invalid="!!err('state_id')">
                         <option value="">Choose your state</option>
@@ -239,12 +241,13 @@
             {{-- Step 4: Volunteer (canvassers) / Finish (members) --}}
             <div x-show="step === 3" data-step="3" class="space-y-6">
                 <div>
-                    <h1 class="font-headline text-[36px] leading-[1.05] font-extrabold tracking-[-0.03em] sm:text-[46px]" x-text="canvasser ? 'How would you like to help?' : 'Almost done'">{{ $canvasser ? 'How would you like to help?' : 'Almost done' }}</h1>
-                    <p class="mt-3 text-lg leading-relaxed text-neutral-600" x-text="canvasser ? 'Pick as many as you like. Your coordinator will match you to ward activities.' : 'Tell us who invited you, agree to how we look after your data, and your card is ready.'"></p>
+                    <h1 class="font-headline text-[36px] leading-[1.05] font-extrabold tracking-[-0.03em] sm:text-[46px]" x-text="canvasser ? @js($helpHeading) : 'Almost done'">{{ $canvasser ? $helpHeading : 'Almost done' }}</h1>
+                    <p class="mt-3 text-lg leading-relaxed text-neutral-600"  x-text="canvasser ? @js($helpText) : 'Tell us who invited you, agree to how we look after your data, and your card is ready.'"></p>
                 </div>
 
                 <template x-if="canvasser">
                     <div class="space-y-6">
+                        @unless (config('site.canvasser_roles'))
                         <fieldset>
                             <legend class="label text-base font-semibold">I can help with</legend>
                             <div class="grid gap-3 sm:grid-cols-2">
@@ -258,6 +261,7 @@
                             </div>
                             <p class="error" x-show="err('canvasser_roles')" x-text="err('canvasser_roles')"></p>
                         </fieldset>
+                        @endunless
                         <div>
                             <label class="label text-base font-semibold" for="whatsapp_phone">WhatsApp number <span class="font-normal text-neutral-500">(optional)</span></label>
                             <div class="flex gap-2.5">
@@ -272,7 +276,7 @@
 
                 <div>
                     <label class="label text-base font-semibold" for="referrer">Who invited you? <span class="font-normal text-neutral-500">(optional)</span></label>
-                    <input id="referrer" type="text" class="field-lg font-mono uppercase placeholder:font-body placeholder:normal-case" autocomplete="off" placeholder="Member number, e.g. RHYE-LA-000123" x-model.trim="form.referrer" :aria-invalid="!!err('referrer')">
+                    <input id="referrer" type="text" class="field-lg font-mono uppercase placeholder:font-body placeholder:normal-case" autocomplete="off" placeholder="Member number, e.g. {{ config('site.member_prefix') }}-{{ site_state_code() ?? 'LA' }}-000123" x-model.trim="form.referrer" :aria-invalid="!!err('referrer')">
                     <p class="hint text-sm">Leave blank if no one did.</p>
                     <p class="error" x-show="err('referrer')" x-text="err('referrer')"></p>
                 </div>
@@ -280,7 +284,7 @@
                 <label class="flex cursor-pointer items-start gap-3.5 rounded-2xl bg-[#f1f4f1] p-5">
                     <input type="checkbox" class="mt-1 h-5 w-5 shrink-0 rounded accent-action" x-model="form.consent" :aria-invalid="!!err('consent')">
                     <span class="text-[16px] leading-relaxed text-neutral-700">
-                        I agree that Renewed Hope Youth Engagement may store my details to coordinate the movement under the Nigeria Data Protection Act 2023. My data will never be sold and I can ask for it to be deleted at any time.
+                        I agree that {{ config('site.name') }} may store my details to coordinate the movement under the Nigeria Data Protection Act 2023. My data will never be sold and I can ask for it to be deleted at any time.
                         <a href="{{ route('privacy') }}" target="_blank" class="font-semibold text-action underline-offset-2 hover:underline">Read the privacy notice</a>
                     </span>
                 </label>
@@ -288,7 +292,7 @@
 
                 <p x-show="canvasser" class="flex items-start gap-3 rounded-2xl bg-amber-soft p-5 text-[16px] leading-relaxed text-amber-ink">
                     <x-icon name="shield" class="mt-0.5" />
-                    <span>You'll become a member straight away. Your canvasser application goes to your <strong x-text="(card.stateName ? card.stateName + ' ' : '') + 'state coordinator'">state coordinator</strong> for review.</span>
+                    <span>You'll become a member straight away. Your {{ site_term('canvasser') }} application goes to your <strong>coordinator</strong> for review.</span>
                 </p>
             </div>
 

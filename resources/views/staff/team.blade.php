@@ -128,7 +128,7 @@
                         x-show="!units.length || unit === 'other'" :disabled="type !== 'polling_unit_agent'">
                     @error('polling_unit_id')<p class="error">{{ $message }}</p>@enderror
                     @error('polling_unit_name')<p class="error">{{ $message }}</p>@enderror
-                    <p class="hint">Polling unit agents get the canvasser field page, including registering people door to door.</p>
+                    <p class="hint">Polling unit agents get the field work page, including registering people door to door.</p>
                 </div>
                 @if ($canSms)
                     <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="send_sms" value="1" @checked(old('send_sms'))> Also send the details by SMS</label>

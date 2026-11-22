@@ -8,7 +8,7 @@
                 <div class="rounded-xl bg-surface p-3"><dt class="text-xs text-neutral-500">State</dt><dd class="font-semibold">{{ $state ?? '—' }}</dd></div>
                 <div class="rounded-xl bg-surface p-3"><dt class="text-xs text-neutral-500">Member since</dt><dd class="font-semibold">{{ $since->setTimezone(config('membership.timezone'))->format('M Y') }}</dd></div>
             </dl>
-            <p class="mt-5 text-sm text-neutral-600">This person is an active member of Renewed Hope Youth Engagement.</p>
+            <p class="mt-5 text-sm text-neutral-600">This person is an active member of {{ config('site.name') }}.</p>
         @else
             <span class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-600"><x-icon name="x" class="h-8 w-8" /></span>
             <h1 class="mt-4 font-display text-2xl font-bold">Not a valid membership card</h1>

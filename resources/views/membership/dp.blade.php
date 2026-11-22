@@ -1,21 +1,17 @@
 @php
     $electionYear = \App\Models\Setting::electionDate()->setTimezone(config('membership.timezone'))->format('Y');
-    $messages = [
-        ['kicker' => 'I am a proud member of the', 'headline' => 'Renewed Hope Youth Engagement movement'],
-        ['kicker' => 'Youth for PBAT', 'headline' => config('membership.slogan')],
-        ['kicker' => 'Renewed Hope Youth Engagement', 'headline' => 'Every ward. Every youth.'],
-    ];
+    $messages = config('site.dp_messages');
     $place = collect([$user->lga?->name, $user->state?->name])->filter()->implode(', ');
 @endphp
 <x-layouts.app title="Make your campaign DP">
     <section class="-mx-4 -mt-5 bg-gradient-to-br from-brand-dark to-brand px-4 py-8 text-white sm:-mx-6 sm:px-6 lg:-mx-10 lg:-mt-9 lg:px-10 lg:py-10">
         <p class="text-xs font-semibold tracking-[0.16em] text-accent uppercase">Show your support</p>
         <h1 class="mt-2 font-display text-[28px] leading-tight font-bold tracking-tight sm:text-4xl">Make your campaign DP</h1>
-        <p class="mt-2 max-w-xl text-white/85">Put your photo in an official Renewed Hope Youth Engagement frame, ready for your WhatsApp profile picture and status.</p>
+        <p class="mt-2 max-w-xl text-white/85">Put your photo in an official {{ config('site.name') }} frame, ready for your WhatsApp profile picture and status.</p>
     </section>
 
     <div class="mt-6 grid gap-6 lg:grid-cols-[1fr_minmax(0,460px)]"
-        x-data="dpMaker(@js(['messages' => $messages, 'name' => trim($user->name.($place ? ' · '.$place : '')), 'logos' => [asset('images/logo-rhye.png')], 'year' => $electionYear, 'shareText' => config('membership.slogan').' Join me in the Renewed Hope Youth Engagement movement: '.route('join', ['ref' => $user->memberProfile->referral_code])]))">
+        x-data="dpMaker(@js(['messages' => $messages, 'name' => trim($user->name.($place ? ' · '.$place : '')), 'logos' => [asset(config('site.logo.0'))], 'fileSlug' => strtolower(config('site.short')), 'year' => $electionYear, 'shareText' => config('site.slogan').' Join me in the '.config('site.name').': '.route('join', ['ref' => $user->memberProfile->referral_code])]))">
         <div class="order-2 space-y-4 lg:order-1">
             <section class="panel p-5">
                 <h2 class="font-display font-bold">1. Add your photo</h2>

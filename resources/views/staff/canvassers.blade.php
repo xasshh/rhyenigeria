@@ -1,5 +1,5 @@
 @php use App\Support\NigerianPhone; @endphp
-<x-layouts.app title="Canvassers" heading="Canvasser applications">
+<x-layouts.app :title="site_term('Canvassers')" :heading="site_term('Canvasser').' applications'">
     @unless ($canReview)
         <p class="mt-3 rounded-xl bg-surface px-4 py-3 text-sm text-neutral-600">Applications are approved by the state coordinator. You can see them here but not decide.</p>
     @endunless

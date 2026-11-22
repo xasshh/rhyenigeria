@@ -6,7 +6,7 @@
     ]));
     $joined = $profile->created_at->setTimezone(config('membership.timezone'))->format('j M Y');
 @endphp
-<div x-data="memberCard(@js(['name' => $user->name, 'number' => $profile->member_number, 'place' => $place, 'joined' => $joined, 'role' => $profile->roleLabel(), 'logo' => asset('images/logo-rhye.png'), 'slogan' => config('membership.slogan')]))" {{ $attributes }}>
+<div x-data="memberCard(@js(['name' => $user->name, 'number' => $profile->member_number, 'place' => $place, 'joined' => $joined, 'role' => $profile->roleLabel(), 'logo' => asset(config('site.logo.0')), 'slogan' => config('site.slogan'), 'siteName' => config('site.name')]))" {{ $attributes }}>
     <div class="relative mx-auto aspect-[1.586] w-full max-w-[400px] overflow-hidden rounded-[22px] bg-gradient-to-br from-brand-dark to-brand p-[5%] text-white shadow-xl shadow-brand/25">
         <div class="pointer-events-none absolute -top-16 -right-14 h-48 w-48 rounded-full bg-white/[0.07]"></div>
         <div class="pointer-events-none absolute -bottom-20 -left-6 h-44 w-44 rounded-full bg-accent/20"></div>
@@ -14,8 +14,8 @@
 
         <div class="relative flex h-full flex-col">
             <div class="flex items-start justify-between gap-2">
-                <span class="rounded-lg bg-white px-2 py-1"><img src="{{ asset('images/logo-rhye.png') }}" alt="RHYE — Renewed Hope Youth Engagement" class="h-[clamp(28px,8vw,40px)] w-auto" width="600" height="272"></span>
-                <p class="text-right text-[clamp(7px,2.1vw,9px)] leading-tight font-semibold tracking-[0.14em] text-white/80 uppercase">Membership card<br>Renewed Hope Youth Engagement</p>
+                <span class="rounded-lg bg-white px-2 py-1"><img src="{{ asset(config('site.logo.0')) }}" alt="{{ config('site.short') }} — {{ config('site.name') }}" class="h-[clamp(28px,8vw,40px)] w-auto" width="{{ config('site.logo.1') }}" height="{{ config('site.logo.2') }}"></span>
+                <p class="text-right text-[clamp(7px,2.1vw,9px)] leading-tight font-semibold tracking-[0.14em] text-white/80 uppercase">Membership card<br>{{ config('site.name') }}</p>
             </div>
 
             <div class="mt-auto flex items-end justify-between gap-3">
@@ -35,7 +35,7 @@
 
             <div class="mt-2.5 flex items-center justify-between border-t border-white/25 pt-2 text-[clamp(9px,2.6vw,11px)]">
                 <span class="text-white/80">Joined {{ $joined }}</span>
-                <span class="hidden truncate px-2 font-semibold text-accent italic min-[380px]:inline">{{ config('membership.slogan') }}</span>
+                <span class="hidden truncate px-2 font-semibold text-accent italic min-[380px]:inline">{{ config('site.slogan') }}</span>
                 <span class="font-bold">{{ $profile->roleLabel() }}</span>
             </div>
         </div>

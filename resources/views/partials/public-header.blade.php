@@ -3,24 +3,22 @@
     $image = fn (string $name) => collect(['svg', 'png', 'webp', 'jpg'])
         ->map(fn ($ext) => "images/{$name}.{$ext}")
         ->first(fn ($path) => file_exists(public_path($path)));
-    $rhyeLogo = $image('logo-rhye');
-    $logo = $image('logo-renewed-hope');
-    $partyLogo = $image('logo-apc');
-    $slogan = config('membership.slogan');
+    $slogan = config('site.slogan');
     $electionDate ??= \App\Models\Setting::electionDate();
     $countdown ??= \App\Support\Countdown::parts($electionDate);
     $pad = fn (int $n) => str_pad((string) $n, 2, '0', STR_PAD_LEFT);
     $current ??= 'home';
     $home = route('home');
     // A label maps to a URL, or to a list of [label => URL] for a dropdown.
-    $links = [
+    $links = array_filter([
         'Home' => $home,
         'Countdown' => $home.'#countdown',
         'Events' => $home.'#events',
         'News' => route('news.index'),
-        'States' => ['State coordinators' => route('whatsapp')],
+        // A single-state site has no state-by-state coordinators page.
+        'States' => site_state_code() ? null : ['State coordinators' => route('whatsapp')],
         'Contact' => '#contact',
-    ];
+    ]);
     $currentLabel = ['home' => 'Home', 'news' => 'News', 'whatsapp' => 'States'][$current] ?? null;
 @endphp
     {{-- Announcement bar, with a compact live countdown --}}
@@ -37,7 +35,7 @@
                 </span>
                 <span x-show="done" @unless ($countdown['done']) x-cloak @endunless>Today is Election Day: go and vote</span>
             </a>
-            <span class="hidden sm:inline">Renewed Hope Youth Engagement <a href="{{ route('join') }}" class="ml-1 font-bold text-accent hover:underline">Support Us</a></span>
+            <span class="hidden sm:inline">{{ config('site.name') }} <a href="{{ route('join') }}" class="ml-1 font-bold text-accent hover:underline">Support Us</a></span>
             <a href="{{ route('join') }}" class="font-bold text-accent hover:underline sm:hidden">Support Us</a>
             <x-social-links size="sm" class="hidden lg:flex" />
         </div>
@@ -45,17 +43,15 @@
 
     {{-- Navigation --}}
     <header class="mx-auto flex max-w-[1440px] items-center justify-between gap-6 px-5 py-4 sm:px-8 lg:px-[66px] lg:py-5">
-        <a href="{{ $home }}" class="flex shrink-0 items-center gap-4 sm:gap-9" aria-label="Renewed Hope Youth Engagement home">
-            @if ($rhyeLogo)
-                <img src="{{ asset($rhyeLogo) }}" alt="RHYE — Renewed Hope Youth Engagement" class="h-[40px] w-auto sm:h-[56px]" width="600" height="272">
-                <span class="h-8 w-px bg-brand/20 sm:h-10" aria-hidden="true"></span>
-            @endif
-            @if ($logo)
-                <img src="{{ asset($logo) }}" alt="Renewed Hope" class="h-[30px] w-auto sm:h-[37.5px]" width="285" height="150">
-            @endif
-            @if ($partyLogo)
-                <img src="{{ asset($partyLogo) }}" alt="APC" class="h-[38px] w-auto sm:h-[45.5px]" width="200" height="182">
-            @endif
+        <a href="{{ $home }}" class="flex shrink-0 items-center gap-4 sm:gap-9" aria-label="{{ config('site.name') }} home">
+            <img src="{{ asset(config('site.logo.0')) }}" alt="{{ config('site.short') }} — {{ config('site.name') }}" class="h-[40px] w-auto sm:h-[56px]" width="{{ config('site.logo.1') }}" height="{{ config('site.logo.2') }}">
+            @unless (config('site.logo_has_name'))
+                <span class="-ml-2 font-headline text-[17px] leading-tight font-extrabold tracking-[-0.02em] text-forest sm:-ml-5 sm:text-[22px]">{{ config('site.name') }}</span>
+            @endunless
+            @foreach (config('site.partner_logos') as $i => [$src, $w, $h, $alt])
+                @if ($i === 0)<span class="h-8 w-px bg-brand/20 sm:h-10" aria-hidden="true"></span>@endif
+                <img src="{{ asset($src) }}" alt="{{ $alt }}" class="h-[30px] w-auto sm:h-[40px]" width="{{ $w }}" height="{{ $h }}">
+            @endforeach
         </a>
 
         <nav class="hidden items-center gap-5 text-sm 2xl:gap-7 xl:flex" aria-label="Main">

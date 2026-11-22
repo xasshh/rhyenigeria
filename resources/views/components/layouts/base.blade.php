@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#109648">
-    <title>{{ $title ? $title.' · ' : '' }}Renewed Hope Youth Engagement — {{ config('membership.slogan') }}</title>
-    <meta name="description" content="Renewed Hope Youth Engagement (RHYE). {{ config('membership.slogan') }} Join the movement and get your digital membership card.">
+    <title>{{ $title ? $title.' · ' : '' }}{{ config('site.name') }} — {{ config('site.slogan') }}</title>
+    <meta name="description" content="{{ config('site.name') }} ({{ config('site.short') }}). {{ config('site.slogan') }} Join the movement and get your digital membership card.">
     @include('partials.head-icons')
     @if ($noindex)<meta name="robots" content="noindex, nofollow">@endif
     {{ $head ?? '' }}

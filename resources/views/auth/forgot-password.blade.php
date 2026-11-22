@@ -36,7 +36,7 @@
             <p class="mt-4 text-lg leading-relaxed text-neutral-600">We sent a reset link to <strong class="font-semibold text-ink">{{ $masked }}</strong> if it is registered with us. Open it on this phone to choose a new password.</p>
 
             <ol class="mt-8 space-y-4 rounded-2xl bg-surface p-6 text-[16px]">
-                @foreach (['Open the email from <strong>Renewed Hope Youth Engagement</strong>', 'Tap <strong>Reset password</strong> — the link works once', 'Not there? Check <strong>Spam</strong> or <strong>Promotions</strong>'] as $step)
+                @foreach (['Open the email from <strong>'.e(config('site.name')).'</strong>', 'Tap <strong>Reset password</strong> — the link works once', 'Not there? Check <strong>Spam</strong> or <strong>Promotions</strong>'] as $step)
                     <li class="flex items-start gap-3">
                         <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-sm font-bold text-action ring-1 ring-line">{{ $loop->iteration }}</span>
                         <span class="pt-0.5">{!! $step !!}</span>

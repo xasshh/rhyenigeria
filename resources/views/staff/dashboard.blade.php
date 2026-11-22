@@ -12,7 +12,7 @@
             <x-stat label="Members" :value="$summary['total']" tone="brand" />
             <x-stat label="New today" :value="$summary['today']" :hint="number_format($summary['week']).' this week'" />
             <x-stat label="PVC holders" :value="$summary['pvc']" :hint="number_format($summary['vin']).' with VIN'" />
-            <x-stat label="Canvassers" :value="$summary['canvassers_approved']" :hint="number_format($summary['canvassers_pending']).' pending'" :tone="$summary['canvassers_pending'] ? 'warn' : 'default'" />
+            <x-stat :label="site_term('Canvassers')" :value="$summary['canvassers_approved']" :hint="number_format($summary['canvassers_pending']).' pending'" :tone="$summary['canvassers_pending'] ? 'warn' : 'default'" />
         </div>
 
         @if (! empty($standing['rank']))
@@ -23,7 +23,7 @@
 
         @if ($summary['canvassers_pending'] && ! $state)
             <a href="{{ staff_route('canvassers.index') }}" class="mt-4 flex items-center gap-3 rounded-2xl border border-accent/40 bg-accent/10 p-4 text-sm text-[#7a5b00]">
-                <x-icon name="badge" /> <span class="flex-1"><strong>{{ $summary['canvassers_pending'] }}</strong> canvasser {{ str('application')->plural($summary['canvassers_pending']) }} waiting for review</span> <x-icon name="arrow-right" class="h-4 w-4" />
+                <x-icon name="badge" /> <span class="flex-1"><strong>{{ $summary['canvassers_pending'] }}</strong> {{ site_term('canvasser') }} {{ str('application')->plural($summary['canvassers_pending']) }} waiting for review</span> <x-icon name="arrow-right" class="h-4 w-4" />
             </a>
         @endif
 

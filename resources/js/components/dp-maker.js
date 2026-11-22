@@ -14,7 +14,7 @@ export default (config) => ({
     logos: [],
 
     async init() {
-        // The RHYE logo (more can be listed); a logo that fails to load is left out.
+        // The site logo (more can be listed); a logo that fails to load is left out.
         this.logos = (await Promise.allSettled(config.logos.map(loadImage)))
             .filter((r) => r.status === 'fulfilled').map((r) => r.value);
         this.canShare = !!(navigator.canShare && navigator.canShare({ files: [new File([''], 'x.png', { type: 'image/png' })] }));
@@ -96,18 +96,18 @@ export default (config) => ({
 
     async download() {
         this.busy = true;
-        try { await downloadCanvas(this.$refs.canvas, 'rhye-campaign-dp.png'); } finally { this.busy = false; }
+        try { await downloadCanvas(this.$refs.canvas, `${config.fileSlug || 'campaign'}-dp.png`); } finally { this.busy = false; }
     },
 
     async share() {
         this.busy = true;
         try {
             const blob = await new Promise((r) => this.$refs.canvas.toBlob(r, 'image/png'));
-            const file = new File([blob], 'rhye-campaign-dp.png', { type: 'image/png' });
+            const file = new File([blob], `${config.fileSlug || 'campaign'}-dp.png`, { type: 'image/png' });
             if (navigator.canShare?.({ files: [file] })) {
                 await navigator.share({ files: [file], text: config.shareText });
             } else {
-                await downloadCanvas(this.$refs.canvas, 'rhye-campaign-dp.png');
+                await downloadCanvas(this.$refs.canvas, `${config.fileSlug || 'campaign'}-dp.png`);
             }
         } catch { /* share sheet closed */ } finally { this.busy = false; }
     },

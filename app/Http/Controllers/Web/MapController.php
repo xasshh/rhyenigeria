@@ -35,6 +35,28 @@ class MapController extends Controller
         return response()->json($data)->setPublic()->setMaxAge(self::STATE_COUNTS_SECONDS);
     }
 
+    /** Homepage map on a single-state site: members per LGA of that state, keyed by LGA id. Public and cached. */
+    public function siteLgas(): JsonResponse
+    {
+        $state = State::where('code', site_state_code())->first();
+        abort_if($state === null, 404);
+
+        $data = Cache::remember("map:lga-counts:{$state->id}", self::STATE_COUNTS_SECONDS, function () use ($state) {
+            $counts = DB::table('lgas')
+                ->where('lgas.state_id', $state->id)
+                ->leftJoin('users', fn ($join) => $join->on('users.lga_id', '=', 'lgas.id')->where('users.role', Role::Member->value))
+                ->leftJoin('member_profiles as mp', 'mp.user_id', '=', 'users.id')
+                ->groupBy('lgas.id')
+                ->selectRaw('lgas.id, count(mp.id) AS n')
+                ->pluck('n', 'id')
+                ->map(fn ($n) => (int) $n);
+
+            return ['counts' => $counts->all(), 'total' => $counts->sum(), 'updated_at' => now()->toIso8601String()];
+        });
+
+        return response()->json($data)->setPublic()->setMaxAge(self::STATE_COUNTS_SECONDS);
+    }
+
     /**
      * Coordinator or admin state map: members per LGA in one state, keyed by LGA id.
      * Starts from the viewer's own scope, so a coordinator only ever gets their area.

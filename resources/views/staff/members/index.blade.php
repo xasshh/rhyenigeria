@@ -36,7 +36,7 @@
                 @foreach (['yes' => 'Has PVC', 'no' => 'No PVC yet', 'vin' => 'VIN added', 'no_vin' => 'No VIN'] as $v => $l)<option value="{{ $v }}" @selected(($filters['pvc'] ?? null) === $v)>{{ $l }}</option>@endforeach
             </select>
             <select name="canvasser" class="field py-2 text-sm" x-on:change="$el.form.submit()">
-                <option value="">Canvasser: any</option>
+                <option value="">{{ site_term('Canvasser') }}: any</option>
                 <option value="none" @selected(($filters['canvasser'] ?? null) === 'none')>Not applied</option>
                 @foreach ($canvasserStatuses as $c)<option value="{{ $c->value }}" @selected(($filters['canvasser'] ?? null) === $c->value)>{{ $c->label() }}</option>@endforeach
             </select>

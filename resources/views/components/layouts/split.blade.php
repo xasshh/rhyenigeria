@@ -11,7 +11,7 @@
             <x-fingerprint class="absolute -bottom-40 -left-32 -z-10 hidden w-[420px] rotate-[200deg] text-accent/[0.14] lg:block" />
 
             <p class="flex items-center gap-2.5 text-[11px] font-semibold tracking-[0.2em] text-[#cfe8d4] uppercase lg:text-[13px]">
-                <span class="h-2 w-2 rounded-full bg-leaf" aria-hidden="true"></span> Renewed Hope Youth Engagement
+                <span class="h-2 w-2 rounded-full bg-leaf" aria-hidden="true"></span> {{ config('site.name') }}
             </p>
 
             <div class="mt-4 lg:mt-14">

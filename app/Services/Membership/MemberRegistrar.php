@@ -65,7 +65,7 @@ class MemberRegistrar
 
             if ($canvasser) {
                 $profile->canvasser_status = CanvasserStatus::Pending;
-                $profile->canvasser_roles = array_values($data['canvasser_roles']);
+                $profile->canvasser_roles = config('site.canvasser_roles') ?? array_values($data['canvasser_roles']);
                 $profile->whatsapp_phone = $data['whatsapp_phone'] ?? $data['phone'];
                 $profile->canvasser_applied_at = now();
             }

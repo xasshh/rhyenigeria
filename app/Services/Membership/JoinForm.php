@@ -76,7 +76,7 @@ final class JoinForm
                 'gender' => ['required', new Enum(Gender::class)],
                 'age_range' => ['required', new Enum(AgeRange::class)],
                 'occupation' => ['nullable', 'string', 'max:120'],
-                'state_id' => ['required', 'integer', Rule::exists('states', 'id')],
+                'state_id' => ['required', 'integer', Rule::exists('states', 'id')->when(site_state_code(), fn ($rule, $code) => $rule->where('code', $code))],
             ],
             'location' => [
                 'lga_id' => ['required', 'integer', Rule::exists('lgas', 'id')->where('state_id', (int) ($input['state_id'] ?? 0))],
@@ -99,7 +99,8 @@ final class JoinForm
                 // Honeypot: a hidden field people never see or fill in.
                 'website' => ['prohibited'],
             ] + ($canvasser ? [
-                'canvasser_roles' => ['required', 'array', 'min:1'],
+                // Some sites give every volunteer the same role(s), so there is nothing to choose.
+                'canvasser_roles' => config('site.canvasser_roles') ? ['nullable', 'array'] : ['required', 'array', 'min:1'],
                 'canvasser_roles.*' => ['distinct', new Enum(CanvasserRole::class)],
                 'whatsapp_phone' => ['nullable', 'string', self::nigerianPhone()],
             ] : []),

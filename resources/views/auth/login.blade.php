@@ -9,7 +9,7 @@
             Welcome back <br class="hidden lg:block">to the <span class="text-mint">movement.</span>
         </h1>
         <p class="mt-4 hidden max-w-[380px] text-[19px] leading-relaxed text-white/80 sm:block lg:mt-5">Your card, your ward's events and messages from your coordinator — all in one place.</p>
-        <x-card-preview class="mt-12 hidden lg:block" name="Adaeze Okafor" state="Lagos" ward="Ikeja · Ward 04" number="RHYE-LA-004821" />
+        <x-card-preview class="mt-12 hidden lg:block" name="Adaeze Okafor" state="Lagos" ward="Ikeja · Ward 04" :number="config('site.member_prefix').'-'.(site_state_code() ?? 'LA').'-004821'" />
     </x-slot:aside>
 
     <div class="lg:pl-[50px]">

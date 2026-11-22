@@ -78,7 +78,7 @@ class MemberProfile extends Model
 
     public function roleLabel(): string
     {
-        return $this->isApprovedCanvasser() ? 'Canvasser' : 'Member';
+        return $this->isApprovedCanvasser() ? site_term('Canvasser') : 'Member';
     }
 
     /** True when the member has put a pin on the members map (at sign-up or later). */
@@ -98,10 +98,10 @@ class MemberProfile extends Model
         return ! $this->has_pvc || ! $this->hasVin();
     }
 
-    /** RHYE-{STATE}-{6 digits}, unique. */
+    /** {member_prefix}-{STATE}-{6 digits} (e.g. RHYE-LA-004821, US27-KD-004821), unique. */
     public static function newMemberNumber(State $state): string
     {
-        $prefix = 'RHYE-'.(strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $state->code)) ?: 'NG').'-';
+        $prefix = config('site.member_prefix').'-'.(strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $state->code)) ?: 'NG').'-';
 
         do {
             $number = $prefix.str_pad((string) random_int(0, 999_999), 6, '0', STR_PAD_LEFT);
