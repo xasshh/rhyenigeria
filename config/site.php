@@ -61,8 +61,12 @@ $brands = [
         'slogan' => 'Tinubu, Uba Sau Biyu ne!',
         'tagline' => 'Uba Sani 2027 Movement · Kaduna State',
         'description' => 'Join the Uba Sani 2027 Movement in Kaduna State. Get your digital membership card and updates from your ward.',
-        'logo' => ['images/logo-apc.png', 200, 182],
+        'logo' => ['images/logo-us27.webp', 480, 480],
+        // Header logo height classes when the default (40px / 56px) is too small for the logo.
+        'logo_size' => 'h-[52px] sm:h-[72px]',
         'logo_has_name' => false,
+        // Small line above the name in the header (only when the logo has no name in it).
+        'name_kicker' => 'Contact and Mobilisation Directorate',
         'icons' => 'icons/us27',
         'partner_logos' => [],
         'state_code' => 'KD',
@@ -94,7 +98,7 @@ $brands = [
             [
                 'layout' => 'portrait', 'eyebrow' => 'Governor of Kaduna State', 'headline' => 'Senator Uba Sani',
                 'body' => 'Executive Governor of Kaduna State.',
-                'image_path' => 'images/slides/governor-placeholder.svg', 'image_alt' => 'Senator Uba Sani',
+                'image_path' => 'images/slides/uba-sani-portrait.webp', 'image_alt' => 'Senator Uba Sani',
                 'button_label' => 'Join the Movement', 'button_url' => '/join',
             ],
             [

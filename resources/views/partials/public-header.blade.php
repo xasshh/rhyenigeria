@@ -44,9 +44,14 @@
     {{-- Navigation --}}
     <header class="mx-auto flex max-w-[1440px] items-center justify-between gap-6 px-5 py-4 sm:px-8 lg:px-[66px] lg:py-5">
         <a href="{{ $home }}" class="flex shrink-0 items-center gap-4 sm:gap-9" aria-label="{{ config('site.name') }} home">
-            <img src="{{ asset(config('site.logo.0')) }}" alt="{{ config('site.short') }} — {{ config('site.name') }}" class="h-[40px] w-auto sm:h-[56px]" width="{{ config('site.logo.1') }}" height="{{ config('site.logo.2') }}">
+            <img src="{{ asset(config('site.logo.0')) }}" alt="{{ config('site.short') }} — {{ config('site.name') }}" class="{{ config('site.logo_size', 'h-[40px] sm:h-[56px]') }} w-auto" width="{{ config('site.logo.1') }}" height="{{ config('site.logo.2') }}">
             @unless (config('site.logo_has_name'))
-                <span class="-ml-2 font-headline text-[17px] leading-tight font-extrabold tracking-[-0.02em] text-forest sm:-ml-5 sm:text-[22px]">{{ config('site.name') }}</span>
+                <span class="-ml-2 flex flex-col sm:-ml-5">
+                    @if (config('site.name_kicker'))
+                        <span class="text-[10px] leading-tight font-bold tracking-[0.08em] text-brand uppercase sm:text-xs">{{ config('site.name_kicker') }}</span>
+                    @endif
+                    <span class="font-headline text-[17px] leading-tight font-extrabold tracking-[-0.02em] text-forest sm:text-[22px]">{{ config('site.name') }}</span>
+                </span>
             @endunless
             @foreach (config('site.partner_logos') as $i => [$src, $w, $h, $alt, $size])
                 @if ($i === 0)
