@@ -49,7 +49,7 @@
         </style>
     </x-slot:head>
 
-    <div class="cc fixed inset-0 overflow-y-auto" x-data="commandCentre(@js($config))">
+    <div class="cc fixed inset-0 overflow-x-hidden overflow-y-auto" x-data="commandCentre(@js($config))">
         <div class="cc-grid pointer-events-none fixed inset-0" aria-hidden="true"></div>
         <div class="cc-scan pointer-events-none fixed inset-0 z-40 overflow-hidden" aria-hidden="true"></div>
 
@@ -67,18 +67,18 @@
             {{-- Header --}}
             <header class="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] py-4">
                 <div class="flex items-center gap-4">
-                    <span class="rounded-lg bg-white p-1.5 shadow-[0_0_24px_rgba(46,229,157,.35)]"><img src="{{ asset(config('site.logo.0')) }}" alt="" class="h-11 w-auto" width="{{ config('site.logo.1') }}" height="{{ config('site.logo.2') }}"></span>
+                    <span class="shrink-0 rounded-lg bg-white p-1.5 shadow-[0_0_24px_rgba(46,229,157,.35)]"><img src="{{ asset(config('site.logo.0')) }}" alt="" class="h-9 w-auto sm:h-11" width="{{ config('site.logo.1') }}" height="{{ config('site.logo.2') }}"></span>
                     <div>
                         <p class="cc-label">{{ config('site.name') }} · {{ $scope }}</p>
-                        <h1 class="font-headline text-xl font-extrabold tracking-[0.08em] text-white uppercase sm:text-2xl">Election Command Centre</h1>
+                        <h1 class="font-headline text-lg leading-tight font-extrabold tracking-[0.06em] text-white uppercase sm:text-2xl sm:tracking-[0.08em]">Election Command Centre</h1>
                     </div>
                 </div>
-                <div class="cc-mono flex flex-wrap items-center gap-3 text-sm">
+                <div class="cc-mono flex flex-wrap items-center gap-2 text-xs sm:gap-3 sm:text-sm">
                     <span class="inline-flex items-center gap-2 rounded-full border border-[var(--red)]/50 bg-[var(--red)]/10 px-3 py-1 font-bold tracking-[0.2em] text-[var(--red)]"><span class="cc-live h-2 w-2 rounded-full bg-[var(--red)]"></span>LIVE</span>
                     <span class="rounded-full border border-[var(--line)] px-3 py-1 text-[var(--dim)]">WAT <span class="text-white" x-text="clock">--:--:--</span></span>
                     <span class="hidden rounded-full border border-[var(--line)] px-3 py-1 text-[var(--dim)] md:inline">SYNC <span :class="error ? 'text-[var(--red)]' : 'text-[var(--glow)]'" x-text="error ? 'LOST' : (syncedAgo ?? '…')"></span></span>
                     <span class="hidden rounded-full border border-[var(--amber)]/40 px-3 py-1 text-[var(--amber)] lg:inline">CLEARANCE · SUPER ADMIN</span>
-                    <button type="button" @click="fullscreen()" class="rounded-full border border-[var(--line)] px-3 py-1 text-[var(--text)] hover:border-[var(--glow)] hover:text-white">⛶ Full screen</button>
+                    <button type="button" @click="fullscreen()" class="hidden rounded-full sm:inline-block border border-[var(--line)] px-3 py-1 text-[var(--text)] hover:border-[var(--glow)] hover:text-white">⛶ Full screen</button>
                     <a href="{{ route('admin.dashboard') }}" class="rounded-full border border-[var(--line)] px-3 py-1 text-[var(--dim)] hover:text-white">Exit</a>
                 </div>
             </header>
@@ -93,9 +93,9 @@
                     ['on_shift', 'On shift now', 'Agents reporting live'],
                     ['pvc', 'PVC holders', 'Ready to vote'],
                 ] as [$key, $label, $hint])
-                    <div class="cc-panel p-4">
+                    <div class="cc-panel min-w-0 p-3 sm:p-4">
                         <p class="cc-label">{{ $label }}</p>
-                        <p class="cc-mono cc-value mt-2 text-3xl font-bold text-white sm:text-4xl" :class="bumped.{{ $key }} && 'cc-bump'" x-text="fmt(display.{{ $key }})">—</p>
+                        <p class="cc-mono cc-value mt-2 text-2xl font-bold text-white sm:text-4xl" :class="bumped.{{ $key }} && 'cc-bump'" x-text="fmt(display.{{ $key }})">—</p>
                         <p class="mt-1 text-xs text-[var(--dim)]">
                             @if ($key === 'pvc')
                                 <span class="text-[var(--glow)]" x-text="pct(display.pvc, display.total)"></span> of members
@@ -112,7 +112,7 @@
             <div class="mt-3 grid gap-3 xl:grid-cols-12">
                 {{-- Situation map --}}
                 <section class="cc-panel p-4 xl:col-span-7" aria-label="Situation map">
-                    <div class="flex items-center justify-between">
+                    <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                         <p class="cc-label">Situation map · members by {{ $areaNoun }}</p>
                         <p class="cc-mono text-xs text-[var(--amber)]"><span class="mr-1 inline-block h-2 w-2 rounded-full bg-[var(--amber)]"></span>Sign-ups today</p>
                     </div>
@@ -131,6 +131,10 @@
                             <p class="text-[var(--amber)]">+<span x-text="fmt(tip?.today ?? 0)"></span> today · <span x-text="fmt(tip?.agents ?? 0)"></span> agents</p>
                         </div>
                     </div>
+                    <div x-show="picked" x-cloak class="cc-mono mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--glow)]/40 bg-[var(--glow)]/5 px-3 py-2 text-xs">
+                        <span><span class="font-bold text-white uppercase" x-text="picked?.name"></span> · <span x-text="fmt(picked?.total ?? 0)"></span> members · +<span x-text="fmt(picked?.today ?? 0)"></span> today</span>
+                        <button type="button" @click="callArea()" class="rounded-md bg-[var(--glow)] px-3 py-1.5 font-bold text-[#04140c]">☎ Call people here</button>
+                    </div>
                 </section>
 
                 <div class="grid gap-3 xl:col-span-5">
@@ -140,7 +144,7 @@
                         <div class="cc-mono mt-3 grid grid-cols-4 gap-2 text-center" x-show="!done">
                             @foreach (['totalDays' => 'Days', 'hours' => 'Hrs', 'minutes' => 'Min', 'seconds' => 'Sec'] as $unit => $label)
                                 <div class="rounded-lg border border-[var(--line)] bg-black/30 py-3">
-                                    <p class="cc-value text-3xl font-bold text-white sm:text-5xl" x-text="String({{ $unit }}).padStart(2, '0')">{{ str_pad((string) ($unit === 'totalDays' ? ($countdown['totalDays'] ?? 0) : $countdown[$unit]), 2, '0', STR_PAD_LEFT) }}</p>
+                                    <p class="cc-value text-2xl font-bold text-white sm:text-5xl" x-text="String({{ $unit }}).padStart(2, '0')">{{ str_pad((string) ($unit === 'totalDays' ? ($countdown['totalDays'] ?? 0) : $countdown[$unit]), 2, '0', STR_PAD_LEFT) }}</p>
                                     <p class="cc-label mt-1">{{ $label }}</p>
                                 </div>
                             @endforeach
@@ -152,10 +156,10 @@
                     {{-- Coverage --}}
                     <section class="cc-panel p-5" aria-label="Coverage">
                         <p class="cc-label">Ground coverage</p>
-                        <div class="mt-4 grid grid-cols-2 gap-4">
+                        <div class="mt-4 grid gap-4 sm:grid-cols-2">
                             @foreach ([['wards', 'wards_total', 'Wards reached'], ['areas', 'areas_total', ucfirst($areaNoun).'s reached']] as [$have, $of, $label])
                                 <div class="flex items-center gap-4">
-                                    <svg viewBox="0 0 100 100" class="h-24 w-24 shrink-0 -rotate-90" aria-hidden="true">
+                                    <svg viewBox="0 0 100 100" class="h-20 w-20 shrink-0 -rotate-90 sm:h-24 sm:w-24" aria-hidden="true">
                                         <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(46,229,157,.12)" stroke-width="9" />
                                         <circle cx="50" cy="50" r="42" fill="none" stroke="#2ee59d" stroke-width="9" stroke-linecap="round" pathLength="100"
                                                 :stroke-dasharray="`${ratio('{{ $have }}', '{{ $of }}') * 100} 100`" :stroke-opacity="ratio('{{ $have }}', '{{ $of }}') > 0 ? 1 : 0" style="transition: stroke-dasharray 1.6s ease; filter: drop-shadow(0 0 6px rgba(46,229,157,.8))" />
@@ -188,11 +192,11 @@
             <div class="mt-3 grid gap-3 xl:grid-cols-12">
                 {{-- Trend --}}
                 <section class="cc-panel p-5 xl:col-span-7" aria-label="Sign-ups, last 30 days">
-                    <div class="flex items-center justify-between">
+                    <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                         <p class="cc-label">Momentum · sign-ups, last 30 days <span class="normal-case tracking-normal">(bulk imports excluded)</span></p>
                         <p class="cc-mono text-xs text-[var(--dim)]">Peak <span class="text-white" x-text="fmt(trendMax)"></span>/day</p>
                     </div>
-                    <svg viewBox="0 0 600 180" preserveAspectRatio="none" class="mt-4 h-48 w-full" aria-hidden="true">
+                    <svg viewBox="0 0 600 180" preserveAspectRatio="none" class="mt-4 h-36 w-full sm:h-48" aria-hidden="true">
                         <defs>
                             <linearGradient id="cc-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2ee59d" stop-opacity=".35" /><stop offset="1" stop-color="#2ee59d" stop-opacity="0" /></linearGradient>
                         </defs>
@@ -227,11 +231,11 @@
                     <p class="cc-label">Incoming · latest sign-ups</p>
                     <ul class="cc-mono mt-3 divide-y divide-[var(--line)] text-sm">
                         <template x-for="(r, i) in data.recent ?? []" :key="i">
-                            <li class="flex items-center gap-3 py-2">
+                            <li class="flex flex-wrap items-center gap-x-3 gap-y-0.5 py-2">
                                 <span class="text-[var(--dim)]" x-text="r.time"></span>
                                 <span class="rounded px-1.5 py-0.5 text-[10px] font-bold tracking-wider uppercase" :class="r.via === 'field' ? 'bg-[var(--amber)]/15 text-[var(--amber)]' : 'bg-[var(--glow)]/15 text-[var(--glow)]'" x-text="r.via"></span>
                                 <span class="text-white" x-text="r.name"></span>
-                                <span class="ml-auto truncate text-xs text-[var(--dim)]" x-text="r.place"></span>
+                                <span class="w-full truncate text-xs text-[var(--dim)] sm:ml-auto sm:w-auto" x-text="r.place"></span>
                             </li>
                         </template>
                         <li x-show="!(data.recent ?? []).length" class="py-2 text-[var(--dim)]">No new sign-ups yet.</li>
@@ -241,11 +245,11 @@
                     <p class="cc-label">Field reports · today</p>
                     <ul class="cc-mono mt-3 divide-y divide-[var(--line)] text-sm">
                         <template x-for="(a, i) in data.activities ?? []" :key="i">
-                            <li class="flex items-center gap-3 py-2">
+                            <li class="flex flex-wrap items-center gap-x-3 gap-y-0.5 py-2">
                                 <span class="text-[var(--dim)]" x-text="a.time"></span>
                                 <span class="text-white" x-text="a.who"></span>
                                 <span class="text-[var(--glow)]" x-text="a.label"></span>
-                                <span class="ml-auto truncate text-xs text-[var(--dim)]" x-text="a.ward"></span>
+                                <span class="w-full truncate text-xs text-[var(--dim)] sm:ml-auto sm:w-auto" x-text="a.ward"></span>
                             </li>
                         </template>
                         <li x-show="!(data.activities ?? []).length" class="py-2 text-[var(--dim)]">No field reports yet today. <a href="{{ route('admin.live') }}" class="text-[var(--glow)] underline">Open the live map</a></li>
@@ -258,25 +262,25 @@
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <p class="cc-label">☎ Call desk · direct line to the field</p>
-                        <p class="mt-1 text-xs text-[var(--dim)]">Tap <span class="text-[var(--glow)]">Call</span> to ring from this device (on a computer it opens your phone or calling app) or <span class="text-[var(--glow)]">WhatsApp</span> to message. Click an {{ $areaNoun }} on the map to see its people.</p>
+                        <p class="mt-1 hidden text-xs text-[var(--dim)] sm:block">Tap <span class="text-[var(--glow)]">Call</span> to ring from this device (on a computer it opens your phone or calling app) or <span class="text-[var(--glow)]">WhatsApp</span> to message. Click an {{ $areaNoun }} on the map to see its people.</p>
                     </div>
-                    <div class="cc-mono flex flex-wrap items-center gap-2 text-sm">
+                    <div class="cc-mono flex w-full flex-col gap-2 text-sm sm:w-auto sm:flex-row sm:items-center">
                         @if ($state)
-                            <select x-model="lga" @change="search()" class="rounded-lg border border-[var(--line)] bg-black/40 px-3 py-2 text-[var(--text)] focus:border-[var(--glow)] focus:outline-none" aria-label="LGA">
+                            <select x-model="lga" @change="search()" class="w-full rounded-lg sm:w-auto border border-[var(--line)] bg-black/40 px-3 py-2 text-[var(--text)] focus:border-[var(--glow)] focus:outline-none" aria-label="LGA">
                                 <option value="">All LGAs</option>
                                 @foreach (collect($map['areas'])->sortBy('name') as $area)
                                     <option value="{{ $area['id'] }}">{{ $area['name'] }}</option>
                                 @endforeach
                             </select>
                         @endif
-                        <input type="search" x-model="q" @input.debounce.350ms="search()" placeholder="Name, phone or member no." class="w-64 rounded-lg border border-[var(--line)] bg-black/40 px-3 py-2 text-[var(--text)] placeholder:text-[var(--dim)] focus:border-[var(--glow)] focus:outline-none" aria-label="Search contacts">
+                        <input type="search" x-model="q" @input.debounce.350ms="search()" placeholder="Name, phone or member no." class="w-full rounded-lg sm:w-64 border border-[var(--line)] bg-black/40 px-3 py-2 text-[var(--text)] placeholder:text-[var(--dim)] focus:border-[var(--glow)] focus:outline-none" aria-label="Search contacts">
                     </div>
                 </div>
 
-                <div class="cc-mono mt-4 flex flex-wrap gap-2 text-xs" role="tablist">
-                    <button type="button" @click="setKind('')" :class="kind === '' ? 'border-[var(--glow)] bg-[var(--glow)]/15 text-white' : 'border-[var(--line)] text-[var(--dim)] hover:text-white'" class="rounded-full border px-3 py-1.5 tracking-wider uppercase">All <span class="text-[var(--glow)]" x-text="fmt(total)"></span></button>
+                <div class="cc-mono -mx-5 mt-4 flex gap-2 overflow-x-auto px-5 pb-1 text-xs sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0" role="tablist">
+                    <button type="button" @click="setKind('')" :class="kind === '' ? 'border-[var(--glow)] bg-[var(--glow)]/15 text-white' : 'border-[var(--line)] text-[var(--dim)] hover:text-white'" class="shrink-0 rounded-full border px-3 py-1.5 tracking-wider whitespace-nowrap uppercase">All <span class="text-[var(--glow)]" x-text="fmt(total)"></span></button>
                     <template x-for="[key, label] in Object.entries(kinds)" :key="key">
-                        <button type="button" @click="setKind(key)" :class="kind === key ? 'border-[var(--glow)] bg-[var(--glow)]/15 text-white' : 'border-[var(--line)] text-[var(--dim)] hover:text-white'" class="rounded-full border px-3 py-1.5 tracking-wider uppercase">
+                        <button type="button" @click="setKind(key)" :class="kind === key ? 'border-[var(--glow)] bg-[var(--glow)]/15 text-white' : 'border-[var(--line)] text-[var(--dim)] hover:text-white'" class="shrink-0 rounded-full border px-3 py-1.5 tracking-wider whitespace-nowrap uppercase">
                             <span x-text="label + 's'"></span> <span class="text-[var(--glow)]" x-text="fmt(counts[key] ?? 0)"></span>
                         </button>
                     </template>
@@ -284,8 +288,8 @@
 
                 <ul class="mt-4 grid gap-2 md:grid-cols-2 2xl:grid-cols-3">
                     <template x-for="c in contacts" :key="c.id">
-                        <li class="flex items-center gap-3 rounded-xl border border-[var(--line)] bg-black/25 p-3 transition-colors hover:border-[var(--glow)]/60">
-                            <div class="min-w-0 flex-1">
+                        <li class="flex flex-wrap items-center gap-3 rounded-xl border border-[var(--line)] bg-black/25 p-3 transition-colors hover:border-[var(--glow)]/60 sm:flex-nowrap">
+                            <div class="min-w-0 basis-full sm:basis-auto sm:flex-1">
                                 <p class="flex items-center gap-2">
                                     <a :href="c.profile ?? '#'" :class="c.profile ? 'hover:underline' : 'pointer-events-none'" class="truncate font-semibold text-white" x-text="c.name"></a>
                                     <span x-show="c.on_shift" class="cc-mono inline-flex shrink-0 items-center gap-1 rounded bg-[var(--glow)]/15 px-1.5 py-0.5 text-[10px] font-bold text-[var(--glow)]"><span class="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--glow)]"></span>ON SHIFT</span>
@@ -293,8 +297,8 @@
                                 <p class="cc-mono mt-0.5 truncate text-[11px] tracking-wider uppercase" :class="c.kind === 'member' ? 'text-[var(--dim)]' : 'text-[var(--amber)]'" x-text="c.label + (c.area ? ' · ' + c.area : '')"></p>
                                 <p class="cc-mono mt-1 text-sm text-[var(--text)]" x-text="c.phone_display"></p>
                             </div>
-                            <a :href="`tel:${c.phone}`" class="cc-mono inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-[var(--glow)] px-3 py-2 text-xs font-bold text-[#04140c] shadow-[0_0_14px_rgba(46,229,157,.45)] hover:brightness-110" :aria-label="`Call ${c.name}`">☎ Call</a>
-                            <a :href="`https://wa.me/${c.whatsapp}`" target="_blank" rel="noopener" class="cc-mono inline-flex shrink-0 items-center rounded-lg border border-[var(--glow)]/50 px-3 py-2 text-xs font-bold text-[var(--glow)] hover:bg-[var(--glow)]/10" :aria-label="`WhatsApp ${c.name}`">WhatsApp</a>
+                            <a :href="`tel:${c.phone}`" class="cc-mono inline-flex flex-1 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[var(--glow)] px-3 py-2.5 sm:flex-none sm:py-2 text-xs font-bold text-[#04140c] shadow-[0_0_14px_rgba(46,229,157,.45)] hover:brightness-110" :aria-label="`Call ${c.name}`">☎ Call</a>
+                            <a :href="`https://wa.me/${c.whatsapp}`" target="_blank" rel="noopener" class="cc-mono inline-flex flex-1 shrink-0 items-center justify-center rounded-lg border border-[var(--glow)]/50 px-3 py-2.5 sm:flex-none sm:py-2 text-xs font-bold text-[var(--glow)] hover:bg-[var(--glow)]/10" :aria-label="`WhatsApp ${c.name}`">WhatsApp</a>
                         </li>
                     </template>
                 </ul>

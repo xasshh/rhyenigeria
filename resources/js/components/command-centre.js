@@ -12,6 +12,7 @@ export default (config) => ({
     bumped: {},
     coverage: { wards: 0, wards_total: 0, areas: 0, areas_total: config.areasTotal },
     tip: null,
+    picked: null,
     clock: '',
     syncedAt: null,
     syncedAgo: null,
@@ -134,11 +135,19 @@ export default (config) => ({
         this.tip = { name: path.dataset.name, total: area?.total ?? 0, today: area?.today ?? 0, agents: area?.agents ?? 0, x: event.clientX - box.left, y: event.clientY - box.top };
     },
 
-    // Clicking an area on the map shows its people in the call desk.
+    // Tapping an area selects it (its figures show under the map); clicking with a mouse goes straight to its people.
     pickArea(event) {
         const path = event.target.closest?.('path[data-id]');
         if (!path) return;
-        window.dispatchEvent(new CustomEvent('cc-lga', { detail: { id: path.dataset.id, name: path.dataset.name } }));
+        const area = (this.data.areas ?? []).find((a) => String(a.id) === path.dataset.id);
+        this.picked = { id: path.dataset.id, name: path.dataset.name, total: area?.total ?? 0, today: area?.today ?? 0 };
+        if (event.pointerType === 'mouse') this.callArea();
+        else this.hover(event);
+    },
+
+    callArea() {
+        if (!this.picked) return;
+        window.dispatchEvent(new CustomEvent('cc-lga', { detail: { id: this.picked.id, name: this.picked.name } }));
         document.getElementById('call-desk')?.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth' });
     },
 
