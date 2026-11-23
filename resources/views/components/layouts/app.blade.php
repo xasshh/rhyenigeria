@@ -54,7 +54,8 @@
         {{-- Sidebar (desktop) --}}
         <aside class="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-line bg-white lg:flex">
             <div class="px-5 py-5"><x-logo /></div>
-            <nav class="flex-1 space-y-1 px-3" aria-label="Dashboard">
+            {{-- The links scroll on their own; the logo and the account card stay put. --}}
+            <nav class="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain px-3 pb-2 [scrollbar-color:#cfd8d2_transparent] [scrollbar-width:thin]" aria-label="Dashboard" x-data x-init="$el.querySelector('[aria-current=page]')?.scrollIntoView({ block: 'nearest' })">
                 @foreach ($nav as [$route, $label, $icon, $pattern])
                     <a href="{{ route($route) }}" @class([
                         'flex items-center gap-3 rounded-xl px-3 py-2.5 text-[15px] font-medium transition-colors',
@@ -65,7 +66,7 @@
                     </a>
                 @endforeach
             </nav>
-            <div class="m-3 rounded-2xl border border-line p-3">
+            <div class="m-3 shrink-0 rounded-2xl border border-line p-3">
                 <div class="flex items-center gap-3">
                     <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand/10 text-sm font-bold text-brand-dark">{{ $initials }}</span>
                     <div class="min-w-0">
