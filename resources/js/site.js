@@ -8,7 +8,7 @@ import heroSlider from './components/hero-slider';
 import areaMap from './components/area-map';
 import fieldTracker from './components/field-tracker';
 import locationPin from './components/location-pin';
-import commandCentre, { callDesk } from './components/command-centre';
+import commandCentre, { callDesk, phoneLine } from './components/command-centre';
 
 Alpine.data('joinWizard', joinWizard);
 Alpine.data('memberCard', memberCard);
@@ -19,6 +19,7 @@ Alpine.data('fieldTracker', fieldTracker);
 Alpine.data('locationPin', locationPin);
 Alpine.data('commandCentre', commandCentre);
 Alpine.data('callDesk', callDesk);
+Alpine.data('phoneLine', phoneLine);
 
 // Counts down to `target`. `initial` is the server-rendered value, so the numbers
 // are right before this runs and nothing jumps when it starts.

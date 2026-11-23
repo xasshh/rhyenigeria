@@ -264,3 +264,124 @@ export const callDesk = ({ url, kinds }) => ({
         return new Intl.NumberFormat('en-NG').format(n ?? 0);
     },
 });
+
+/**
+ * The phone line (Africa's Talking). Polls the call log every few seconds so a call into the
+ * line shows while it rings; places calls by ringing the operator first. The call desk asks
+ * for a call with a `cc-ring` window event.
+ */
+export const phoneLine = ({ enabled, number, url, store, handledUrl, csrf, operatorPhone }) => ({
+    enabled,
+    number,
+    calls: [],
+    waiting: 0,
+    ringMe: '',
+    notice: '',
+    noticeError: false,
+    busy: false,
+    timer: null,
+
+    init() {
+        try {
+            this.ringMe = localStorage.getItem('cc-ring-me') || operatorPhone || '';
+        } catch {
+            this.ringMe = operatorPhone || '';
+        }
+        this.load();
+        this.timer = setInterval(() => document.hidden || this.load(), 5000);
+    },
+
+    get live() {
+        return this.calls.filter((c) => c.live && c.direction === 'inbound');
+    },
+
+    saveRingMe() {
+        try {
+            localStorage.setItem('cc-ring-me', this.ringMe.trim());
+        } catch {
+            /* private mode: just not remembered */
+        }
+    },
+
+    async load() {
+        try {
+            const res = await fetch(url, { headers: { Accept: 'application/json' } });
+            if (!res.ok) return;
+            const body = await res.json();
+            this.calls = body.calls;
+            this.waiting = body.waiting;
+        } catch {
+            /* next poll will retry */
+        }
+    },
+
+    async ring(payload, name) {
+        if (!this.enabled) return;
+        if (!this.ringMe.trim()) {
+            this.say('Enter the phone number we should ring you on first (top of the Phone line panel).', true);
+            document.getElementById('phone-line')?.scrollIntoView({ behavior: 'smooth' });
+            return;
+        }
+        this.busy = true;
+        this.say(`Placing call to ${name}…`);
+        try {
+            const res = await fetch(store, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
+                body: JSON.stringify({ ...payload, ring_me: this.ringMe.trim() }),
+            });
+            const body = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                const first = body.errors ? Object.values(body.errors)[0]?.[0] : null;
+                throw new Error(first || body.message || 'The call could not be placed.');
+            }
+            this.saveRingMe();
+            this.say(body.message);
+            this.load();
+        } catch (e) {
+            this.say(e.message, true);
+        } finally {
+            this.busy = false;
+        }
+    },
+
+    callBack(call) {
+        this.ring({ call_id: call.id }, call.name || call.phone_display);
+    },
+
+    async markHandled(call) {
+        await fetch(handledUrl.replace('__ID__', call.id), { method: 'PATCH', headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf } });
+        this.load();
+    },
+
+    say(text, error = false) {
+        this.notice = text;
+        this.noticeError = error;
+        clearTimeout(this._noticeTimer);
+        this._noticeTimer = setTimeout(() => (this.notice = ''), 12000);
+    },
+
+    statusLabel(c) {
+        return {
+            ringing: c.direction === 'inbound' ? 'Ringing' : 'Ringing you',
+            connected: 'On call',
+            completed: 'Answered',
+            missed: 'Missed',
+            voicemail: 'Voice message',
+            no_answer: 'No answer',
+            failed: 'You missed it',
+        }[c.status] ?? c.status;
+    },
+
+    statusClass(c) {
+        if (c.live) return 'bg-[var(--red)]/20 text-[var(--red)]';
+        if (c.needs_call_back) return 'bg-[var(--amber)]/20 text-[var(--amber)]';
+        if (c.status === 'completed') return 'bg-[var(--glow)]/15 text-[var(--glow)]';
+        return 'bg-white/10 text-[var(--dim)]';
+    },
+
+    duration(s) {
+        if (!s) return '';
+        return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    },
+});

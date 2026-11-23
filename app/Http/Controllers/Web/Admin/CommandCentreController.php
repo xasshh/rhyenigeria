@@ -12,6 +12,7 @@ use App\Services\Audit\AuditLogger;
 use App\Services\Geo\AreaMap;
 use App\Services\Membership\MemberDirectory;
 use App\Services\Tracking\LiveOperations;
+use App\Services\Voice\AfricasTalkingVoice;
 use App\Support\NigerianPhone;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
@@ -28,7 +29,7 @@ use Illuminate\View\View;
  */
 class CommandCentreController extends Controller
 {
-    public function index(Request $request, AreaMap $map, AuditLogger $audit): View
+    public function index(Request $request, AreaMap $map, AuditLogger $audit, AfricasTalkingVoice $voice): View
     {
         $state = $this->state();
         $shapes = $state ? $map->lgas($state) : $map->states();
@@ -41,6 +42,15 @@ class CommandCentreController extends Controller
             'electionDate' => Setting::electionDate(),
             'electionLabel' => Setting::electionLabel(),
             'contactKinds' => self::contactKinds(),
+            'line' => [
+                'enabled' => $voice->isConfigured(),
+                'number' => $voice->number() ? NigerianPhone::format(NigerianPhone::normalise($voice->number()) ?? $voice->number()) : null,
+                'url' => route('admin.command.calls'),
+                'store' => route('admin.command.calls.store'),
+                'handledUrl' => route('admin.command.calls.handled', '__ID__'),
+                'csrf' => csrf_token(),
+                'operatorPhone' => $request->user()->phone,
+            ],
             'config' => [
                 'feed' => route('admin.command.feed'),
                 'contacts' => route('admin.command.contacts'),

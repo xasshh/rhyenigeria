@@ -6,6 +6,7 @@ use App\Http\Controllers\Web\Admin\AdminController;
 use App\Http\Controllers\Web\Admin\CommandCentreController;
 use App\Http\Controllers\Web\Admin\CoordinatorController;
 use App\Http\Controllers\Web\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Web\Admin\PhoneLineController;
 use App\Http\Controllers\Web\Admin\SettingsController;
 use App\Http\Controllers\Web\Admin\SlideController;
 use App\Http\Controllers\Web\AuthController;
@@ -153,6 +154,9 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('command', [CommandCentreController::class, 'index'])->name('command');
         Route::get('command/feed', [CommandCentreController::class, 'feed'])->middleware('throttle:30,1')->name('command.feed');
         Route::get('command/contacts', [CommandCentreController::class, 'contacts'])->middleware('throttle:60,1')->name('command.contacts');
+        Route::get('command/calls', [PhoneLineController::class, 'index'])->middleware('throttle:120,1')->name('command.calls');
+        Route::post('command/calls', [PhoneLineController::class, 'store'])->middleware('throttle:20,1')->name('command.calls.store');
+        Route::patch('command/calls/{call}/handled', [PhoneLineController::class, 'handled'])->name('command.calls.handled');
         Route::get('admins', [AdminController::class, 'index'])->name('admins.index');
         Route::post('admins', [AdminController::class, 'store'])->name('admins.store');
         Route::patch('admins/{admin}', [AdminController::class, 'update'])->name('admins.update');

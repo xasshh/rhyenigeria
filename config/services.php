@@ -44,4 +44,18 @@ return [
         'url' => env('BULKSMSNIGERIA_URL', 'https://www.bulksmsnigeria.com/api/v2'),
     ],
 
+    // Africa's Talking voice: the command centre's phone line. The number's callback URL in the AT
+    // dashboard must be https://<site>/api/webhooks/voice/<AT_VOICE_WEBHOOK_TOKEN>.
+    'africastalking' => [
+        'username' => env('AT_USERNAME'),
+        'api_key' => env('AT_API_KEY'),
+        // The virtual number bought on AT, e.g. +2342017001234.
+        'voice_number' => env('AT_VOICE_NUMBER'),
+        // Phones that ring when someone calls the line (comma separated). Empty: callers leave a voice message.
+        'forward_to' => env('AT_VOICE_FORWARD_TO'),
+        'webhook_token' => env('AT_VOICE_WEBHOOK_TOKEN'),
+        // Spoken to people who call the line.
+        'greeting' => env('AT_VOICE_GREETING'),
+    ],
+
 ];
