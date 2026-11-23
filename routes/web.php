@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\GeographyController;
 use App\Http\Controllers\Web\AccountPasswordController;
 use App\Http\Controllers\Web\Admin\AdminController;
+use App\Http\Controllers\Web\Admin\CommandCentreController;
 use App\Http\Controllers\Web\Admin\CoordinatorController;
 use App\Http\Controllers\Web\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Web\Admin\SettingsController;
@@ -149,6 +150,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('coordinators', [CoordinatorController::class, 'index'])->name('coordinators.index');
         Route::post('coordinators', [CoordinatorController::class, 'store'])->name('coordinators.store');
         Route::patch('coordinators/{coordinator}', [CoordinatorController::class, 'update'])->name('coordinators.update');
+        Route::get('command', [CommandCentreController::class, 'index'])->name('command');
+        Route::get('command/feed', [CommandCentreController::class, 'feed'])->middleware('throttle:30,1')->name('command.feed');
         Route::get('admins', [AdminController::class, 'index'])->name('admins.index');
         Route::post('admins', [AdminController::class, 'store'])->name('admins.store');
         Route::patch('admins/{admin}', [AdminController::class, 'update'])->name('admins.update');

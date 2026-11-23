@@ -4,6 +4,7 @@
     $nav = match (true) {
         $user->isSuperAdmin() => [
             ['admin.dashboard', 'Overview', 'chart', 'admin.dashboard'],
+            ['admin.command', 'Command centre', 'flag', 'admin.command'],
             ['admin.leaderboard', 'Leaderboard', 'trophy', 'admin.leaderboard'],
             ['admin.live', 'Live map', 'map', 'admin.live'],
             ['admin.members.index', 'Members', 'users', 'admin.members.index|admin.members.show'],

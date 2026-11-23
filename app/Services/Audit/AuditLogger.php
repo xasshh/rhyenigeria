@@ -20,6 +20,8 @@ class AuditLogger
 
     public const ADMIN_REACTIVATED = 'admin.reactivated';
 
+    public const COMMAND_CENTRE_OPENED = 'command_centre.opened';
+
     /**
      * Record who did what, and when.
      *
