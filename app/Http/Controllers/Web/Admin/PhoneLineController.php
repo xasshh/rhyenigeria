@@ -12,6 +12,7 @@ use App\Support\NigerianPhone;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
 
@@ -19,6 +20,8 @@ use RuntimeException;
  * The command centre's phone line. Placing a call rings the operator's phone first and,
  * when they answer, connects the contact (so every call goes out from the campaign number,
  * is recorded and is logged). Calls into the line show up here as they ring.
+ * Until the line is connected, calls from operators' own phones and calls into an
+ * ordinary hotline are logged here by hand, so follow-ups are not lost.
  */
 class PhoneLineController extends Controller
 {
@@ -32,6 +35,8 @@ class PhoneLineController extends Controller
             'calls' => $calls->map(fn (VoiceCall $c) => [
                 'id' => $c->id,
                 'direction' => $c->direction,
+                'channel' => $c->channel,
+                'note' => $c->note,
                 'status' => $c->status,
                 'live' => $c->isLive(),
                 'needs_call_back' => $c->needsCallBack(),
@@ -46,7 +51,7 @@ class PhoneLineController extends Controller
                 'time' => CarbonImmutable::parse($c->created_at)->setTimezone($tz)->format('H:i'),
                 'day' => CarbonImmutable::parse($c->created_at)->setTimezone($tz)->isToday() ? null : CarbonImmutable::parse($c->created_at)->setTimezone($tz)->format('j M'),
             ])->values(),
-            'waiting' => VoiceCall::where('direction', VoiceCall::INBOUND)->whereIn('status', ['missed', 'voicemail'])->whereNull('handled_at')->count(),
+            'waiting' => VoiceCall::whereIn('status', VoiceCall::FOLLOW_UP)->whereNull('handled_at')->count(),
         ])->setPrivate();
     }
 
@@ -81,22 +86,90 @@ class PhoneLineController extends Controller
             'operator_phone' => $data['ring_me'],
         ]);
 
-        // Calling someone back deals with their missed call.
-        if (isset($data['call_id'])) {
-            VoiceCall::whereKey($data['call_id'])->whereNull('handled_at')->update(['handled_at' => now(), 'handled_by' => $request->user()->id]);
-        }
+        $this->resolve($request, $data['call_id'] ?? null);
 
         $audit->record($request, AuditLogger::COMMAND_CALL_PLACED, $call, ['to' => NigerianPhone::mask($phone)]);
 
         return response()->json(['message' => 'Your phone ('.NigerianPhone::format($data['ring_me']).') is ringing. Answer it and we will connect the call.', 'id' => $call->id]);
     }
 
+    /** The operator is about to call from their own phone (the call desk's tel: link): log it. */
+    public function direct(Request $request, AuditLogger $audit): JsonResponse
+    {
+        $data = $request->validate([
+            'user_id' => ['required_without:call_id', 'nullable', 'integer'],
+            'call_id' => ['required_without:user_id', 'nullable', 'integer'],
+        ]);
+        [$phone, $contactId] = isset($data['user_id']) ? $this->contact((int) $data['user_id']) : $this->caller((int) $data['call_id']);
+
+        $call = VoiceCall::create([
+            'direction' => VoiceCall::OUTBOUND,
+            'channel' => VoiceCall::PHONE,
+            'status' => 'dialled',
+            'contact_phone' => $phone,
+            'contact_user_id' => $contactId,
+            'operator_id' => $request->user()->id,
+        ]);
+        $this->resolve($request, $data['call_id'] ?? null);
+        $audit->record($request, AuditLogger::COMMAND_CALL_PLACED, $call, ['to' => NigerianPhone::mask($phone), 'channel' => VoiceCall::PHONE]);
+
+        return response()->json(['id' => $call->id]);
+    }
+
+    /** How an own-phone call went. */
+    public function outcome(Request $request, VoiceCall $call): JsonResponse
+    {
+        abort_unless($call->channel === VoiceCall::PHONE && $call->direction === VoiceCall::OUTBOUND, 404);
+        $data = $request->validate([
+            'outcome' => ['required', Rule::in(array_keys(VoiceCall::OUTCOMES))],
+            'note' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $call->forceFill([
+            'status' => VoiceCall::OUTCOMES[$data['outcome']],
+            'note' => $data['note'] ?? $call->note,
+            'ended_at' => $call->ended_at ?? now(),
+        ])->save();
+
+        return response()->json(['ok' => true]);
+    }
+
+    /** Someone answered (or missed) a call on an ordinary hotline phone and types it in. */
+    public function incoming(Request $request): JsonResponse
+    {
+        $request->merge(['phone' => NigerianPhone::normalise($request->input('phone')) ?? $request->input('phone')]);
+        $data = $request->validate([
+            'phone' => ['required', 'regex:/^\+234[789][01]\d{8}$/'],
+            'answered' => ['required', 'boolean'],
+            'note' => ['nullable', 'string', 'max:255'],
+        ], ['phone.regex' => 'Enter the caller\'s Nigerian mobile number.']);
+
+        $call = VoiceCall::create([
+            'direction' => VoiceCall::INBOUND,
+            'channel' => VoiceCall::PHONE,
+            'status' => $data['answered'] ? 'completed' : 'missed',
+            'contact_phone' => $data['phone'],
+            'contact_user_id' => User::where('phone', $data['phone'])->value('id'),
+            'operator_id' => $request->user()->id,
+            'note' => $data['note'] ?? null,
+        ]);
+
+        return response()->json(['id' => $call->id, 'name' => $call->contact?->name]);
+    }
+
     public function handled(Request $request, VoiceCall $call): JsonResponse
     {
-        abort_unless($call->direction === VoiceCall::INBOUND, 404);
         $call->forceFill(['handled_at' => now(), 'handled_by' => $request->user()->id])->save();
 
         return response()->json(['ok' => true]);
+    }
+
+    /** Calling someone back deals with the call that needed it. */
+    private function resolve(Request $request, ?int $callId): void
+    {
+        if ($callId) {
+            VoiceCall::whereKey($callId)->whereNull('handled_at')->update(['handled_at' => now(), 'handled_by' => $request->user()->id]);
+        }
     }
 
     /** @return array{0: string, 1: int} Someone the call desk lists (same scope as the contacts search). */
@@ -114,10 +187,10 @@ class PhoneLineController extends Controller
         return [$user->phone, $user->id];
     }
 
-    /** @return array{0: string, 1: ?int} Someone who rang the line. */
+    /** @return array{0: string, 1: ?int} The other person on an earlier call. */
     private function caller(int $id): array
     {
-        $call = VoiceCall::whereKey($id)->where('direction', VoiceCall::INBOUND)->first();
+        $call = VoiceCall::find($id);
         if (! $call || ! str_starts_with($call->contact_phone, '+')) {
             throw ValidationException::withMessages(['call_id' => 'That caller cannot be called back.']);
         }

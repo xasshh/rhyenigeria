@@ -92,4 +92,39 @@ class PhoneLineTest extends TestCase
         $this->actingAs($admin)->get('/admin/command')->assertSee('not connected yet');
         $this->actingAs($admin)->postJson('/admin/command/calls', ['user_id' => 1, 'ring_me' => '08030000001'])->assertStatus(503);
     }
+
+    public function test_a_call_from_the_operators_own_phone_is_logged_and_its_outcome_kept(): void
+    {
+        config(['services.africastalking.api_key' => null]);
+        $admin = User::factory()->superAdmin()->create();
+        $contact = User::factory()->coordinator()->create(['phone' => '+2348031112222', 'name' => 'Hauwa Musa']);
+
+        $id = $this->actingAs($admin)->postJson('/admin/command/calls/direct', ['user_id' => $contact->id])->assertOk()->json('id');
+        $this->actingAs($admin)->getJson('/admin/command/calls')
+            ->assertJsonPath('calls.0.status', 'dialled')->assertJsonPath('calls.0.channel', 'phone')->assertJsonPath('calls.0.name', 'Hauwa Musa');
+
+        $this->actingAs($admin)->patchJson("/admin/command/calls/{$id}/outcome", ['outcome' => 'call_later', 'note' => 'At a rally, try after 6'])->assertOk();
+        $this->actingAs($admin)->getJson('/admin/command/calls')
+            ->assertJsonPath('calls.0.status', 'call_later')->assertJsonPath('calls.0.needs_call_back', true)->assertJsonPath('waiting', 1);
+
+        // Calling again from the follow-up deals with it.
+        $this->actingAs($admin)->postJson('/admin/command/calls/direct', ['call_id' => $id])->assertOk();
+        $this->actingAs($admin)->getJson('/admin/command/calls')->assertJsonPath('waiting', 0);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'command_centre.call_placed', 'user_id' => $admin->id]);
+
+        $this->actingAs($admin)->patchJson("/admin/command/calls/{$id}/outcome", ['outcome' => 'nonsense'])->assertUnprocessable();
+    }
+
+    public function test_a_call_to_the_hotline_is_typed_in_and_matched_to_the_member(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $member = User::factory()->role(Role::Member)->create(['phone' => '+2348035556666', 'name' => 'Musa Bello']);
+
+        $this->actingAs($admin)->postJson('/admin/command/calls/incoming', ['phone' => '0803 555 6666', 'answered' => false, 'note' => 'Wants to volunteer'])
+            ->assertOk()->assertJsonPath('name', 'Musa Bello');
+        $this->assertDatabaseHas('voice_calls', ['direction' => 'inbound', 'channel' => 'phone', 'status' => 'missed', 'contact_user_id' => $member->id, 'note' => 'Wants to volunteer']);
+
+        $this->actingAs($admin)->postJson('/admin/command/calls/incoming', ['phone' => '12345', 'answered' => true])->assertUnprocessable();
+        $this->actingAs(User::factory()->coordinator()->create())->postJson('/admin/command/calls/incoming', ['phone' => '08035556666', 'answered' => true])->assertForbidden();
+    }
 }

@@ -258,7 +258,7 @@
             </div>
 
             {{-- Phone line (Africa's Talking) --}}
-            <section id="phone-line" class="cc-panel mt-3 scroll-mt-4 p-5" aria-label="Phone line" x-data="phoneLine(@js($line))" @cc-ring.window="ring($event.detail.payload, $event.detail.name)">
+            <section id="phone-line" class="cc-panel mt-3 scroll-mt-4 p-5" aria-label="Phone line" x-data="phoneLine(@js($line))" @cc-ring.window="ring($event.detail.payload, $event.detail.name)" @cc-dial.window="dialled($event.detail.payload)">
                 {{-- Someone is ringing the line right now --}}
                 <div x-show="live.length" x-cloak x-transition class="fixed inset-x-3 top-3 z-50 mx-auto max-w-xl rounded-xl border border-[var(--red)] bg-[#1a0507]/95 p-4 shadow-[0_0_40px_rgba(255,77,94,.45)] backdrop-blur" role="alert">
                     <template x-for="c in live" :key="c.id">
@@ -275,13 +275,14 @@
 
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                        <p class="cc-label">☏ Phone line <span x-show="waiting" x-cloak class="ml-2 rounded bg-[var(--amber)]/20 px-1.5 py-0.5 text-[var(--amber)]" x-text="waiting + ' to call back'"></span></p>
+                        <p class="cc-label">☏ Phone line <span x-show="waiting" x-cloak class="ml-2 rounded bg-[var(--amber)]/20 px-1.5 py-0.5 text-[var(--amber)]" x-text="waiting + ' to follow up'"></span></p>
                         @if ($line['enabled'])
                             <p class="mt-1 text-xs text-[var(--dim)]">Campaign number <span class="cc-mono text-[var(--glow)]">{{ $line['number'] }}</span>. When you press Call, your phone rings first. Answer it and we connect you. Calls are recorded. Calls to this number show here as they ring.</p>
                         @else
-                            <p class="mt-1 text-xs text-[var(--amber)]">The campaign phone line is not connected yet. Until it is, Call uses your own phone.</p>
+                            <p class="mt-1 text-xs text-[var(--amber)]">The campaign phone line is not connected yet. Until it is, Call uses your own phone and the call is logged here, so mark how it went when you hang up. When the hotline phone rings, log the call with <span class="text-[var(--glow)]">+ Log incoming call</span>.</p>
                         @endif
                     </div>
+                    <button type="button" @click="logOpen = !logOpen" class="cc-mono w-full shrink-0 rounded-lg border border-[var(--glow)]/50 px-3 py-2 text-xs font-bold text-[var(--glow)] hover:bg-[var(--glow)]/10 sm:w-auto" :aria-expanded="logOpen">+ Log incoming call</button>
                     @if ($line['enabled'])
                         <label class="cc-mono flex w-full flex-col gap-1 text-[11px] tracking-wider text-[var(--dim)] uppercase sm:w-auto">
                             Ring me on
@@ -289,6 +290,23 @@
                         </label>
                     @endif
                 </div>
+
+                <form x-show="logOpen" x-cloak x-transition @submit.prevent="logIncoming()" class="mt-4 grid gap-3 rounded-xl border border-[var(--line)] bg-black/25 p-4 sm:grid-cols-[12rem_auto_1fr_auto] sm:items-end">
+                    <label class="cc-mono flex flex-col gap-1 text-[11px] tracking-wider text-[var(--dim)] uppercase">
+                        Caller's number
+                        <input type="tel" x-model="log.phone" required placeholder="0803 000 0000" class="rounded-lg border border-[var(--line)] bg-black/40 px-3 py-2 text-sm tracking-normal text-[var(--text)] normal-case placeholder:text-[var(--dim)] focus:border-[var(--glow)] focus:outline-none">
+                    </label>
+                    <div class="cc-mono flex gap-1 text-xs" role="radiogroup" aria-label="Was the call answered?">
+                        <button type="button" @click="log.answered = true" :class="log.answered ? 'border-[var(--glow)] bg-[var(--glow)]/15 text-white' : 'border-[var(--line)] text-[var(--dim)]'" class="flex-1 rounded-lg border px-3 py-2" :aria-checked="log.answered" role="radio">Answered</button>
+                        <button type="button" @click="log.answered = false" :class="!log.answered ? 'border-[var(--amber)] bg-[var(--amber)]/15 text-white' : 'border-[var(--line)] text-[var(--dim)]'" class="flex-1 rounded-lg border px-3 py-2" :aria-checked="!log.answered" role="radio">Missed</button>
+                    </div>
+                    <label class="cc-mono flex flex-col gap-1 text-[11px] tracking-wider text-[var(--dim)] uppercase">
+                        What it was about (optional)
+                        <input type="text" x-model="log.note" maxlength="255" placeholder="e.g. Agents in Zaria need materials" class="rounded-lg border border-[var(--line)] bg-black/40 px-3 py-2 text-sm tracking-normal text-[var(--text)] normal-case placeholder:text-[var(--dim)] focus:border-[var(--glow)] focus:outline-none">
+                    </label>
+                    <button type="submit" class="cc-mono rounded-lg bg-[var(--glow)] px-4 py-2 text-xs font-bold text-[#04140c] hover:brightness-110">Save</button>
+                    <p x-show="logError" x-text="logError" class="cc-mono text-sm text-[var(--red)] sm:col-span-4"></p>
+                </form>
 
                 <p x-show="notice" x-cloak x-transition class="cc-mono mt-3 rounded-lg border px-3 py-2 text-sm" :class="noticeError ? 'border-[var(--red)]/60 text-[var(--red)]' : 'border-[var(--glow)]/50 text-[var(--glow)]'" x-text="notice" role="status"></p>
 
@@ -299,13 +317,22 @@
                             <div class="min-w-0 flex-1">
                                 <p class="truncate"><span class="font-semibold text-white" x-text="c.name || c.phone_display"></span> <span class="text-[var(--dim)]" x-show="c.name" x-text="'· ' + c.phone_display"></span></p>
                                 <p class="cc-mono truncate text-[11px] text-[var(--dim)]">
-                                    <span x-text="(c.day ? c.day + ' ' : '') + c.time"></span><span x-show="c.area" x-text="' · ' + c.area"></span><span x-show="c.operator" x-text="' · by ' + c.operator"></span><span x-show="c.duration" x-text="' · ' + duration(c.duration)"></span>
+                                    <span x-text="(c.day ? c.day + ' ' : '') + c.time"></span><span x-show="c.area" x-text="' · ' + c.area"></span><span x-show="c.operator" x-text="' · by ' + c.operator"></span><span x-show="c.duration" x-text="' · ' + duration(c.duration)"></span><span x-show="c.channel === 'phone'"> · own phone</span>
                                 </p>
+                                <p x-show="c.note" class="mt-0.5 text-xs text-[var(--text)]" x-text="c.note"></p>
                             </div>
                             <span class="cc-mono shrink-0 rounded px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase" :class="statusClass(c)" x-text="statusLabel(c)"></span>
-                            <div class="flex w-full items-center gap-2 sm:w-auto" x-show="c.recording || (c.direction === 'inbound' && !c.live)">
+                            {{-- An own-phone call: how did it go? --}}
+                            <div class="cc-mono grid w-full grid-cols-2 gap-1.5 text-[11px] sm:flex sm:w-auto" x-show="c.status === 'dialled'">
+                                <button type="button" @click="setOutcome(c, 'reached')" class="rounded-lg bg-[var(--glow)] px-2.5 py-1.5 font-bold text-[#04140c] hover:brightness-110">Reached</button>
+                                <button type="button" @click="setOutcome(c, 'no_answer')" class="rounded-lg border border-[var(--line)] px-2.5 py-1.5 text-[var(--text)] hover:border-[var(--amber)]">No answer</button>
+                                <button type="button" @click="setOutcome(c, 'wrong_number')" class="rounded-lg border border-[var(--line)] px-2.5 py-1.5 text-[var(--text)] hover:border-[var(--red)]">Wrong number</button>
+                                <button type="button" @click="setOutcome(c, 'call_later')" class="rounded-lg border border-[var(--line)] px-2.5 py-1.5 text-[var(--text)] hover:border-[var(--amber)]">Call later</button>
+                            </div>
+                            <div class="flex w-full items-center gap-2 sm:w-auto" x-show="c.recording || c.needs_call_back">
                                 <template x-if="c.recording"><audio :src="c.recording" controls preload="none" class="h-8 w-full max-w-[220px]"></audio></template>
-                                <button type="button" x-show="enabled && c.direction === 'inbound' && !c.live" @click="callBack(c)" :disabled="busy" class="cc-mono shrink-0 rounded-lg bg-[var(--glow)] px-3 py-1.5 text-xs font-bold text-[#04140c] hover:brightness-110 disabled:opacity-50">☎ Call back</button>
+                                <button type="button" x-show="enabled && c.needs_call_back" @click="callBack(c)" :disabled="busy" class="cc-mono shrink-0 rounded-lg bg-[var(--glow)] px-3 py-1.5 text-xs font-bold text-[#04140c] hover:brightness-110 disabled:opacity-50">☎ Call back</button>
+                                <a x-show="!enabled && c.needs_call_back && c.phone.startsWith('+')" :href="`tel:${c.phone}`" @click="dialled({ call_id: c.id })" class="cc-mono shrink-0 rounded-lg bg-[var(--glow)] px-3 py-1.5 text-xs font-bold text-[#04140c] hover:brightness-110">☎ Call back</a>
                                 <button type="button" x-show="c.needs_call_back" @click="markHandled(c)" class="cc-mono shrink-0 rounded-lg border border-[var(--line)] px-2.5 py-1.5 text-[11px] text-[var(--dim)] hover:text-white">Done</button>
                             </div>
                         </li>
@@ -356,9 +383,9 @@
                             </div>
                             @if ($line['enabled'])
                                 <button type="button" @click="$dispatch('cc-ring', { payload: { user_id: c.id }, name: c.name })" class="cc-mono inline-flex flex-1 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[var(--glow)] px-3 py-2.5 sm:flex-none sm:py-2 text-xs font-bold text-[#04140c] shadow-[0_0_14px_rgba(46,229,157,.45)] hover:brightness-110" :aria-label="`Call ${c.name} on the campaign line`">☎ Call</button>
-                                <a :href="`tel:${c.phone}`" class="cc-mono inline-flex shrink-0 items-center justify-center rounded-lg border border-[var(--line)] px-2.5 py-2.5 sm:py-2 text-xs text-[var(--dim)] hover:text-white" title="Call from this device instead" :aria-label="`Call ${c.name} from this device`">📱</a>
+                                <a :href="`tel:${c.phone}`" @click="$dispatch('cc-dial', { payload: { user_id: c.id } })" class="cc-mono inline-flex shrink-0 items-center justify-center rounded-lg border border-[var(--line)] px-2.5 py-2.5 sm:py-2 text-xs text-[var(--dim)] hover:text-white" title="Call from this device instead" :aria-label="`Call ${c.name} from this device`">📱</a>
                             @else
-                                <a :href="`tel:${c.phone}`" class="cc-mono inline-flex flex-1 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[var(--glow)] px-3 py-2.5 sm:flex-none sm:py-2 text-xs font-bold text-[#04140c] shadow-[0_0_14px_rgba(46,229,157,.45)] hover:brightness-110" :aria-label="`Call ${c.name}`">☎ Call</a>
+                                <a :href="`tel:${c.phone}`" @click="$dispatch('cc-dial', { payload: { user_id: c.id } })" class="cc-mono inline-flex flex-1 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[var(--glow)] px-3 py-2.5 sm:flex-none sm:py-2 text-xs font-bold text-[#04140c] shadow-[0_0_14px_rgba(46,229,157,.45)] hover:brightness-110" :aria-label="`Call ${c.name}`">☎ Call</a>
                             @endif
                             <a :href="`https://wa.me/${c.whatsapp}`" target="_blank" rel="noopener" class="cc-mono inline-flex flex-1 shrink-0 items-center justify-center rounded-lg border border-[var(--glow)]/50 px-3 py-2.5 sm:flex-none sm:py-2 text-xs font-bold text-[var(--glow)] hover:bg-[var(--glow)]/10" :aria-label="`WhatsApp ${c.name}`">WhatsApp</a>
                         </li>

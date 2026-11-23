@@ -156,6 +156,9 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('command/contacts', [CommandCentreController::class, 'contacts'])->middleware('throttle:60,1')->name('command.contacts');
         Route::get('command/calls', [PhoneLineController::class, 'index'])->middleware('throttle:120,1')->name('command.calls');
         Route::post('command/calls', [PhoneLineController::class, 'store'])->middleware('throttle:20,1')->name('command.calls.store');
+        Route::post('command/calls/direct', [PhoneLineController::class, 'direct'])->middleware('throttle:60,1')->name('command.calls.direct');
+        Route::post('command/calls/incoming', [PhoneLineController::class, 'incoming'])->middleware('throttle:60,1')->name('command.calls.incoming');
+        Route::patch('command/calls/{call}/outcome', [PhoneLineController::class, 'outcome'])->name('command.calls.outcome');
         Route::patch('command/calls/{call}/handled', [PhoneLineController::class, 'handled'])->name('command.calls.handled');
         Route::get('admins', [AdminController::class, 'index'])->name('admins.index');
         Route::post('admins', [AdminController::class, 'store'])->name('admins.store');

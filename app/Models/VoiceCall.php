@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /** One call on the campaign phone line. See the create_voice_calls_table migration. */
-#[Fillable(['session_id', 'direction', 'status', 'contact_phone', 'contact_user_id', 'operator_id', 'operator_phone'])]
+#[Fillable(['session_id', 'direction', 'channel', 'status', 'note', 'contact_phone', 'contact_user_id', 'operator_id', 'operator_phone'])]
 class VoiceCall extends Model
 {
     /** @use HasFactory<VoiceCallFactory> */
@@ -18,6 +18,18 @@ class VoiceCall extends Model
     public const INBOUND = 'inbound';
 
     public const OUTBOUND = 'outbound';
+
+    /** Through Africa's Talking. */
+    public const LINE = 'line';
+
+    /** From an operator's own phone, or typed in by whoever answered the hotline. */
+    public const PHONE = 'phone';
+
+    /** How an own-phone call went, as the operator reports it, and the status it leaves. */
+    public const OUTCOMES = ['reached' => 'completed', 'no_answer' => 'no_answer', 'wrong_number' => 'wrong_number', 'call_later' => 'call_later'];
+
+    /** Statuses that mean someone still has to be called (back). */
+    public const FOLLOW_UP = ['missed', 'voicemail', 'no_answer', 'call_later'];
 
     protected function casts(): array
     {
@@ -46,9 +58,9 @@ class VoiceCall extends Model
         return in_array($this->status, ['ringing', 'connected'], true);
     }
 
-    /** Someone called the line and nobody spoke to them, and nobody has dealt with it yet. */
+    /** Nobody has spoken to this person yet (a missed call, a voice message, no answer, "call later"), and nobody has dealt with it. */
     public function needsCallBack(): bool
     {
-        return $this->direction === self::INBOUND && in_array($this->status, ['missed', 'voicemail'], true) && $this->handled_at === null;
+        return in_array($this->status, self::FOLLOW_UP, true) && $this->handled_at === null;
     }
 }

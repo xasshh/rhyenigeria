@@ -270,7 +270,7 @@ export const callDesk = ({ url, kinds }) => ({
  * line shows while it rings; places calls by ringing the operator first. The call desk asks
  * for a call with a `cc-ring` window event.
  */
-export const phoneLine = ({ enabled, number, url, store, handledUrl, csrf, operatorPhone }) => ({
+export const phoneLine = ({ enabled, number, url, store, handledUrl, outcomeUrl, directUrl, incomingUrl, csrf, operatorPhone }) => ({
     enabled,
     number,
     calls: [],
@@ -280,6 +280,9 @@ export const phoneLine = ({ enabled, number, url, store, handledUrl, csrf, opera
     noticeError: false,
     busy: false,
     timer: null,
+    logOpen: false,
+    log: { phone: '', answered: true, note: '' },
+    logError: '',
 
     init() {
         try {
@@ -349,8 +352,61 @@ export const phoneLine = ({ enabled, number, url, store, handledUrl, csrf, opera
         this.ring({ call_id: call.id }, call.name || call.phone_display);
     },
 
+    /** A call from the operator's own phone (tel: link): log it; the link itself still dials. */
+    dialled(payload) {
+        fetch(directUrl, {
+            method: 'POST',
+            keepalive: true,
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
+            body: JSON.stringify(payload),
+        })
+            .then(() => this.load())
+            .catch(() => {});
+        this.say('Call logged. When you hang up, mark how it went in the Phone line panel.');
+    },
+
+    async send(target, method, payload) {
+        const res = await fetch(target, {
+            method,
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
+            body: JSON.stringify(payload),
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            const first = body.errors ? Object.values(body.errors)[0]?.[0] : null;
+            throw new Error(first || body.message || 'That did not save. Try again.');
+        }
+        return body;
+    },
+
+    async setOutcome(call, outcome) {
+        try {
+            await this.send(outcomeUrl.replace('__ID__', call.id), 'PATCH', { outcome });
+            this.load();
+        } catch (e) {
+            this.say(e.message, true);
+        }
+    },
+
+    async logIncoming() {
+        this.logError = '';
+        try {
+            const body = await this.send(incomingUrl, 'POST', this.log);
+            this.say(body.name ? `Logged: ${body.name} called.` : 'Call logged.');
+            this.log = { phone: '', answered: true, note: '' };
+            this.logOpen = false;
+            this.load();
+        } catch (e) {
+            this.logError = e.message;
+        }
+    },
+
     async markHandled(call) {
-        await fetch(handledUrl.replace('__ID__', call.id), { method: 'PATCH', headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf } });
+        try {
+            await this.send(handledUrl.replace('__ID__', call.id), 'PATCH', {});
+        } catch (e) {
+            this.say(e.message, true);
+        }
         this.load();
     },
 
@@ -370,11 +426,15 @@ export const phoneLine = ({ enabled, number, url, store, handledUrl, csrf, opera
             voicemail: 'Voice message',
             no_answer: 'No answer',
             failed: 'You missed it',
+            dialled: 'How did it go?',
+            wrong_number: 'Wrong number',
+            call_later: 'Call again',
         }[c.status] ?? c.status;
     },
 
     statusClass(c) {
         if (c.live) return 'bg-[var(--red)]/20 text-[var(--red)]';
+        if (c.status === 'dialled') return 'bg-[var(--glow)]/25 text-white';
         if (c.needs_call_back) return 'bg-[var(--amber)]/20 text-[var(--amber)]';
         if (c.status === 'completed') return 'bg-[var(--glow)]/15 text-[var(--glow)]';
         return 'bg-white/10 text-[var(--dim)]';
