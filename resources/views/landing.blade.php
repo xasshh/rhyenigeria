@@ -261,11 +261,12 @@
                             </a>
                         @endif
                     </div>
-                    {{-- X turns each quote into the real post when its script loads; until then (or if X is blocked) the card below links to it. --}}
-                    <div class="x-feed mt-8 columns-1 gap-6 md:columns-2 lg:columns-3" data-x-feed>
+                    {{-- X turns each quote into the real post when its script loads; until then (or if X is blocked) the card links to it.
+                         Posts past the first six wait, hidden and unconverted, until "Load more". --}}
+                    <div class="mt-8 grid items-start gap-6 md:grid-cols-2 lg:grid-cols-3" data-x-feed>
                         @foreach ($xPosts as $post)
-                            <div class="mb-6 break-inside-avoid">
-                                <blockquote class="twitter-tweet" data-dnt="true" data-conversation="none" data-align="center">
+                            <div class="min-w-0" data-x-item @if ($loop->index >= \App\Models\XPost::HOMEPAGE_COUNT) hidden @endif>
+                                <blockquote @class(['twitter-tweet' => $loop->index < \App\Models\XPost::HOMEPAGE_COUNT, 'm-0!']) data-dnt="true" data-conversation="none" data-align="center">
                                     <a href="{{ $post->url() }}" class="flex items-center justify-between gap-3 rounded-2xl border border-line bg-surface p-5 font-body text-ink hover:border-action">
                                         <span>
                                             <span class="block font-bold">Post by {{ '@'.$post->handle }}</span>
@@ -277,16 +278,35 @@
                             </div>
                         @endforeach
                     </div>
+                    @if ($xPosts->count() > \App\Models\XPost::HOMEPAGE_COUNT)
+                        <div class="mt-8 flex justify-center">
+                            <button type="button" class="btn-ghost px-8" data-x-more>Load more posts</button>
+                        </div>
+                    @endif
                 </div>
             </section>
             <script>
-                // Load X's embed script only when the section is about to scroll into view.
                 (() => {
                     const feed = document.querySelector('[data-x-feed]');
+                    const more = document.querySelector('[data-x-more]');
+                    const step = {{ \App\Models\XPost::HOMEPAGE_COUNT }};
+                    // Load X's embed script only when the section is about to scroll into view.
                     const load = () => { const s = document.createElement('script'); s.src = 'https://platform.twitter.com/widgets.js'; s.async = true; s.charset = 'utf-8'; document.body.appendChild(s); };
-                    if (!('IntersectionObserver' in window)) { load(); return; }
-                    const io = new IntersectionObserver((entries) => { if (entries.some((e) => e.isIntersecting)) { io.disconnect(); load(); } }, { rootMargin: '600px' });
-                    io.observe(feed);
+                    if ('IntersectionObserver' in window) {
+                        const io = new IntersectionObserver((entries) => { if (entries.some((e) => e.isIntersecting)) { io.disconnect(); load(); } }, { rootMargin: '600px' });
+                        io.observe(feed);
+                    } else {
+                        load();
+                    }
+                    more?.addEventListener('click', () => {
+                        const next = [...feed.querySelectorAll('[data-x-item][hidden]')].slice(0, step);
+                        next.forEach((item) => {
+                            item.hidden = false;
+                            item.querySelector('blockquote').classList.add('twitter-tweet');
+                            window.twttr?.widgets?.load(item);
+                        });
+                        if (!feed.querySelector('[data-x-item][hidden]')) more.remove();
+                    });
                 })();
             </script>
         @endif

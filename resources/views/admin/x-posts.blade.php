@@ -2,7 +2,7 @@
     <div>
         <h1 class="font-display text-2xl font-bold tracking-tight sm:text-[28px]">X posts</h1>
         <p class="mt-1 text-sm text-neutral-600">
-            Posts from X (Twitter) shown on <a href="{{ route('home') }}#x-feed" class="font-medium text-brand underline" target="_blank">the homepage</a>, newest first. The latest {{ \App\Models\XPost::HOMEPAGE_COUNT }} are shown.
+            Posts from X (Twitter) shown on <a href="{{ route('home') }}#x-feed" class="font-medium text-brand underline" target="_blank">the homepage</a>, newest first: {{ \App\Models\XPost::HOMEPAGE_COUNT }} at a time, with a Load more button for the rest (up to {{ \App\Models\XPost::HOMEPAGE_MAX }}).
             @if ($handle) Follow <a href="https://x.com/{{ $handle }}" target="_blank" rel="noopener" class="font-medium text-brand underline">{{ '@'.$handle }}</a> and add each new post here. @endif
         </p>
     </div>
@@ -27,7 +27,7 @@
                         {{ '@'.$post->handle }}
                         @if ($post->posted_at) · posted {{ $post->posted_at->setTimezone(config('membership.timezone'))->format('j M Y, g:ia') }} @endif
                         @if ($post->addedBy) · added by {{ $post->addedBy->name }} @endif
-                        @if ($loop->index < \App\Models\XPost::HOMEPAGE_COUNT && $posts->currentPage() === 1) · <span class="font-semibold text-brand">on the homepage</span> @endif
+                        @if ($posts->firstItem() + $loop->index <= \App\Models\XPost::HOMEPAGE_MAX) · <span class="font-semibold text-brand">on the homepage</span> @endif
                     </p>
                 </div>
                 <form method="POST" action="{{ route('admin.x-posts.destroy', $post) }}">

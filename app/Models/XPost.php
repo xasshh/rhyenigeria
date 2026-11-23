@@ -17,7 +17,11 @@ class XPost extends Model
     /** @use HasFactory<XPostFactory> */
     use HasFactory;
 
+    /** Posts in the homepage grid at first, and how many more each "Load more" shows. */
     public const HOMEPAGE_COUNT = 6;
+
+    /** The most the homepage holds; older ones stay on X. */
+    public const HOMEPAGE_MAX = 60;
 
     /** x.com/<handle>/status/<id> (also twitter.com, mobile., with or without query strings). */
     public const LINK_PATTERN = '#^https?://(?:www\.|mobile\.)?(?:x|twitter)\.com/([A-Za-z0-9_]{1,15})/status(?:es)?/(\d{5,25})(?:[/?\#].*)?$#i';

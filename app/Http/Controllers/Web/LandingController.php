@@ -29,7 +29,7 @@ class LandingController extends Controller
             'slides' => $eventSlides->concat(HeroSlide::query()->shown()->get())->values(),
             'electionDate' => $electionDate,
             'electionLabel' => Setting::electionLabel(),
-            'xPosts' => XPost::query()->newest()->limit(XPost::HOMEPAGE_COUNT)->get(),
+            'xPosts' => XPost::query()->newest()->limit(XPost::HOMEPAGE_MAX)->get(),
             'xHandle' => Admin\XPostController::siteHandle(),
             'countdown' => Countdown::parts($electionDate),
             // A single-state site maps that state's LGAs instead of the country.

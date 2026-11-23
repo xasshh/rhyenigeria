@@ -55,4 +55,16 @@ class XPostTest extends TestCase
         $this->get('/admin/x-posts')->assertRedirect(route('login'));
         $this->actingAs(User::factory()->coordinator()->create())->post('/admin/x-posts', ['link' => 'https://x.com/a/status/1860000000000000000'])->assertForbidden();
     }
+
+    public function test_the_homepage_shows_six_posts_then_load_more(): void
+    {
+        XPost::factory()->count(6)->create();
+        $this->get('/')->assertOk()->assertDontSee('Load more posts');
+
+        XPost::factory()->count(3)->create();
+        $html = $this->get('/')->assertOk()->assertSee('Load more posts')->getContent();
+        $this->assertSame(9, substr_count($html, 'class="min-w-0" data-x-item'));
+        $this->assertSame(3, preg_match_all('/data-x-item\s+hidden/', $html));
+        $this->assertSame(6, substr_count($html, 'class="twitter-tweet'));
+    }
 }
