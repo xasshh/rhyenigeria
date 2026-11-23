@@ -68,7 +68,9 @@ $brands = [
         // Small line above the name in the header (only when the logo has no name in it).
         'name_kicker' => 'Contact and Mobilisation Directorate',
         'icons' => 'icons/us27',
-        'partner_logos' => [],
+        'partner_logos' => [
+            ['images/logo-apc.png', 200, 182, 'APC', 'h-[38px] sm:h-[52px]'],
+        ],
         'state_code' => 'KD',
         'canvasser' => 'polling unit agent',
         'canvassers' => 'polling unit agents',
