@@ -81,7 +81,8 @@ class CommandCentreController extends Controller
                 'wards' => $wardsCovered, 'wards_total' => $wardsTotal,
                 'areas' => $areas->where('total', '>', 0)->count(),
             ],
-            'trend' => $directory->perDay($members, 30),
+            // Bulk-imported lists would swamp the day they were loaded; the trend shows people signing up.
+            'trend' => $directory->perDay((clone $members)->whereNull('mp.import_source'), 30),
             'field' => $field['totals'],
             'activities' => collect($field['activities'])->take(10)->map(fn ($a) => [
                 'who' => $a['canvasser'], 'label' => $a['label'], 'ward' => $a['ward'], 'time' => $a['time'],

@@ -116,8 +116,14 @@ export default (config) => ({
         const pts = values.map((v, i) => [(i / (values.length - 1)) * 600, 170 - (v / max) * 150]);
         const line = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
         this.trendArea = `${line} L600,180 L0,180 Z`;
-        // Redraw the line only when it changed, so the draw-in effect plays for new data.
-        if (line !== this.trendLine) { this.trendLine = ''; this.$nextTick(() => { this.trendLine = line; }); }
+        // Replay the draw-in effect only when the line changed.
+        if (line !== this.trendLine) {
+            this.trendLine = line;
+            const el = this.$refs.trendPath;
+            el.style.animation = 'none';
+            void el.getBoundingClientRect();
+            el.style.animation = '';
+        }
     },
 
     hover(event) {

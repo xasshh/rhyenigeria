@@ -158,7 +158,7 @@
                                     <svg viewBox="0 0 100 100" class="h-24 w-24 shrink-0 -rotate-90" aria-hidden="true">
                                         <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(46,229,157,.12)" stroke-width="9" />
                                         <circle cx="50" cy="50" r="42" fill="none" stroke="#2ee59d" stroke-width="9" stroke-linecap="round" pathLength="100"
-                                                :stroke-dasharray="`${ratio('{{ $have }}', '{{ $of }}') * 100} 100`" style="transition: stroke-dasharray 1.6s ease; filter: drop-shadow(0 0 6px rgba(46,229,157,.8))" />
+                                                :stroke-dasharray="`${ratio('{{ $have }}', '{{ $of }}') * 100} 100`" :stroke-opacity="ratio('{{ $have }}', '{{ $of }}') > 0 ? 1 : 0" style="transition: stroke-dasharray 1.6s ease; filter: drop-shadow(0 0 6px rgba(46,229,157,.8))" />
                                     </svg>
                                     <div>
                                         <p class="cc-mono cc-value text-3xl font-bold text-white" x-text="Math.round(ratio('{{ $have }}', '{{ $of }}') * 100) + '%'">—</p>
@@ -189,7 +189,7 @@
                 {{-- Trend --}}
                 <section class="cc-panel p-5 xl:col-span-7" aria-label="Sign-ups, last 30 days">
                     <div class="flex items-center justify-between">
-                        <p class="cc-label">Momentum · sign-ups, last 30 days</p>
+                        <p class="cc-label">Momentum · sign-ups, last 30 days <span class="normal-case tracking-normal">(bulk imports excluded)</span></p>
                         <p class="cc-mono text-xs text-[var(--dim)]">Peak <span class="text-white" x-text="fmt(trendMax)"></span>/day</p>
                     </div>
                     <svg viewBox="0 0 600 180" preserveAspectRatio="none" class="mt-4 h-48 w-full" aria-hidden="true">
@@ -198,7 +198,7 @@
                         </defs>
                         @foreach ([45, 90, 135] as $y)<line x1="0" x2="600" y1="{{ $y }}" y2="{{ $y }}" stroke="rgba(46,229,157,.10)" stroke-dasharray="4 6" />@endforeach
                         <path :d="trendArea" fill="url(#cc-fill)" />
-                        <template x-if="trendLine"><path :d="trendLine" class="cc-line" fill="none" stroke="#2ee59d" stroke-width="2.5" vector-effect="non-scaling-stroke" /></template>
+                        <path x-ref="trendPath" :d="trendLine || 'M0,170'" class="cc-line" pathLength="2000" fill="none" stroke="#2ee59d" stroke-width="2.5" vector-effect="non-scaling-stroke" />
                     </svg>
                     <div class="cc-mono mt-1 flex justify-between text-[11px] text-[var(--dim)]"><span x-text="data.trend?.labels?.[0]"></span><span>Today</span></div>
                 </section>
