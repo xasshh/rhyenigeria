@@ -16,4 +16,7 @@
                 <a href="{{ route('privacy') }}" class="hover:text-white">Privacy notice</a>
             </nav>
         </div>
+        <div class="border-t border-white/10">
+            <p class="mx-auto max-w-[1440px] px-5 py-4 font-body text-[13px] text-white/60 sm:px-8 lg:px-[66px]">&copy; 2026 iCONECT. Website developed by iCONECT.</p>
+        </div>
     </footer>
