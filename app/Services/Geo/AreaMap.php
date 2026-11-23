@@ -33,12 +33,38 @@ class AreaMap
         ));
     }
 
+    /**
+     * The same areas as GeoJSON for the command centre's live map: boundaries, plus a label
+     * point inside each one. A state's LGAs, or every state when no state is given.
+     *
+     * @return array{areas: array<string, mixed>, labels: array<string, mixed>}
+     */
+    public function geojson(?State $state): array
+    {
+        $key = $state ? "area-map:geojson:lgas:{$state->id}:v1" : 'area-map:geojson:states:v1';
+
+        return Cache::remember($key, self::CACHE_SECONDS, function () use ($state) {
+            $rows = $state
+                ? DB::select('SELECT id, name, ST_AsGeoJSON(ST_SimplifyPreserveTopology(boundary, 0.001), 5) AS geo, ST_AsGeoJSON(ST_PointOnSurface(boundary), 5) AS label FROM lgas WHERE state_id = ? AND boundary IS NOT NULL ORDER BY name', [$state->id])
+                : DB::select('SELECT id, name, ST_AsGeoJSON(ST_SimplifyPreserveTopology(boundary, 0.005), 4) AS geo, ST_AsGeoJSON(ST_PointOnSurface(boundary), 4) AS label FROM states WHERE boundary IS NOT NULL ORDER BY name');
+
+            $feature = fn ($row, string $geometry) => ['type' => 'Feature', 'id' => (int) $row->id, 'geometry' => json_decode($geometry, true), 'properties' => ['id' => (int) $row->id, 'name' => $row->name]];
+
+            return [
+                'areas' => ['type' => 'FeatureCollection', 'features' => array_map(fn ($r) => $feature($r, $r->geo), $rows)],
+                'labels' => ['type' => 'FeatureCollection', 'features' => array_map(fn ($r) => $feature($r, $r->label), $rows)],
+            ];
+        });
+    }
+
     /** Clear the cached shapes, for example after `geo:import` loads new boundaries. */
     public static function forget(): void
     {
         Cache::forget('area-map:states:v1');
+        Cache::forget('area-map:geojson:states:v1');
         foreach (State::pluck('id') as $id) {
             Cache::forget("area-map:lgas:{$id}:v1");
+            Cache::forget("area-map:geojson:lgas:{$id}:v1");
         }
     }
 

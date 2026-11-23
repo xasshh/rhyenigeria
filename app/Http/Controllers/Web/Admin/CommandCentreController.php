@@ -11,6 +11,7 @@ use App\Models\Ward;
 use App\Services\Audit\AuditLogger;
 use App\Services\Geo\AreaMap;
 use App\Services\Membership\MemberDirectory;
+use App\Services\News\NewsWire;
 use App\Services\Tracking\LiveOperations;
 use App\Services\Voice\AfricasTalkingVoice;
 use App\Support\NigerianPhone;
@@ -57,6 +58,14 @@ class CommandCentreController extends Controller
             'config' => [
                 'feed' => route('admin.command.feed'),
                 'contacts' => route('admin.command.contacts'),
+                'geo' => route('admin.command.geo'),
+                'live' => route('admin.command.live'),
+                'area' => route('admin.command.area', '__ID__'),
+                'news' => route('admin.command.news'),
+                'pins' => route('admin.members.map.pins', array_filter(['state_id' => $state?->id])),
+                'style' => config('tracking.command_map_style_url'),
+                'areaNoun' => $state ? 'LGA' : 'state',
+                'areaList' => collect($shapes['areas'])->map(fn ($a) => ['id' => $a['id'], 'name' => $a['name']])->values(),
                 'refreshSeconds' => 30,
                 'operator' => $request->user()->name,
                 'scope' => $state ? $state->name.' State' : 'Nigeria',
@@ -110,6 +119,61 @@ class CommandCentreController extends Controller
             'recent' => $recent,
             'generated_at' => now()->toIso8601ZuluString(),
         ])->setPrivate();
+    }
+
+    /** The live map's shapes: one feature per {$areaNoun}, plus label points. */
+    public function geo(AreaMap $map): JsonResponse
+    {
+        return response()->json($map->geojson($this->state()))->setPrivate()->setMaxAge(3600);
+    }
+
+    /** Where the field team is right now, and what they reported today, for the live map. */
+    public function live(Request $request, LiveOperations $live): JsonResponse
+    {
+        $feed = $live->feed($request->user(), $this->state()?->id);
+        $placed = array_values(array_filter($feed['canvassers'], fn ($c) => $c['position'] !== null));
+        $phones = User::whereIn('id', array_column($placed, 'id'))->pluck('phone', 'id');
+
+        return response()->json([
+            'agents' => array_map(fn ($c) => [
+                'id' => $c['id'], 'name' => $c['name'], 'area' => $c['seen_ward'] ?? $c['area'], 'status' => $c['status'],
+                'lat' => $c['position']['latitude'], 'lng' => $c['position']['longitude'],
+                'seen' => $c['seen_minutes_ago'], 'households' => $c['households'], 'activities' => $c['activities'],
+                'phone' => $phones[$c['id']] ?? null,
+            ], $placed),
+            'activities' => array_map(fn ($a) => [
+                'id' => $a['id'], 'who' => $a['canvasser'], 'kind' => $a['kind'], 'label' => $a['label'], 'ward' => $a['ward'],
+                'households' => $a['households'], 'time' => $a['time'], 'lat' => $a['latitude'], 'lng' => $a['longitude'],
+            ], $feed['activities']),
+            'totals' => $feed['totals'],
+        ])->setPrivate();
+    }
+
+    /** One {$areaNoun} up close: its wards (or, nationally, a state's LGAs) by members. */
+    public function area(Request $request, int $id, MemberDirectory $directory): JsonResponse
+    {
+        $state = $this->state();
+        $members = $directory->query($request->user());
+        if ($state) {
+            abort_unless(DB::table('lgas')->where('id', $id)->where('state_id', $state->id)->exists(), 404);
+            $parts = $directory->byArea((clone $members)->where('users.lga_id', $id), 'ward');
+        } else {
+            abort_unless(State::whereKey($id)->exists(), 404);
+            $parts = $directory->byArea((clone $members)->where('users.state_id', $id), 'lga');
+        }
+
+        return response()->json([
+            'noun' => $state ? 'ward' : 'LGA',
+            'parts' => $parts->filter(fn ($p) => $p->id !== null)->take(12)->map(fn ($p) => [
+                'name' => $p->name, 'total' => (int) $p->total, 'today' => (int) $p->today, 'agents' => (int) $p->canvassers,
+            ])->values(),
+            'unplaced' => (int) ($parts->firstWhere('id', null)?->total ?? 0),
+        ])->setPrivate();
+    }
+
+    public function news(NewsWire $wire): JsonResponse
+    {
+        return response()->json($wire->headlines())->setPrivate();
     }
 
     /** Who each kind of contact is; the SQL decides the kind once so filters, counts and labels agree. */

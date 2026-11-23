@@ -4,7 +4,7 @@
     $scope = $state ? $state->name.' State' : 'Nigeria';
     $agents = site_term('Canvassers');
 @endphp
-<x-layouts.base title="Election Command Centre" noindex>
+<x-layouts.base title="Election Command Centre" noindex :map="true">
     <x-slot:head>
         <meta name="theme-color" content="#030b07">
         <style>
@@ -24,9 +24,21 @@
             .cc-live { box-shadow: 0 0 0 0 rgba(255,77,79,.7); animation: cc-pulse 1.6s infinite; }
             .cc-radar { background: conic-gradient(from 0deg, rgba(46,229,157,.0) 0deg, rgba(46,229,157,.0) 300deg, rgba(46,229,157,.28) 360deg); border-radius: 9999px; animation: cc-spin 6s linear infinite; mix-blend-mode: screen; }
             .cc-rings { background: repeating-radial-gradient(circle, transparent 0 58px, rgba(46,229,157,.10) 58px 59px); border-radius: 9999px; }
-            .cc-map path { transition: fill .8s ease, filter .3s ease; cursor: crosshair; }
-            .cc-map path:hover { filter: brightness(1.5) drop-shadow(0 0 6px rgba(46,229,157,.9)); }
-            .cc-map path.cc-hot { animation: cc-hot 2.2s ease-in-out infinite; }
+            .cc-hud { background: linear-gradient(to bottom, rgba(3,11,7,.85), transparent); }
+            .cc-crosshair::before, .cc-crosshair::after { content: ''; position: absolute; background: rgba(46,229,157,.35); }
+            .cc-crosshair::before { left: 50%; top: calc(50% - 14px); width: 1px; height: 28px; }
+            .cc-crosshair::after { top: 50%; left: calc(50% - 14px); height: 1px; width: 28px; }
+            .cc .maplibregl-ctrl-group { background: rgba(4,20,12,.9); border: 1px solid var(--line); }
+            .cc .maplibregl-ctrl-group button + button { border-top-color: var(--line); }
+            .cc .maplibregl-ctrl-group button .maplibregl-ctrl-icon { filter: invert(1) hue-rotate(180deg) brightness(1.3); }
+            .cc .maplibregl-ctrl-attrib { background: rgba(3,11,7,.7); color: var(--dim); }
+            .cc .maplibregl-ctrl-attrib a { color: var(--dim); }
+            .cc-pop .maplibregl-popup-content { background: #04140c; color: var(--text); border: 1px solid rgba(46,229,157,.6); border-radius: 10px; box-shadow: 0 0 24px rgba(46,229,157,.3); font-family: ui-monospace, Menlo, monospace; font-size: 12px; padding: 10px 12px; }
+            .cc-pop .maplibregl-popup-tip { border-top-color: #04140c !important; border-bottom-color: #04140c !important; }
+            .cc-pop .maplibregl-popup-close-button { color: var(--dim); font-size: 16px; }
+            .cc-pop-title { color: #fff; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
+            .cc-pop-sub { color: var(--dim); margin-top: 2px; }
+            .cc-pop-btn { display: inline-block; margin-top: 8px; background: var(--glow); color: #04140c; font-weight: 700; padding: 4px 10px; border-radius: 6px; }
             .cc-line { stroke-dasharray: 2000; stroke-dashoffset: 2000; animation: cc-draw 2.4s ease-out forwards; filter: drop-shadow(0 0 6px rgba(46,229,157,.8)); }
             .cc-ticker { animation: cc-marquee 60s linear infinite; }
             .cc-caret::after { content: '▌'; animation: cc-blink 1s steps(1) infinite; color: var(--glow); margin-left: 2px; }
@@ -36,7 +48,6 @@
             @keyframes cc-bump { 0% { color: #fff; text-shadow: 0 0 28px rgba(46,229,157,1); } 100% { } }
             @keyframes cc-pulse { 70% { box-shadow: 0 0 0 10px rgba(255,77,79,0); } 100% { box-shadow: 0 0 0 0 rgba(255,77,79,0); } }
             @keyframes cc-spin { to { transform: rotate(360deg); } }
-            @keyframes cc-hot { 50% { filter: brightness(1.6) drop-shadow(0 0 8px rgba(242,183,5,.9)); } }
             @keyframes cc-draw { to { stroke-dashoffset: 0; } }
             @keyframes cc-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
             @keyframes cc-blink { 50% { opacity: 0; } }
@@ -110,30 +121,68 @@
             </section>
 
             <div class="mt-3 grid gap-3 xl:grid-cols-12">
-                {{-- Situation map --}}
-                <section class="cc-panel p-4 xl:col-span-7" aria-label="Situation map">
-                    <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-                        <p class="cc-label">Situation map · members by {{ $areaNoun }}</p>
-                        <p class="cc-mono text-xs text-[var(--amber)]"><span class="mr-1 inline-block h-2 w-2 rounded-full bg-[var(--amber)]"></span>Sign-ups today</p>
-                    </div>
-                    <div class="relative mx-auto mt-3 aspect-square max-h-[620px] w-full" x-ref="mapFrame" @pointerleave="tip = null">
-                        <div class="cc-rings pointer-events-none absolute inset-[4%]" aria-hidden="true"></div>
-                        <div class="cc-radar pointer-events-none absolute inset-[4%]" aria-hidden="true"></div>
-                        <svg viewBox="{{ $map['viewBox'] }}" class="cc-map relative h-full w-full" x-ref="map" role="img" aria-label="Map of members by {{ $areaNoun }}" @pointermove="hover($event)" @click="pickArea($event)">
-                            @foreach ($map['areas'] as $area)
-                                <path d="{{ $area['d'] }}" data-id="{{ $area['id'] }}" data-name="{{ $area['name'] }}" fill="#0b1f15" stroke="#2ee59d" stroke-opacity=".35" stroke-width="1" vector-effect="non-scaling-stroke" />
-                            @endforeach
-                        </svg>
-                        <div x-show="tip" x-cloak class="cc-mono pointer-events-none absolute z-10 w-max -translate-x-1/2 rounded-lg border border-[var(--glow)]/60 bg-[#04140c]/95 px-3 py-2 text-xs shadow-[0_0_20px_rgba(46,229,157,.35)]"
-                             :style="tip && `left:${tip.x}px; top:${tip.y}px; transform: translate(-50%, calc(-100% - 12px))`">
-                            <p class="text-sm font-bold tracking-wider text-white uppercase" x-text="tip?.name"></p>
-                            <p class="text-[var(--glow)]"><span x-text="fmt(tip?.total ?? 0)"></span> members</p>
-                            <p class="text-[var(--amber)]">+<span x-text="fmt(tip?.today ?? 0)"></span> today · <span x-text="fmt(tip?.agents ?? 0)"></span> agents</p>
+                {{-- Live situation map --}}
+                <section class="cc-panel overflow-hidden p-0 xl:col-span-7" aria-label="Live situation map" x-data="commandMap(@js($config))">
+                    <div class="relative h-[440px] sm:h-[560px] xl:h-full xl:min-h-[640px]">
+                        <div class="absolute inset-0"><div x-ref="canvas" class="h-full w-full"></div></div>
+                        <div class="cc-radar pointer-events-none absolute top-1/2 left-1/2 aspect-square w-[130%] -translate-x-1/2 -translate-y-1/2 opacity-40" aria-hidden="true"></div>
+                        <div class="cc-crosshair pointer-events-none absolute inset-0" aria-hidden="true"></div>
+
+                        {{-- HUD --}}
+                        <div class="cc-hud pointer-events-none absolute inset-x-0 top-0 p-3 sm:p-4">
+                            <p class="cc-label flex items-center gap-2"><span class="cc-live inline-block h-2 w-2 rounded-full bg-[var(--red)]"></span>Live situation map · {{ $config['scope'] }}</p>
+                            <p class="cc-mono mt-1 hidden text-[10px] tracking-wider text-[var(--glow)] sm:block" x-text="hud"></p>
+                            <p class="cc-mono mt-1 text-[11px] text-[var(--dim)]">
+                                <span class="text-[var(--glow)]" x-text="fmt(live.agents.length)"></span> agents placed ·
+                                <span class="text-[var(--glow)]" x-text="fmt(live.totals?.active ?? 0)"></span> active ·
+                                <span class="text-[var(--glow)]" x-text="fmt(live.activities.length)"></span> reports today ·
+                                <span class="text-[var(--glow)]" x-text="fmt(heatCount)"></span> members pinned
+                            </p>
                         </div>
-                    </div>
-                    <div x-show="picked" x-cloak class="cc-mono mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--glow)]/40 bg-[var(--glow)]/5 px-3 py-2 text-xs">
-                        <span><span class="font-bold text-white uppercase" x-text="picked?.name"></span> · <span x-text="fmt(picked?.total ?? 0)"></span> members · +<span x-text="fmt(picked?.today ?? 0)"></span> today</span>
-                        <button type="button" @click="callArea()" class="rounded-md bg-[var(--glow)] px-3 py-1.5 font-bold text-[#04140c]">☎ Call people here</button>
+
+                        {{-- Layer switches --}}
+                        <div class="cc-mono absolute bottom-3 left-3 right-14 flex flex-wrap gap-1.5 text-[10px] sm:text-[11px]" x-show="ready" x-cloak>
+                            <button type="button" @click="toggle3d()" :class="three ? 'border-[var(--glow)] bg-[var(--glow)]/20 text-white' : 'border-[var(--line)] bg-black/60 text-[var(--dim)]'" class="rounded-full border px-2.5 py-1 tracking-wider uppercase backdrop-blur">3D</button>
+                            <button type="button" @click="togglePatrol()" :class="patrol ? 'border-[var(--red)] bg-[var(--red)]/25 text-white' : 'border-[var(--line)] bg-black/60 text-[var(--dim)]'" class="rounded-full border px-2.5 py-1 tracking-wider uppercase backdrop-blur"><span x-text="patrol ? '■ Patrolling' : '▶ Patrol'"></span></button>
+                            @foreach (['agents' => ['Agents', '#2ee59d'], 'reports' => ['Field reports', '#fb923c'], 'heat' => ['Members heat', '#22d3ee'], 'pulses' => ['Sign-ups today', '#f2b705']] as $layer => [$label, $dot])
+                                <button type="button" @click="toggleLayer('{{ $layer }}')" :class="layers.{{ $layer }} ? 'border-[var(--glow)]/60 bg-black/60 text-white' : 'border-[var(--line)] bg-black/60 text-[var(--dim)] line-through'" class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 tracking-wider uppercase backdrop-blur"><span class="h-2 w-2 rounded-full" style="background: {{ $dot }}"></span>{{ $label }}</button>
+                            @endforeach
+                            <button type="button" @click="home()" class="rounded-full border border-[var(--line)] bg-black/60 px-2.5 py-1 tracking-wider text-[var(--dim)] uppercase backdrop-blur hover:text-white">⌂ Reset</button>
+                        </div>
+
+                        {{-- Hover read-out --}}
+                        <div x-show="tip && !picked" x-cloak class="cc-mono pointer-events-none absolute z-10 w-max rounded-lg border border-[var(--glow)]/60 bg-[#04140c]/95 px-3 py-2 text-xs shadow-[0_0_20px_rgba(46,229,157,.35)]"
+                             :style="tip && `left:${tip.x}px; top:${tip.y}px; transform: translate(-50%, calc(-100% - 14px))`">
+                            <p class="text-sm font-bold tracking-wider text-white uppercase" x-text="tip?.name"></p>
+                            <p class="text-[var(--glow)]"><span x-text="fmt(tip?.total)"></span> members</p>
+                            <p class="text-[var(--amber)]">+<span x-text="fmt(tip?.today)"></span> today · <span x-text="fmt(tip?.agents)"></span> agents</p>
+                        </div>
+
+                        {{-- A picked area up close --}}
+                        <div x-show="picked" x-cloak x-transition class="cc-mono absolute top-16 right-3 left-3 z-10 max-h-[70%] overflow-y-auto rounded-xl border border-[var(--glow)]/60 bg-[#04140c]/92 p-4 text-xs shadow-[0_0_30px_rgba(46,229,157,.3)] backdrop-blur sm:left-auto sm:w-72 sm:top-20">
+                            <div class="flex items-start justify-between gap-2">
+                                <div>
+                                    <p class="cc-label">Target · {{ $areaNoun }}</p>
+                                    <p class="text-base font-bold tracking-wider text-white uppercase" x-text="picked?.name"></p>
+                                </div>
+                                <button type="button" @click="stopPatrol(); closePick()" class="text-lg leading-none text-[var(--dim)] hover:text-white" aria-label="Close">×</button>
+                            </div>
+                            <div class="mt-3 grid grid-cols-3 gap-2 text-center">
+                                <div class="rounded-md border border-[var(--line)] py-1.5"><p class="text-base font-bold text-white" x-text="fmt(picked?.total)"></p><p class="text-[9px] text-[var(--dim)] uppercase">Members</p></div>
+                                <div class="rounded-md border border-[var(--line)] py-1.5"><p class="text-base font-bold text-[var(--amber)]" x-text="'+' + fmt(picked?.today)"></p><p class="text-[9px] text-[var(--dim)] uppercase">Today</p></div>
+                                <div class="rounded-md border border-[var(--line)] py-1.5"><p class="text-base font-bold text-[var(--glow)]" x-text="fmt(picked?.agents)"></p><p class="text-[9px] text-[var(--dim)] uppercase">Agents</p></div>
+                            </div>
+                            <p class="cc-label mt-3" x-show="detail?.parts?.length">Top <span x-text="detail?.noun + 's'"></span></p>
+                            <ul class="mt-1.5 space-y-1">
+                                <template x-for="w in detail?.parts ?? []" :key="w.name">
+                                    <li class="flex items-center justify-between gap-2"><span class="truncate uppercase" x-text="w.name"></span><span class="shrink-0"><span class="text-white" x-text="fmt(w.total)"></span><span class="ml-1 text-[var(--amber)]" x-show="w.today" x-text="'+' + w.today"></span></span></li>
+                                </template>
+                            </ul>
+                            <p x-show="picked && !detail" class="mt-2 text-[var(--dim)]">Scanning…</p>
+                            <button type="button" @click="callHere()" class="mt-3 w-full rounded-md bg-[var(--glow)] px-3 py-2 font-bold text-[#04140c]">☎ Call people here</button>
+                        </div>
+
+                        <div x-show="failed" x-cloak class="cc-mono absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-[var(--dim)]">The live map could not start on this device (it needs WebGL). The figures on the rest of the page are still live.</div>
                     </div>
                 </section>
 
@@ -188,6 +237,36 @@
                     </section>
                 </div>
             </div>
+
+            {{-- News wire --}}
+            <section class="cc-panel mt-3 p-5" aria-label="News wire" x-data="newsWire(@js(['url' => $config['news']]))">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <p class="cc-label flex items-center gap-2"><span class="cc-live inline-block h-2 w-2 rounded-full bg-[var(--red)]"></span>News wire · elections and {{ $state?->name ?? 'Nigeria' }}</p>
+                    <div class="cc-mono -mx-5 flex gap-1.5 overflow-x-auto px-5 text-[11px] sm:mx-0 sm:px-0">
+                        <button type="button" @click="topic = ''" :class="topic === '' ? 'border-[var(--glow)] bg-[var(--glow)]/15 text-white' : 'border-[var(--line)] text-[var(--dim)]'" class="shrink-0 rounded-full border px-2.5 py-1 tracking-wider uppercase">All</button>
+                        <template x-for="t in topics" :key="t">
+                            <button type="button" @click="topic = t" :class="topic === t ? 'border-[var(--glow)] bg-[var(--glow)]/15 text-white' : 'border-[var(--line)] text-[var(--dim)]'" class="shrink-0 rounded-full border px-2.5 py-1 tracking-wider whitespace-nowrap uppercase" x-text="t"></button>
+                        </template>
+                    </div>
+                </div>
+                <ul class="mt-3 grid gap-x-6 lg:grid-cols-2">
+                    <template x-for="n in shown" :key="n.url">
+                        <li class="border-b border-[var(--line)] py-2.5">
+                            <a :href="n.url" target="_blank" rel="noopener noreferrer" class="group block">
+                                <p class="cc-mono flex flex-wrap items-center gap-2 text-[10px] tracking-wider uppercase">
+                                    <span x-show="breaking(n)" class="rounded bg-[var(--red)] px-1.5 py-0.5 font-bold text-white">Breaking</span>
+                                    <span x-show="n.fresh" class="rounded bg-[var(--glow)] px-1.5 py-0.5 font-bold text-[#04140c]">New</span>
+                                    <span class="text-[var(--glow)]" x-text="n.source"></span>
+                                    <span class="text-[var(--dim)]" x-text="ago(n) + ' · ' + n.topic"></span>
+                                </p>
+                                <p class="mt-1 text-sm leading-snug text-white group-hover:text-[var(--glow)] group-hover:underline" x-text="n.title"></p>
+                            </a>
+                        </li>
+                    </template>
+                </ul>
+                <p x-show="!items.length" class="cc-mono mt-3 text-sm text-[var(--dim)]">Gathering headlines…</p>
+                <p class="cc-mono mt-3 text-[10px] text-[var(--dim)]">Headlines from Google News searches, checked every 10 minutes. Stories open on the publisher's site.</p>
+            </section>
 
             <div class="mt-3 grid gap-3 xl:grid-cols-12">
                 {{-- Trend --}}

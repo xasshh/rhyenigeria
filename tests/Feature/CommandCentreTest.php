@@ -7,6 +7,8 @@ use App\Enums\Role;
 use App\Models\MemberProfile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class CommandCentreTest extends TestCase
@@ -89,5 +91,51 @@ class CommandCentreTest extends TestCase
     public function test_only_super_admins_can_use_the_call_desk(): void
     {
         $this->actingAs(User::factory()->coordinator()->create())->getJson('/admin/command/contacts')->assertForbidden();
+    }
+
+    public function test_the_live_map_endpoints_answer_super_admins_only(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        $this->actingAs($admin)->getJson('/admin/command/geo')->assertOk()->assertJsonStructure(['areas' => ['type', 'features'], 'labels' => ['type', 'features']]);
+        $this->actingAs($admin)->getJson('/admin/command/live')->assertOk()->assertJsonStructure(['agents', 'activities', 'totals']);
+
+        $coordinator = User::factory()->coordinator()->create();
+        foreach (['/admin/command/geo', '/admin/command/live', '/admin/command/news', '/admin/command/area/1'] as $url) {
+            $this->actingAs($coordinator)->getJson($url)->assertForbidden();
+        }
+    }
+
+    public function test_the_area_close_up_lists_what_is_inside_it(): void
+    {
+        $geo = $this->geography();
+        $admin = User::factory()->superAdmin()->create();
+        MemberProfile::factory()->for(User::factory()->member($geo['wardA'])->create())->create();
+
+        $this->actingAs($admin)->getJson('/admin/command/area/'.$geo['state']->id)
+            ->assertOk()->assertJsonPath('noun', 'LGA')->assertJsonPath('parts.0.name', $geo['lga']->name)->assertJsonPath('parts.0.total', 1);
+        $this->actingAs($admin)->getJson('/admin/command/area/999999')->assertNotFound();
+    }
+
+    public function test_the_news_wire_merges_searches_newest_first_and_survives_an_outage(): void
+    {
+        Cache::flush();
+        $rss = fn (array $items) => '<?xml version="1.0"?><rss><channel>'.implode('', array_map(fn ($i) => "<item><title>{$i[0]} - {$i[1]}</title><link>https://news.google.com/rss/articles/{$i[2]}</link><pubDate>{$i[3]}</pubDate><source url=\"https://x.example\">{$i[1]}</source></item>", $items)).'</channel></rss>';
+        Http::fake(['news.google.com/*' => Http::sequence()
+            ->push($rss([['INEC extends voter registration', 'Daily Trust', 'a', now()->subHour()->toRfc2822String()], ['Older story', 'Punch', 'b', now()->subDays(2)->toRfc2822String()]]))
+            ->push($rss([['INEC extends voter registration', 'Daily Trust', 'a2', now()->subHour()->toRfc2822String()], ['Kaduna news', 'Channels', 'c', now()->subMinutes(10)->toRfc2822String()]]))
+            ->whenEmpty(Http::response('', 500))]);
+        config(['site.news_topics' => ['One' => 'q1', 'Two' => 'q2']]);
+        $admin = User::factory()->superAdmin()->create();
+
+        $this->actingAs($admin)->getJson('/admin/command/news')->assertOk()
+            ->assertJsonCount(3, 'items')
+            ->assertJsonPath('items.0.title', 'Kaduna news')
+            ->assertJsonPath('items.0.source', 'Channels')
+            ->assertJsonPath('items.1.title', 'INEC extends voter registration');
+
+        // Later, Google is down: the last list is still served.
+        $this->travel(15)->minutes();
+        $this->actingAs($admin)->getJson('/admin/command/news')->assertOk()->assertJsonCount(3, 'items');
     }
 }

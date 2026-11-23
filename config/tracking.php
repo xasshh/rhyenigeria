@@ -19,6 +19,8 @@ return [
 
     // Street map behind the coordinators' live map (MapLibre style URL). OpenFreeMap: OpenStreetMap data, no key.
     'map_style_url' => env('MAP_STYLE_URL', 'https://tiles.openfreemap.org/styles/liberty'),
+    // The command centre's dark live map.
+    'command_map_style_url' => env('COMMAND_MAP_STYLE_URL', 'https://tiles.openfreemap.org/styles/dark'),
 
     // Longest window a single trail request may cover.
     'max_trail_window_days' => 31,

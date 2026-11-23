@@ -51,6 +51,12 @@ $brands = [
         'stats' => [['5,000+', 'youth empowered'], ['275+', 'events organised'], ['36+', 'states nationwide']],
         // The three badges around the President's picture on the main homepage slide.
         'hero_badges' => ['5,000+ youth empowered', '275+ Events Organized', '36+ Nationwide'],
+        // The command centre's news wire: label => Google News search.
+        'news_topics' => [
+            'Elections' => 'INEC OR "2027 election" OR "voter registration" when:7d',
+            'Tinubu 2027' => 'Tinubu 2027 OR "Renewed Hope" when:7d',
+            'APC' => 'APC Nigeria primaries OR campaign when:7d',
+        ],
     ],
 
     // ubasani2027.com: Kaduna State governorship campaign.
@@ -91,6 +97,12 @@ $brands = [
         'sample_card' => ['Aisha Bello', 'Kaduna', 'Kaduna North · Ward 04'],
         'stats' => [['23', 'local governments'], ['255', 'wards'], ['8,000+', 'polling units']],
         'hero_badges' => ['23 local governments', '255 wards', '8,000+ polling units'],
+        'news_topics' => [
+            'Kaduna' => 'Kaduna when:3d',
+            'Uba Sani' => '"Uba Sani" when:7d',
+            'Elections' => 'Kaduna (INEC OR election OR "voter registration" OR PVC) when:7d',
+            'National' => 'INEC OR "2027 election" when:3d',
+        ],
         // Homepage slides for a new database (php artisan site:seed-slides). Admins edit them afterwards.
         'slides' => [
             [

@@ -154,6 +154,10 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('command', [CommandCentreController::class, 'index'])->name('command');
         Route::get('command/feed', [CommandCentreController::class, 'feed'])->middleware('throttle:30,1')->name('command.feed');
         Route::get('command/contacts', [CommandCentreController::class, 'contacts'])->middleware('throttle:60,1')->name('command.contacts');
+        Route::get('command/geo', [CommandCentreController::class, 'geo'])->name('command.geo');
+        Route::get('command/live', [CommandCentreController::class, 'live'])->middleware('throttle:60,1')->name('command.live');
+        Route::get('command/area/{id}', [CommandCentreController::class, 'area'])->whereNumber('id')->middleware('throttle:60,1')->name('command.area');
+        Route::get('command/news', [CommandCentreController::class, 'news'])->middleware('throttle:30,1')->name('command.news');
         Route::get('command/calls', [PhoneLineController::class, 'index'])->middleware('throttle:120,1')->name('command.calls');
         Route::post('command/calls', [PhoneLineController::class, 'store'])->middleware('throttle:20,1')->name('command.calls.store');
         Route::post('command/calls/direct', [PhoneLineController::class, 'direct'])->middleware('throttle:60,1')->name('command.calls.direct');

@@ -2,17 +2,13 @@
 // eases the numbers towards their new values and paints the situation map.
 const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const KEYS = ['total', 'today', 'week', 'agents', 'on_shift', 'pvc'];
-// Dark-to-glow scale for the map; areas with no members stay near-black.
-const SCALE = ['#0f3a26', '#13573a', '#178050', '#1fb26c', '#2ee59d'];
-const EMPTY = '#0b1f15';
 
 export default (config) => ({
     data: {},
     display: Object.fromEntries(KEYS.map((k) => [k, 0])),
     bumped: {},
     coverage: { wards: 0, wards_total: 0, areas: 0, areas_total: config.areasTotal },
-    tip: null,
-    picked: null,
+    headlines: [],
     clock: '',
     syncedAt: null,
     syncedAgo: null,
@@ -51,6 +47,7 @@ export default (config) => ({
 
         this.load();
         setInterval(() => { if (!document.hidden) this.load(); }, config.refreshSeconds * 1000);
+        window.addEventListener('cc-news', (e) => { this.headlines = e.detail; });
     },
 
     async load() {
@@ -72,7 +69,8 @@ export default (config) => ({
         const targets = { total: s.total, today: s.today, week: s.week, agents: s.canvassers_approved, on_shift: data.field.on_shift, pvc: s.pvc };
         KEYS.forEach((k) => this.animate(k, targets[k] ?? 0));
         this.coverage = { ...data.coverage, areas_total: config.areasTotal };
-        this.paintMap();
+        // The live map (its own component) colours the areas from the same figures.
+        window.dispatchEvent(new CustomEvent('cc-feed', { detail: data.areas ?? [] }));
         this.drawTrend();
         this.first = false;
     },
@@ -96,19 +94,6 @@ export default (config) => ({
         requestAnimationFrame(step);
     },
 
-    paintMap() {
-        const byId = Object.fromEntries((this.data.areas ?? []).map((a) => [String(a.id), a]));
-        const max = Math.max(1, ...(this.data.areas ?? []).map((a) => a.total));
-        this.$refs.map.querySelectorAll('path[data-id]').forEach((path) => {
-            const area = byId[path.dataset.id];
-            const total = area?.total ?? 0;
-            // Square root so a few big areas do not wash every other one out.
-            const level = total ? Math.min(SCALE.length - 1, Math.floor(Math.sqrt(total / max) * SCALE.length)) : -1;
-            path.setAttribute('fill', level < 0 ? EMPTY : SCALE[level]);
-            path.classList.toggle('cc-hot', (area?.today ?? 0) > 0);
-        });
-    },
-
     drawTrend() {
         const values = this.data.trend?.values ?? [];
         if (values.length < 2) return;
@@ -127,30 +112,6 @@ export default (config) => ({
         }
     },
 
-    hover(event) {
-        const path = event.target.closest?.('path[data-id]');
-        if (!path) { this.tip = null; return; }
-        const area = (this.data.areas ?? []).find((a) => String(a.id) === path.dataset.id);
-        const box = this.$refs.mapFrame.getBoundingClientRect();
-        this.tip = { name: path.dataset.name, total: area?.total ?? 0, today: area?.today ?? 0, agents: area?.agents ?? 0, x: event.clientX - box.left, y: event.clientY - box.top };
-    },
-
-    // Tapping an area selects it (its figures show under the map); clicking with a mouse goes straight to its people.
-    pickArea(event) {
-        const path = event.target.closest?.('path[data-id]');
-        if (!path) return;
-        const area = (this.data.areas ?? []).find((a) => String(a.id) === path.dataset.id);
-        this.picked = { id: path.dataset.id, name: path.dataset.name, total: area?.total ?? 0, today: area?.today ?? 0 };
-        if (event.pointerType === 'mouse') this.callArea();
-        else this.hover(event);
-    },
-
-    callArea() {
-        if (!this.picked) return;
-        window.dispatchEvent(new CustomEvent('cc-lga', { detail: { id: this.picked.id, name: this.picked.name } }));
-        document.getElementById('call-desk')?.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth' });
-    },
-
     get strongest() {
         return [...(this.data.areas ?? [])].sort((a, b) => b.total - a.total).slice(0, 8);
     },
@@ -161,8 +122,8 @@ export default (config) => ({
 
     // The areas with the fewest members, including any with none at all.
     get weakest() {
-        const known = new Map((this.data.areas ?? []).map((a) => [String(a.id), a]));
-        const all = [...this.$refs.map.querySelectorAll('path[data-id]')].map((p) => known.get(p.dataset.id) ?? { id: Number(p.dataset.id), name: p.dataset.name, total: 0 });
+        const known = new Map((this.data.areas ?? []).map((a) => [a.id, a]));
+        const all = config.areaList.map((a) => known.get(a.id) ?? { ...a, total: 0 });
         return all.sort((a, b) => a.total - b.total).slice(0, 5);
     },
 
@@ -177,6 +138,7 @@ export default (config) => ({
         ];
         const top = this.strongest[0];
         if (top) items.push(`Leading: ${top.name.toUpperCase()} with ${this.fmt(top.total)} members`);
+        this.headlines.slice(0, 3).forEach((h) => items.unshift(`${h.source ? h.source.toUpperCase() + ': ' : ''}${h.title}`));
         (this.data.recent ?? []).slice(0, 4).forEach((r) => items.push(`${r.time} · ${r.name} joined${r.place ? ` in ${r.place}` : ''}`));
         return items;
     },
@@ -197,6 +159,60 @@ export default (config) => ({
     fullscreen() {
         if (document.fullscreenElement) document.exitFullscreen();
         else document.documentElement.requestFullscreen?.();
+    },
+});
+
+/**
+ * The news wire: election and local headlines gathered on the server from news searches,
+ * refreshed every few minutes. Stories under an hour old are marked breaking, and the
+ * newest reach the FLASH ticker.
+ */
+export const newsWire = ({ url }) => ({
+    items: [],
+    topic: '',
+    fetchedAt: null,
+    seen: new Set(),
+    first: true,
+    now: Date.now(),
+
+    init() {
+        this.load();
+        setInterval(() => document.hidden || this.load(), 300000);
+        setInterval(() => { this.now = Date.now(); }, 60000);
+    },
+
+    async load() {
+        try {
+            const res = await fetch(url, { headers: { Accept: 'application/json' } });
+            if (!res.ok) return;
+            const body = await res.json();
+            this.items = body.items.map((i) => ({ ...i, fresh: !this.first && !this.seen.has(i.url) }));
+            body.items.forEach((i) => this.seen.add(i.url));
+            this.fetchedAt = body.fetched_at;
+            this.first = false;
+            window.dispatchEvent(new CustomEvent('cc-news', { detail: this.items.filter((i) => this.breaking(i)) }));
+        } catch {
+            /* keep what is shown */
+        }
+    },
+
+    get topics() {
+        return [...new Set(this.items.map((i) => i.topic))];
+    },
+
+    get shown() {
+        return this.items.filter((i) => !this.topic || i.topic === this.topic).slice(0, 18);
+    },
+
+    breaking(item) {
+        return this.now - Date.parse(item.published_at) < 3600 * 1000;
+    },
+
+    ago(item) {
+        const m = Math.max(0, Math.round((this.now - Date.parse(item.published_at)) / 60000));
+        if (m < 60) return `${m}m ago`;
+        if (m < 1440) return `${Math.round(m / 60)}h ago`;
+        return `${Math.round(m / 1440)}d ago`;
     },
 });
 
