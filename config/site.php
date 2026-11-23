@@ -65,6 +65,8 @@ $brands = [
         // Header logo height classes when the default (40px / 56px) is too small for the logo.
         'logo_size' => 'h-[52px] sm:h-[72px]',
         'logo_has_name' => false,
+        // The logo sticker on homepage pictures: always top-left, and larger so the faces show.
+        'logo_tag' => ['position' => '-top-4 -left-3 sm:-left-5', 'size' => 'h-14 sm:h-20'],
         // Small line above the name in the header (only when the logo has no name in it).
         'name_kicker' => 'Contact and Mobilisation Directorate',
         'icons' => 'icons/us27',
