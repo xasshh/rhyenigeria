@@ -134,6 +134,14 @@ export default (config) => ({
         this.tip = { name: path.dataset.name, total: area?.total ?? 0, today: area?.today ?? 0, agents: area?.agents ?? 0, x: event.clientX - box.left, y: event.clientY - box.top };
     },
 
+    // Clicking an area on the map shows its people in the call desk.
+    pickArea(event) {
+        const path = event.target.closest?.('path[data-id]');
+        if (!path) return;
+        window.dispatchEvent(new CustomEvent('cc-lga', { detail: { id: path.dataset.id, name: path.dataset.name } }));
+        document.getElementById('call-desk')?.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth' });
+    },
+
     get strongest() {
         return [...(this.data.areas ?? [])].sort((a, b) => b.total - a.total).slice(0, 8);
     },
@@ -180,5 +188,70 @@ export default (config) => ({
     fullscreen() {
         if (document.fullscreenElement) document.exitFullscreen();
         else document.documentElement.requestFullscreen?.();
+    },
+});
+
+// The call desk: searchable directory of coordinators, agents and members with call and WhatsApp links.
+export const callDesk = ({ url, kinds }) => ({
+    kinds,
+    kind: '',
+    lga: '',
+    q: '',
+    page: 1,
+    contacts: [],
+    counts: {},
+    total: 0,
+    hasMore: false,
+    loading: false,
+    error: false,
+    request: 0,
+
+    init() {
+        this.search();
+    },
+
+    setKind(kind) {
+        this.kind = kind;
+        this.search();
+    },
+
+    pickLga({ id }) {
+        this.lga = String(id);
+        this.search();
+    },
+
+    search() {
+        this.page = 1;
+        this.fetch(false);
+    },
+
+    more() {
+        this.page += 1;
+        this.fetch(true);
+    },
+
+    async fetch(append) {
+        const ticket = ++this.request;
+        this.loading = true;
+        this.error = false;
+        const params = new URLSearchParams(Object.entries({ kind: this.kind, lga_id: this.lga, q: this.q.trim(), page: this.page }).filter(([, v]) => v !== '' && v !== null));
+        try {
+            const res = await fetch(`${url}?${params}`, { headers: { Accept: 'application/json' } });
+            if (!res.ok) throw new Error(String(res.status));
+            const body = await res.json();
+            if (ticket !== this.request) return;
+            this.contacts = append ? [...this.contacts, ...body.contacts] : body.contacts;
+            this.counts = body.counts;
+            this.total = body.total;
+            this.hasMore = body.has_more;
+        } catch {
+            if (ticket === this.request) this.error = true;
+        } finally {
+            if (ticket === this.request) this.loading = false;
+        }
+    },
+
+    fmt(n) {
+        return new Intl.NumberFormat('en-NG').format(n ?? 0);
     },
 });

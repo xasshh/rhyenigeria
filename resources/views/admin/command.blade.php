@@ -119,7 +119,7 @@
                     <div class="relative mx-auto mt-3 aspect-square max-h-[620px] w-full" x-ref="mapFrame" @pointerleave="tip = null">
                         <div class="cc-rings pointer-events-none absolute inset-[4%]" aria-hidden="true"></div>
                         <div class="cc-radar pointer-events-none absolute inset-[4%]" aria-hidden="true"></div>
-                        <svg viewBox="{{ $map['viewBox'] }}" class="cc-map relative h-full w-full" x-ref="map" role="img" aria-label="Map of members by {{ $areaNoun }}" @pointermove="hover($event)">
+                        <svg viewBox="{{ $map['viewBox'] }}" class="cc-map relative h-full w-full" x-ref="map" role="img" aria-label="Map of members by {{ $areaNoun }}" @pointermove="hover($event)" @click="pickArea($event)">
                             @foreach ($map['areas'] as $area)
                                 <path d="{{ $area['d'] }}" data-id="{{ $area['id'] }}" data-name="{{ $area['name'] }}" fill="#0b1f15" stroke="#2ee59d" stroke-opacity=".35" stroke-width="1" vector-effect="non-scaling-stroke" />
                             @endforeach
@@ -252,6 +252,58 @@
                     </ul>
                 </section>
             </div>
+
+            {{-- Call desk --}}
+            <section id="call-desk" class="cc-panel mt-3 scroll-mt-4 p-5" aria-label="Call desk" x-data="callDesk(@js(['url' => $config['contacts'], 'kinds' => $contactKinds]))" @cc-lga.window="pickLga($event.detail)">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <p class="cc-label">☎ Call desk · direct line to the field</p>
+                        <p class="mt-1 text-xs text-[var(--dim)]">Tap <span class="text-[var(--glow)]">Call</span> to ring from this device (on a computer it opens your phone or calling app) or <span class="text-[var(--glow)]">WhatsApp</span> to message. Click an {{ $areaNoun }} on the map to see its people.</p>
+                    </div>
+                    <div class="cc-mono flex flex-wrap items-center gap-2 text-sm">
+                        @if ($state)
+                            <select x-model="lga" @change="search()" class="rounded-lg border border-[var(--line)] bg-black/40 px-3 py-2 text-[var(--text)] focus:border-[var(--glow)] focus:outline-none" aria-label="LGA">
+                                <option value="">All LGAs</option>
+                                @foreach (collect($map['areas'])->sortBy('name') as $area)
+                                    <option value="{{ $area['id'] }}">{{ $area['name'] }}</option>
+                                @endforeach
+                            </select>
+                        @endif
+                        <input type="search" x-model="q" @input.debounce.350ms="search()" placeholder="Name, phone or member no." class="w-64 rounded-lg border border-[var(--line)] bg-black/40 px-3 py-2 text-[var(--text)] placeholder:text-[var(--dim)] focus:border-[var(--glow)] focus:outline-none" aria-label="Search contacts">
+                    </div>
+                </div>
+
+                <div class="cc-mono mt-4 flex flex-wrap gap-2 text-xs" role="tablist">
+                    <button type="button" @click="setKind('')" :class="kind === '' ? 'border-[var(--glow)] bg-[var(--glow)]/15 text-white' : 'border-[var(--line)] text-[var(--dim)] hover:text-white'" class="rounded-full border px-3 py-1.5 tracking-wider uppercase">All <span class="text-[var(--glow)]" x-text="fmt(total)"></span></button>
+                    <template x-for="[key, label] in Object.entries(kinds)" :key="key">
+                        <button type="button" @click="setKind(key)" :class="kind === key ? 'border-[var(--glow)] bg-[var(--glow)]/15 text-white' : 'border-[var(--line)] text-[var(--dim)] hover:text-white'" class="rounded-full border px-3 py-1.5 tracking-wider uppercase">
+                            <span x-text="label + 's'"></span> <span class="text-[var(--glow)]" x-text="fmt(counts[key] ?? 0)"></span>
+                        </button>
+                    </template>
+                </div>
+
+                <ul class="mt-4 grid gap-2 md:grid-cols-2 2xl:grid-cols-3">
+                    <template x-for="c in contacts" :key="c.id">
+                        <li class="flex items-center gap-3 rounded-xl border border-[var(--line)] bg-black/25 p-3 transition-colors hover:border-[var(--glow)]/60">
+                            <div class="min-w-0 flex-1">
+                                <p class="flex items-center gap-2">
+                                    <a :href="c.profile ?? '#'" :class="c.profile ? 'hover:underline' : 'pointer-events-none'" class="truncate font-semibold text-white" x-text="c.name"></a>
+                                    <span x-show="c.on_shift" class="cc-mono inline-flex shrink-0 items-center gap-1 rounded bg-[var(--glow)]/15 px-1.5 py-0.5 text-[10px] font-bold text-[var(--glow)]"><span class="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--glow)]"></span>ON SHIFT</span>
+                                </p>
+                                <p class="cc-mono mt-0.5 truncate text-[11px] tracking-wider uppercase" :class="c.kind === 'member' ? 'text-[var(--dim)]' : 'text-[var(--amber)]'" x-text="c.label + (c.area ? ' · ' + c.area : '')"></p>
+                                <p class="cc-mono mt-1 text-sm text-[var(--text)]" x-text="c.phone_display"></p>
+                            </div>
+                            <a :href="`tel:${c.phone}`" class="cc-mono inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-[var(--glow)] px-3 py-2 text-xs font-bold text-[#04140c] shadow-[0_0_14px_rgba(46,229,157,.45)] hover:brightness-110" :aria-label="`Call ${c.name}`">☎ Call</a>
+                            <a :href="`https://wa.me/${c.whatsapp}`" target="_blank" rel="noopener" class="cc-mono inline-flex shrink-0 items-center rounded-lg border border-[var(--glow)]/50 px-3 py-2 text-xs font-bold text-[var(--glow)] hover:bg-[var(--glow)]/10" :aria-label="`WhatsApp ${c.name}`">WhatsApp</a>
+                        </li>
+                    </template>
+                </ul>
+                <p x-show="!loading && !contacts.length" class="cc-mono mt-4 text-sm text-[var(--dim)]">No one matches.</p>
+                <p x-show="error" x-cloak class="cc-mono mt-4 text-sm text-[var(--red)]">Could not load contacts. Try again.</p>
+                <div class="mt-4 flex justify-center" x-show="hasMore">
+                    <button type="button" @click="more()" :disabled="loading" class="cc-mono rounded-full border border-[var(--line)] px-4 py-2 text-xs tracking-wider text-[var(--text)] uppercase hover:border-[var(--glow)]">Load more</button>
+                </div>
+            </section>
         </div>
 
         {{-- Ticker --}}

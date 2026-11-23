@@ -152,6 +152,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::patch('coordinators/{coordinator}', [CoordinatorController::class, 'update'])->name('coordinators.update');
         Route::get('command', [CommandCentreController::class, 'index'])->name('command');
         Route::get('command/feed', [CommandCentreController::class, 'feed'])->middleware('throttle:30,1')->name('command.feed');
+        Route::get('command/contacts', [CommandCentreController::class, 'contacts'])->middleware('throttle:60,1')->name('command.contacts');
         Route::get('admins', [AdminController::class, 'index'])->name('admins.index');
         Route::post('admins', [AdminController::class, 'store'])->name('admins.store');
         Route::patch('admins/{admin}', [AdminController::class, 'update'])->name('admins.update');

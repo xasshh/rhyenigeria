@@ -22,6 +22,8 @@ class AuditLogger
 
     public const COMMAND_CENTRE_OPENED = 'command_centre.opened';
 
+    public const COMMAND_CONTACTS_SEARCHED = 'command_centre.contacts_searched';
+
     /**
      * Record who did what, and when.
      *
