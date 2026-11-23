@@ -34,6 +34,9 @@ class AppServiceProvider extends ServiceProvider
             ->by('field-register:'.$request->user()?->id)
             ->response(fn () => response()->json(['message' => 'You have registered a lot of people in the last hour. Please wait a little before adding more.'], 429)));
 
+        // Incident reports and updates: plenty for a busy election day, not enough to flood the desk.
+        RateLimiter::for('incidents', fn (Request $request) => Limit::perHour(40)->by('incidents:'.$request->user()?->id));
+
         RateLimiter::for('geo', fn (Request $request) => Limit::perMinute((int) config('membership.geo_rate_limit_per_minute'))->by('geo:'.$request->ip()));
 
         RateLimiter::for('password-reset', fn (Request $request) => Limit::perMinute(5)->by('reset:'.$request->ip()));

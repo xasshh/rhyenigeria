@@ -90,6 +90,11 @@ class User extends Authenticatable
         return $this->hasMany(EmpowermentReport::class);
     }
 
+    public function incidents(): HasMany
+    {
+        return $this->hasMany(Incident::class);
+    }
+
     public function isMember(): bool
     {
         return $this->role === Role::Member;

@@ -35,6 +35,7 @@
             ['membership.home', 'Home', 'home', 'membership.home'],
             ['membership.card', 'My card', 'card', 'membership.card'],
             $user->isApprovedCanvasser() ? ['membership.field.show', 'Field work', 'pin', 'membership.field.*'] : null,
+            ['membership.incidents', 'Report incident', 'alert', 'membership.incidents*'],
             ['membership.events', 'Events & news', 'calendar', 'membership.events'],
             ['membership.empowerment', 'Empowerment', 'gift', 'membership.empowerment'],
             ['membership.dp', 'Campaign DP', 'camera', 'membership.dp'],

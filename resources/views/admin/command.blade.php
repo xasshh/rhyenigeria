@@ -60,7 +60,7 @@
         </style>
     </x-slot:head>
 
-    <div class="cc fixed inset-0 overflow-x-hidden overflow-y-auto" x-data="commandCentre(@js($config))">
+    <div id="cc-root" class="cc fixed inset-0 overflow-x-hidden overflow-y-auto" x-data="commandCentre(@js($config))">
         <div class="cc-grid pointer-events-none fixed inset-0" aria-hidden="true"></div>
         <div class="cc-scan pointer-events-none fixed inset-0 z-40 overflow-hidden" aria-hidden="true"></div>
 
@@ -136,7 +136,8 @@
                                 <span class="text-[var(--glow)]" x-text="fmt(live.agents.length)"></span> agents placed ·
                                 <span class="text-[var(--glow)]" x-text="fmt(live.totals?.active ?? 0)"></span> active ·
                                 <span class="text-[var(--glow)]" x-text="fmt(live.activities.length)"></span> reports today ·
-                                <span class="text-[var(--glow)]" x-text="fmt(heatCount)"></span> members pinned
+                                <span class="text-[var(--glow)]" x-text="fmt(heatCount)"></span> members pinned ·
+                                <span class="text-[var(--red)]" x-text="fmt(incidentCount)"></span> open incidents
                             </p>
                         </div>
 
@@ -144,7 +145,7 @@
                         <div class="cc-mono absolute bottom-3 left-3 right-14 flex flex-wrap gap-1.5 text-[10px] sm:text-[11px]" x-show="ready" x-cloak>
                             <button type="button" @click="toggle3d()" :class="three ? 'border-[var(--glow)] bg-[var(--glow)]/20 text-white' : 'border-[var(--line)] bg-black/60 text-[var(--dim)]'" class="rounded-full border px-2.5 py-1 tracking-wider uppercase backdrop-blur">3D</button>
                             <button type="button" @click="togglePatrol()" :class="patrol ? 'border-[var(--red)] bg-[var(--red)]/25 text-white' : 'border-[var(--line)] bg-black/60 text-[var(--dim)]'" class="rounded-full border px-2.5 py-1 tracking-wider uppercase backdrop-blur"><span x-text="patrol ? '■ Patrolling' : '▶ Patrol'"></span></button>
-                            @foreach (['agents' => ['Agents', '#2ee59d'], 'reports' => ['Field reports', '#fb923c'], 'heat' => ['Members heat', '#22d3ee'], 'pulses' => ['Sign-ups today', '#f2b705']] as $layer => [$label, $dot])
+                            @foreach (['incidents' => ['Incidents', '#ff4d4f'], 'agents' => ['Agents', '#2ee59d'], 'reports' => ['Field reports', '#fb923c'], 'heat' => ['Members heat', '#22d3ee'], 'pulses' => ['Sign-ups today', '#f2b705']] as $layer => [$label, $dot])
                                 <button type="button" @click="toggleLayer('{{ $layer }}')" :class="layers.{{ $layer }} ? 'border-[var(--glow)]/60 bg-black/60 text-white' : 'border-[var(--line)] bg-black/60 text-[var(--dim)] line-through'" class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 tracking-wider uppercase backdrop-blur"><span class="h-2 w-2 rounded-full" style="background: {{ $dot }}"></span>{{ $label }}</button>
                             @endforeach
                             <button type="button" @click="home()" class="rounded-full border border-[var(--line)] bg-black/60 px-2.5 py-1 tracking-wider text-[var(--dim)] uppercase backdrop-blur hover:text-white">⌂ Reset</button>
@@ -237,6 +238,155 @@
                     </section>
                 </div>
             </div>
+
+            {{-- Incidents reported from the field --}}
+            <section id="incidents" class="cc-panel mt-3 scroll-mt-4 p-5" aria-label="Incidents" x-data="incidentDesk(@js(['url' => $config['incidents'], 'showUrl' => $config['incidentShow'], 'csrf' => csrf_token()]))">
+                {{-- A new report just came in --}}
+                <template x-teleport="#cc-root">
+                    <div class="fixed inset-x-3 top-24 z-50 mx-auto max-w-xl space-y-2" x-show="alerts.length" x-cloak>
+                    <template x-for="a in alerts" :key="a.id">
+                        <button type="button" @click="open(a.id)" class="flex w-full items-center gap-3 rounded-xl border p-3 text-left shadow-[0_0_40px_rgba(255,77,94,.45)] backdrop-blur" :class="a.urgency === 'critical' ? 'border-[var(--red)] bg-[#1a0507]/95' : 'border-[var(--amber)] bg-[#1a1405]/95'">
+                            <span class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-lg" :class="a.urgency === 'critical' ? 'bg-[var(--red)] text-white' : 'bg-[var(--amber)] text-black'"><span class="absolute inset-0 animate-ping rounded-full opacity-50" :class="a.urgency === 'critical' ? 'bg-[var(--red)]' : 'bg-[var(--amber)]'"></span>⚠</span>
+                            <span class="min-w-0 flex-1">
+                                <span class="cc-mono block text-[11px] font-bold tracking-[0.2em] uppercase" :class="a.urgency === 'critical' ? 'text-[var(--red)]' : 'text-[var(--amber)]'" x-text="'New incident · ' + a.urgency_label"></span>
+                                <span class="block truncate font-semibold text-white" x-text="a.category_label"></span>
+                                <span class="cc-mono block truncate text-xs text-[var(--text)]" x-text="a.place + ' · ' + a.by"></span>
+                            </span>
+                            <span class="cc-mono shrink-0 text-xs text-[var(--glow)]">Open →</span>
+                        </button>
+                    </template>
+                </div>
+                </template>
+
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <p class="cc-label flex items-center gap-2"><span class="inline-block h-2 w-2 rounded-full bg-[var(--red)]" :class="counts.new ? 'cc-live' : ''"></span>⚠ Incidents · live from the field</p>
+                        <p class="cc-mono mt-1 text-xs text-[var(--dim)]"><span class="text-[var(--red)]" x-text="counts.new"></span> new · <span class="text-white" x-text="counts.open"></span> open · <span class="text-[var(--red)]" x-text="counts.critical"></span> urgent · <span x-text="counts.today"></span> reported today</p>
+                    </div>
+                    <div class="cc-mono flex gap-1.5 text-[11px]">
+                        <button type="button" @click="setFilter('open')" :class="filter === 'open' ? 'border-[var(--glow)] bg-[var(--glow)]/15 text-white' : 'border-[var(--line)] text-[var(--dim)]'" class="rounded-full border px-3 py-1 tracking-wider uppercase">Open</button>
+                        <button type="button" @click="setFilter('all')" :class="filter === 'all' ? 'border-[var(--glow)] bg-[var(--glow)]/15 text-white' : 'border-[var(--line)] text-[var(--dim)]'" class="rounded-full border px-3 py-1 tracking-wider uppercase">All</button>
+                    </div>
+                </div>
+
+                <ul class="mt-4 grid gap-2 md:grid-cols-2 2xl:grid-cols-3">
+                    <template x-for="i in incidents" :key="i.id">
+                        <li>
+                            <button type="button" @click="open(i.id)" class="w-full rounded-xl border bg-black/25 p-3 text-left transition-colors hover:border-[var(--glow)]/70" :class="i.status === 'new' ? (i.urgency === 'critical' ? 'border-[var(--red)] shadow-[0_0_18px_rgba(255,77,79,.35)]' : 'border-[var(--amber)]/70') : 'border-[var(--line)]'">
+                                <p class="cc-mono flex flex-wrap items-center gap-1.5 text-[10px] tracking-wider uppercase">
+                                    <span class="rounded px-1.5 py-0.5 font-bold" :class="urgencyClass(i)" x-text="i.urgency_label"></span>
+                                    <span x-show="i.status === 'new'" class="rounded bg-[var(--red)]/20 px-1.5 py-0.5 font-bold text-[var(--red)]">New</span>
+                                    <span x-show="i.status !== 'new'" class="text-[var(--dim)]" x-text="i.status_label"></span>
+                                    <span class="ml-auto text-[var(--dim)]" x-text="(i.day ? i.day + ' ' : '') + i.time"></span>
+                                </p>
+                                <p class="mt-1.5 font-semibold text-white" x-text="i.category_label"></p>
+                                <p class="mt-0.5 line-clamp-2 text-sm text-[var(--text)]" x-text="i.excerpt"></p>
+                                <p class="cc-mono mt-1.5 truncate text-[11px] text-[var(--dim)]">
+                                    <span x-text="i.place"></span> · <span x-text="i.by"></span>
+                                    <span x-show="i.photo_count" class="text-[var(--glow)]" x-text="' · ▣ ' + i.photo_count"></span>
+                                    <span x-show="i.update_count" x-text="' · ' + i.update_count + ' updates'"></span>
+                                </p>
+                            </button>
+                        </li>
+                    </template>
+                </ul>
+                <p x-show="!incidents.length" class="cc-mono mt-3 text-sm text-[var(--dim)]" x-text="filter === 'open' ? 'No open incidents. All quiet.' : 'No incidents reported yet.'"></p>
+                <p x-show="error" x-cloak x-text="error" class="cc-mono mt-3 text-sm text-[var(--red)]"></p>
+
+                {{-- One incident up close --}}
+                <template x-teleport="#cc-root">
+                    <div x-show="detail" x-cloak x-transition.opacity class="fixed inset-0 z-[60] overflow-y-auto bg-black/80 p-3 backdrop-blur-sm sm:p-6" @click.self="close()" role="dialog" aria-modal="true" aria-label="Incident">
+                    <template x-if="detail">
+                        <div class="cc-panel mx-auto max-w-5xl bg-[#04140c]! p-4 sm:p-6">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="min-w-0">
+                                    <p class="cc-mono flex flex-wrap items-center gap-1.5 text-[10px] tracking-wider uppercase">
+                                        <span class="rounded px-1.5 py-0.5 font-bold" :class="urgencyClass(detail)" x-text="detail.urgency_label"></span>
+                                        <span class="text-[var(--dim)]" x-text="'Incident #' + detail.id + ' · ' + detail.status_label + ' · ' + (detail.day ? detail.day + ' ' : '') + detail.time"></span>
+                                    </p>
+                                    <h3 class="mt-1.5 text-xl font-bold text-white sm:text-2xl" x-text="detail.category_label"></h3>
+                                    <p class="cc-mono mt-1 text-sm text-[var(--glow)]" x-text="detail.place"></p>
+                                </div>
+                                <button type="button" @click="close()" class="cc-mono shrink-0 rounded-lg border border-[var(--line)] px-3 py-1.5 text-sm text-[var(--dim)] hover:text-white" aria-label="Close">✕</button>
+                            </div>
+
+                            <div class="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+                                <div>
+                                    <template x-if="detail.photos.length">
+                                        <div>
+                                            <a :href="detail.photos[photo]" target="_blank" class="block overflow-hidden rounded-xl border border-[var(--line)] bg-black">
+                                                <img :src="detail.photos[photo]" alt="Photo from the scene" class="max-h-[60vh] w-full object-contain">
+                                            </a>
+                                            <div class="mt-2 flex gap-2 overflow-x-auto" x-show="detail.photos.length > 1">
+                                                <template x-for="(src, n) in detail.photos" :key="src">
+                                                    <button type="button" @click="photo = n" class="shrink-0 overflow-hidden rounded-lg border-2" :class="photo === n ? 'border-[var(--glow)]' : 'border-transparent opacity-70'"><img :src="src" alt="" class="h-16 w-16 object-cover"></button>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    <p x-show="!detail.photos.length" class="cc-mono rounded-xl border border-dashed border-[var(--line)] p-6 text-center text-sm text-[var(--dim)]">No photos sent with this report.</p>
+                                    <p class="cc-label mt-5">What the reporter says</p>
+                                    <p class="mt-2 text-[15px] leading-relaxed whitespace-pre-line text-white" x-text="detail.description"></p>
+
+                                    <p class="cc-label mt-6" x-show="detail.timeline.length">Updates</p>
+                                    <ol class="mt-2 space-y-2">
+                                        <template x-for="u in detail.timeline" :key="u.id">
+                                            <li class="rounded-lg border p-3 text-sm" :class="u.from_command ? 'border-[var(--glow)]/40 bg-[var(--glow)]/5' : 'border-[var(--amber)]/40 bg-[var(--amber)]/5'">
+                                                <p class="cc-mono text-[11px] text-[var(--dim)]" x-text="(u.from_command ? 'Command centre · ' + (u.by ?? '') : 'Reporter') + ' · ' + u.time"></p>
+                                                <p class="mt-1 whitespace-pre-line text-white" x-text="u.body"></p>
+                                                <div class="mt-2 flex flex-wrap gap-2" x-show="u.photos.length">
+                                                    <template x-for="src in u.photos" :key="src"><a :href="src" target="_blank"><img :src="src" alt="" class="h-20 w-20 rounded-lg object-cover"></a></template>
+                                                </div>
+                                            </li>
+                                        </template>
+                                    </ol>
+                                </div>
+
+                                <div class="space-y-4">
+                                    <div class="rounded-xl border border-[var(--line)] bg-black/30 p-4">
+                                        <p class="cc-label">Reported by</p>
+                                        <p class="mt-1.5 text-lg font-semibold text-white"><a :href="detail.reporter.profile ?? '#'" :class="detail.reporter.profile ? 'hover:underline' : 'pointer-events-none'" x-text="detail.reporter.name"></a></p>
+                                        <p class="cc-mono text-xs tracking-wider text-[var(--amber)] uppercase" x-text="detail.reporter.role + (detail.reporter.home ? ' · ' + detail.reporter.home : '')"></p>
+                                        <p class="cc-mono mt-1 text-sm text-[var(--text)]" x-text="detail.reporter.phone_display + (detail.reporter.member_number ? ' · ' + detail.reporter.member_number : '')"></p>
+                                        <div class="mt-3 grid grid-cols-2 gap-2" x-show="detail.reporter.phone">
+                                            <a :href="'tel:' + detail.reporter.phone" @click="callReporter()" class="cc-mono rounded-lg bg-[var(--glow)] py-2.5 text-center text-xs font-bold text-[#04140c]">☎ Call</a>
+                                            <a :href="'https://wa.me/' + detail.reporter.whatsapp" target="_blank" rel="noopener" class="cc-mono rounded-lg border border-[var(--glow)]/50 py-2.5 text-center text-xs font-bold text-[var(--glow)]">WhatsApp</a>
+                                        </div>
+                                    </div>
+
+                                    <div class="rounded-xl border border-[var(--line)] bg-black/30 p-4">
+                                        <p class="cc-label">Location</p>
+                                        <p class="cc-mono mt-1.5 text-sm text-[var(--text)]" x-text="detail.location ? detail.location.lat.toFixed(5) + ', ' + detail.location.lng.toFixed(5) + (detail.location.accuracy ? ' (±' + detail.location.accuracy + ' m)' : '') : 'No GPS location sent; shown at the middle of the LGA.'"></p>
+                                        <div class="mt-3 flex flex-wrap gap-2">
+                                            <button type="button" @click="showOnMap()" class="cc-mono rounded-lg border border-[var(--glow)]/50 px-3 py-2 text-xs font-bold text-[var(--glow)]">◎ Show on the live map</button>
+                                            <a x-show="detail.location" :href="detail.location ? `https://www.google.com/maps?q=${detail.location.lat},${detail.location.lng}` : '#'" target="_blank" rel="noopener" class="cc-mono rounded-lg border border-[var(--line)] px-3 py-2 text-xs text-[var(--dim)] hover:text-white">Directions ↗</a>
+                                        </div>
+                                    </div>
+
+                                    <div class="rounded-xl border border-[var(--line)] bg-black/30 p-4">
+                                        <p class="cc-label">Action</p>
+                                        <p class="cc-mono mt-1 text-[11px] text-[var(--dim)]" x-show="detail.handler" x-text="'Handled by ' + detail.handler"></p>
+                                        <textarea x-model="note" rows="2" maxlength="1000" placeholder="Add a note: who was sent, what was done… (the reporter sees it)" class="mt-2 w-full rounded-lg border border-[var(--line)] bg-black/40 px-3 py-2 text-sm text-[var(--text)] placeholder:text-[var(--dim)] focus:border-[var(--glow)] focus:outline-none"></textarea>
+                                        <div class="cc-mono mt-2 grid grid-cols-2 gap-2 text-xs">
+                                            <button type="button" @click="act(null)" :disabled="saving || !note.trim()" class="rounded-lg border border-[var(--glow)]/50 py-2 font-bold text-[var(--glow)] disabled:opacity-40">Add note</button>
+                                            <template x-if="['new', 'seen'].includes(detail.status)">
+                                                <button type="button" @click="act('resolved')" :disabled="saving" class="rounded-lg bg-[var(--glow)] py-2 font-bold text-[#04140c]">✓ Resolved</button>
+                                            </template>
+                                            <template x-if="['new', 'seen'].includes(detail.status)">
+                                                <button type="button" @click="act('dismissed')" :disabled="saving" class="col-span-2 rounded-lg border border-[var(--line)] py-2 text-[var(--dim)] hover:text-white">Close: not a real incident</button>
+                                            </template>
+                                            <template x-if="!['new', 'seen'].includes(detail.status)">
+                                                <button type="button" @click="act('seen')" :disabled="saving" class="rounded-lg border border-[var(--amber)]/60 py-2 font-bold text-[var(--amber)]">Reopen</button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                </template>
+            </section>
 
             {{-- News wire --}}
             <section class="cc-panel mt-3 p-5" aria-label="News wire" x-data="newsWire(@js(['url' => $config['news']]))">
@@ -339,7 +489,8 @@
             {{-- Phone line (Africa's Talking) --}}
             <section id="phone-line" class="cc-panel mt-3 scroll-mt-4 p-5" aria-label="Phone line" x-data="phoneLine(@js($line))" @cc-ring.window="ring($event.detail.payload, $event.detail.name)" @cc-dial.window="dialled($event.detail.payload)">
                 {{-- Someone is ringing the line right now --}}
-                <div x-show="live.length" x-cloak x-transition class="fixed inset-x-3 top-3 z-50 mx-auto max-w-xl rounded-xl border border-[var(--red)] bg-[#1a0507]/95 p-4 shadow-[0_0_40px_rgba(255,77,94,.45)] backdrop-blur" role="alert">
+                <template x-teleport="#cc-root">
+                    <div x-show="live.length" x-cloak x-transition class="fixed inset-x-3 top-3 z-50 mx-auto max-w-xl rounded-xl border border-[var(--red)] bg-[#1a0507]/95 p-4 shadow-[0_0_40px_rgba(255,77,94,.45)] backdrop-blur" role="alert">
                     <template x-for="c in live" :key="c.id">
                         <div class="flex items-center gap-3">
                             <span class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--red)] text-lg text-white"><span class="absolute inset-0 animate-ping rounded-full bg-[var(--red)]/60"></span>☎</span>
@@ -351,6 +502,7 @@
                         </div>
                     </template>
                 </div>
+                </template>
 
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div>

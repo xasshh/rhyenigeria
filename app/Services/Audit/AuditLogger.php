@@ -26,6 +26,10 @@ class AuditLogger
 
     public const COMMAND_CALL_PLACED = 'command_centre.call_placed';
 
+    public const INCIDENT_VIEWED = 'incident.viewed';
+
+    public const INCIDENT_UPDATED = 'incident.updated';
+
     /**
      * Record who did what, and when.
      *

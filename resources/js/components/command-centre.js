@@ -163,6 +163,141 @@ export default (config) => ({
 });
 
 /**
+ * The incident desk: reports from members and agents in the field, polled every few seconds.
+ * A new report raises an alert; opening one shows its photos, description, place, reporter
+ * (with call and WhatsApp) and the follow-ups, and lets the operator resolve or annotate it.
+ */
+export const incidentDesk = ({ url, showUrl, csrf }) => ({
+    incidents: [],
+    counts: { new: 0, open: 0, critical: 0, today: 0 },
+    filter: 'open',
+    known: null,
+    alerts: [],
+    detail: null,
+    loadingDetail: false,
+    photo: 0,
+    note: '',
+    saving: false,
+    error: '',
+
+    init() {
+        this.load();
+        setInterval(() => document.hidden || this.load(), 8000);
+        window.addEventListener('cc-incident-open', (e) => this.open(e.detail.id));
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.detail) this.close();
+        });
+    },
+
+    async load() {
+        try {
+            const res = await fetch(`${url}?filter=${this.filter}`, { headers: { Accept: 'application/json' } });
+            if (!res.ok) return;
+            const body = await res.json();
+            this.incidents = body.incidents;
+            this.counts = body.counts;
+            // Anything not seen on the previous poll is new: alert once.
+            const ids = new Set(body.incidents.map((i) => i.id));
+            if (this.known) {
+                const fresh = body.incidents.filter((i) => !this.known.has(i.id) && i.status === 'new');
+                if (fresh.length) {
+                    this.alerts = [...fresh, ...this.alerts].slice(0, 3);
+                    this.beep(fresh.some((i) => i.urgency === 'critical'));
+                }
+            }
+            this.known = new Set([...(this.known ?? []), ...ids]);
+            window.dispatchEvent(new CustomEvent('cc-incidents', { detail: body.incidents.filter((i) => ['new', 'seen'].includes(i.status)) }));
+        } catch {
+            /* next poll */
+        }
+    },
+
+    setFilter(f) {
+        this.filter = f;
+        this.load();
+    },
+
+    async open(id) {
+        this.alerts = this.alerts.filter((a) => a.id !== id);
+        this.loadingDetail = true;
+        this.error = '';
+        this.photo = 0;
+        this.note = '';
+        try {
+            const res = await fetch(showUrl.replace('__ID__', id), { headers: { Accept: 'application/json' } });
+            if (!res.ok) throw new Error();
+            this.detail = await res.json();
+            document.documentElement.style.overflow = 'hidden';
+        } catch {
+            this.error = 'Could not open that report.';
+        } finally {
+            this.loadingDetail = false;
+        }
+        this.load();
+    },
+
+    close() {
+        this.detail = null;
+        document.documentElement.style.overflow = '';
+    },
+
+    async act(status) {
+        if (!this.detail || this.saving) return;
+        this.saving = true;
+        try {
+            const res = await fetch(showUrl.replace('__ID__', this.detail.id), {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
+                body: JSON.stringify({ ...(status ? { status } : {}), ...(this.note.trim() ? { note: this.note.trim() } : {}) }),
+            });
+            if (!res.ok) throw new Error();
+            const id = this.detail.id;
+            this.note = '';
+            await this.open(id);
+        } catch {
+            this.error = 'That did not save. Try again.';
+        } finally {
+            this.saving = false;
+        }
+    },
+
+    showOnMap() {
+        if (!this.detail) return;
+        window.dispatchEvent(new CustomEvent('cc-fly', { detail: { lat: this.detail.location?.lat, lng: this.detail.location?.lng, lgaId: this.detail.lga_id } }));
+        this.close();
+        document.querySelector('[aria-label="Live situation map"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    },
+
+    callReporter() {
+        window.dispatchEvent(new CustomEvent('cc-dial', { detail: { payload: { user_id: this.detail.reporter.id } } }));
+    },
+
+    /** A short alarm tone (browsers allow it once the page has been clicked). */
+    beep(urgent) {
+        try {
+            const ctx = this._audio ?? (this._audio = new (window.AudioContext || window.webkitAudioContext)());
+            [0, 0.25, ...(urgent ? [0.5, 0.75] : [])].forEach((t) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.frequency.value = urgent ? 980 : 760;
+                gain.gain.setValueAtTime(0.0001, ctx.currentTime + t);
+                gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + t + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.18);
+                osc.connect(gain).connect(ctx.destination);
+                osc.start(ctx.currentTime + t);
+                osc.stop(ctx.currentTime + t + 0.2);
+            });
+        } catch {
+            /* no sound, the banner still shows */
+        }
+    },
+
+    urgencyClass(i) {
+        return { critical: 'bg-[var(--red)] text-white', serious: 'bg-[var(--amber)] text-[#1a1200]', minor: 'bg-white/15 text-[var(--text)]' }[i.urgency];
+    },
+});
+
+/**
  * The news wire: election and local headlines gathered on the server from news searches,
  * refreshed every few minutes. Stories under an hour old are marked breaking, and the
  * newest reach the FLASH ticker.

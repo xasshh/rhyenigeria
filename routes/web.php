@@ -6,12 +6,14 @@ use App\Http\Controllers\Web\Admin\AdminController;
 use App\Http\Controllers\Web\Admin\CommandCentreController;
 use App\Http\Controllers\Web\Admin\CoordinatorController;
 use App\Http\Controllers\Web\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Web\Admin\IncidentDeskController;
 use App\Http\Controllers\Web\Admin\PhoneLineController;
 use App\Http\Controllers\Web\Admin\SettingsController;
 use App\Http\Controllers\Web\Admin\SlideController;
 use App\Http\Controllers\Web\Admin\XPostController;
 use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\FieldWorkController;
+use App\Http\Controllers\Web\IncidentController;
 use App\Http\Controllers\Web\JoinController;
 use App\Http\Controllers\Web\LandingController;
 use App\Http\Controllers\Web\MapController;
@@ -98,6 +100,14 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('campaign-dp', 'dp')->name('dp');
     });
 
+    // Members and agents report incidents to the command centre.
+    Route::middleware(['role:member', 'member.setup'])->prefix('membership/incidents')->name('membership.incidents')->controller(IncidentController::class)->group(function () {
+        Route::get('/', 'index');
+        Route::post('/', 'store')->middleware('throttle:incidents')->name('.store');
+        Route::post('{incident}/updates', 'storeUpdate')->middleware('throttle:incidents')->name('.updates.store');
+    });
+    Route::get('incidents/photos/{photo}', [IncidentController::class, 'photo'])->name('incidents.photos.show');
+
     // Field work for approved canvassers: location sharing only between Start shift and End shift.
     Route::middleware(['role:member', 'member.setup'])->prefix('membership/field')->name('membership.field.')->controller(FieldWorkController::class)->group(function () {
         Route::get('/', 'show')->name('show');
@@ -159,6 +169,9 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('command/live', [CommandCentreController::class, 'live'])->middleware('throttle:60,1')->name('command.live');
         Route::get('command/area/{id}', [CommandCentreController::class, 'area'])->whereNumber('id')->middleware('throttle:60,1')->name('command.area');
         Route::get('command/news', [CommandCentreController::class, 'news'])->middleware('throttle:30,1')->name('command.news');
+        Route::get('command/incidents', [IncidentDeskController::class, 'index'])->middleware('throttle:120,1')->name('command.incidents');
+        Route::get('command/incidents/{incident}', [IncidentDeskController::class, 'show'])->name('command.incidents.show');
+        Route::patch('command/incidents/{incident}', [IncidentDeskController::class, 'update'])->name('command.incidents.update');
         Route::get('command/calls', [PhoneLineController::class, 'index'])->middleware('throttle:120,1')->name('command.calls');
         Route::post('command/calls', [PhoneLineController::class, 'store'])->middleware('throttle:20,1')->name('command.calls.store');
         Route::post('command/calls/direct', [PhoneLineController::class, 'direct'])->middleware('throttle:60,1')->name('command.calls.direct');

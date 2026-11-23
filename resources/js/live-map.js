@@ -299,7 +299,8 @@ Alpine.data('commandMap', (config) => {
         failed: false,
         three: true,
         patrol: false,
-        layers: { heat: true, agents: true, reports: true, pulses: true },
+        layers: { heat: true, agents: true, reports: true, pulses: true, incidents: true },
+        incidentCount: 0,
         live: { agents: [], activities: [], totals: {} },
         heatCount: 0,
         tip: null,
@@ -328,6 +329,8 @@ Alpine.data('commandMap', (config) => {
             ['dragstart', 'wheel', 'touchstart'].forEach((e) => map.on(e, (ev) => ev.originalEvent && this.stopPatrol()));
 
             window.addEventListener('cc-feed', (e) => this.paint(e.detail));
+            window.addEventListener('cc-incidents', (e) => this.plotIncidents(e.detail));
+            window.addEventListener('cc-fly', (e) => this.flyTo(e.detail));
             map.on('load', async () => {
                 try {
                     const res = await fetch(config.geo, { headers: { Accept: 'application/json' } });
@@ -341,6 +344,7 @@ Alpine.data('commandMap', (config) => {
                 this.home(false);
                 this.ready = true;
                 this.paint(window.__ccAreas ?? []);
+                this.plotIncidents(window.__ccIncidents ?? []);
                 this.loadLive();
                 this.loadPins();
                 setInterval(() => document.hidden || this.loadLive(), 15000);
@@ -357,18 +361,20 @@ Alpine.data('commandMap', (config) => {
             map.addSource('heat', { type: 'geojson', data: empty });
             map.addSource('reports', { type: 'geojson', data: empty });
             map.addSource('agents', { type: 'geojson', data: empty });
+            map.addSource('incidents', { type: 'geojson', data: empty });
 
             const fillColour = ['case', ['>', ['coalesce', ['feature-state', 'total'], 0], 0],
                 ['interpolate', ['linear'], ['coalesce', ['feature-state', 'level'], 0], 0, CC_SCALE[0], 0.25, CC_SCALE[1], 0.5, CC_SCALE[2], 0.75, CC_SCALE[3], 1, CC_SCALE[4]],
                 '#0b1f15'];
-            map.addLayer({ id: 'areas-flat', type: 'fill', source: 'areas', layout: { visibility: 'none' }, paint: { 'fill-color': fillColour, 'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.95, 0.72] } });
+            map.addLayer({ id: 'areas-flat', type: 'fill', source: 'areas', layout: { visibility: 'none' }, paint: { 'fill-color': fillColour, 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 9, ['case', ['boolean', ['feature-state', 'hover'], false], 0.95, 0.72], 12.5, 0.1] } });
             map.addLayer({
                 id: 'areas-3d', type: 'fill-extrusion', source: 'areas',
                 paint: {
                     'fill-extrusion-color': ['case', ['boolean', ['feature-state', 'hover'], false], '#7dffc8', fillColour],
                     'fill-extrusion-height': ['*', ['coalesce', ['feature-state', 'level'], 0], maxHeight],
                     'fill-extrusion-base': 0,
-                    'fill-extrusion-opacity': 0.82,
+                    // Fade the blocks out close up, so the streets underneath show.
+                    'fill-extrusion-opacity': ['interpolate', ['linear'], ['zoom'], 9, 0.82, 12.5, 0.12],
                     'fill-extrusion-height-transition': { duration: 1200 },
                 },
             });
@@ -390,6 +396,8 @@ Alpine.data('commandMap', (config) => {
                 paint: { 'text-color': '#bff7dc', 'text-halo-color': '#020805', 'text-halo-width': 1.6 },
             });
             map.addLayer({ id: 'reports', type: 'circle', source: 'reports', paint: { 'circle-radius': 5, 'circle-color': ['match', ['get', 'kind'], ...Object.entries(CC_KIND).flat(), '#94a3b8'], 'circle-stroke-width': 1.5, 'circle-stroke-color': '#020805' } });
+            map.addLayer({ id: 'incidents-halo', type: 'circle', source: 'incidents', paint: { 'circle-radius': 18, 'circle-color': '#ff4d4f', 'circle-opacity': 0.3, 'circle-blur': 0.3 } });
+            map.addLayer({ id: 'incidents', type: 'circle', source: 'incidents', paint: { 'circle-radius': ['case', ['==', ['get', 'urgency'], 'critical'], 9, 7], 'circle-color': ['match', ['get', 'urgency'], 'critical', '#ff4d4f', 'serious', '#f2b705', '#cbd5e1'], 'circle-stroke-width': 2.5, 'circle-stroke-color': '#fff' } });
             map.addLayer({ id: 'agents-halo', type: 'circle', source: 'agents', paint: { 'circle-radius': 14, 'circle-color': ['get', 'colour'], 'circle-opacity': 0.25, 'circle-blur': 0.4 } });
             map.addLayer({ id: 'agents', type: 'circle', source: 'agents', paint: { 'circle-radius': 6.5, 'circle-color': ['get', 'colour'], 'circle-stroke-width': 2, 'circle-stroke-color': '#020805' } });
 
@@ -397,13 +405,14 @@ Alpine.data('commandMap', (config) => {
                 map.on('mousemove', id, (e) => this.hover(e));
                 map.on('mouseleave', id, () => this.unhover());
                 map.on('click', id, (e) => {
-                    if (map.queryRenderedFeatures(e.point, { layers: ['agents', 'reports'] }).length) return;
+                    if (map.queryRenderedFeatures(e.point, { layers: ['agents', 'reports', 'incidents'] }).length) return;
                     this.pick(e.features[0].id);
                 });
             });
             map.on('click', 'agents', (e) => this.agentPopup(e.features[0]));
+            map.on('click', 'incidents', (e) => window.dispatchEvent(new CustomEvent('cc-incident-open', { detail: { id: e.features[0].properties.id } })));
             map.on('click', 'reports', (e) => this.reportPopup(e.features[0]));
-            ['agents', 'reports'].forEach((id) => {
+            ['agents', 'reports', 'incidents'].forEach((id) => {
                 map.on('mouseenter', id, () => (map.getCanvas().style.cursor = 'pointer'));
                 map.on('mouseleave', id, () => (map.getCanvas().style.cursor = ''));
             });
@@ -462,9 +471,35 @@ Alpine.data('commandMap', (config) => {
                 map.setPaintProperty('pulses', 'circle-radius', 6 + phase * 26);
                 map.setPaintProperty('pulses', 'circle-stroke-opacity', 0.9 * (1 - phase));
                 const beat = (Math.sin(t / 380) + 1) / 2;
+                map.setPaintProperty('incidents-halo', 'circle-radius', 10 + phase * 22);
+                map.setPaintProperty('incidents-halo', 'circle-opacity', 0.45 * (1 - phase));
                 map.setPaintProperty('agents-halo', 'circle-radius', ['case', ['==', ['get', 'status'], 'active'], 10 + beat * 10, 10]);
             };
             frame = requestAnimationFrame(step);
+        },
+
+        /** Open incidents: where the reporter was, or (without a location) near the middle of their LGA. */
+        plotIncidents(list) {
+            window.__ccIncidents = list;
+            if (!this.ready) return;
+            this.incidentCount = list.length;
+            const features = list.map((i) => {
+                if (i.lat !== null && i.lng !== null) return point(i.lng, i.lat, i);
+                const label = geo.labels.features.find((f) => f.id === i.lga_id);
+                if (!label) return null;
+                const [lng, lat] = label.geometry.coordinates;
+                const jitter = ((i.id * 9301 + 49297) % 233280) / 233280 - 0.5;
+                return point(lng + jitter * 0.06, lat + (jitter * 7919 % 1) * 0.04, i);
+            }).filter(Boolean);
+            map.getSource('incidents').setData({ type: 'FeatureCollection', features });
+        },
+
+        flyTo({ lat, lng, lgaId }) {
+            if (lat !== undefined && lat !== null) {
+                map.flyTo({ center: [lng, lat], zoom: 14, pitch: 55, duration: 2200 });
+            } else if (lgaId) {
+                this.pick(lgaId);
+            }
         },
 
         hover(e) {
@@ -526,7 +561,7 @@ Alpine.data('commandMap', (config) => {
 
         toggleLayer(name) {
             this.layers[name] = !this.layers[name];
-            const ids = { heat: ['heat'], agents: ['agents', 'agents-halo'], reports: ['reports'], pulses: ['pulses', 'pulses-core'] }[name];
+            const ids = { incidents: ['incidents', 'incidents-halo'], heat: ['heat'], agents: ['agents', 'agents-halo'], reports: ['reports'], pulses: ['pulses', 'pulses-core'] }[name];
             ids.forEach((id) => map.setLayoutProperty(id, 'visibility', this.layers[name] ? 'visible' : 'none'));
         },
 

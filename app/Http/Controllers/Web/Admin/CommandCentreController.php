@@ -62,6 +62,8 @@ class CommandCentreController extends Controller
                 'live' => route('admin.command.live'),
                 'area' => route('admin.command.area', '__ID__'),
                 'news' => route('admin.command.news'),
+                'incidents' => route('admin.command.incidents'),
+                'incidentShow' => route('admin.command.incidents.show', '__ID__'),
                 'pins' => route('admin.members.map.pins', array_filter(['state_id' => $state?->id])),
                 'style' => config('tracking.command_map_style_url'),
                 'areaNoun' => $state ? 'LGA' : 'state',
