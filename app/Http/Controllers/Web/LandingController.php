@@ -8,6 +8,7 @@ use App\Models\HeroSlide;
 use App\Models\NewsPost;
 use App\Models\Setting;
 use App\Models\State;
+use App\Models\XPost;
 use App\Services\Geo\AreaMap;
 use App\Support\Countdown;
 use Illuminate\View\View;
@@ -28,6 +29,8 @@ class LandingController extends Controller
             'slides' => $eventSlides->concat(HeroSlide::query()->shown()->get())->values(),
             'electionDate' => $electionDate,
             'electionLabel' => Setting::electionLabel(),
+            'xPosts' => XPost::query()->newest()->limit(XPost::HOMEPAGE_COUNT)->get(),
+            'xHandle' => Admin\XPostController::siteHandle(),
             'countdown' => Countdown::parts($electionDate),
             // A single-state site maps that state's LGAs instead of the country.
             'siteState' => $siteState = site_state_code() ? State::where('code', site_state_code())->first() : null,

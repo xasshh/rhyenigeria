@@ -9,6 +9,7 @@ use App\Http\Controllers\Web\Admin\DashboardController as AdminDashboardControll
 use App\Http\Controllers\Web\Admin\PhoneLineController;
 use App\Http\Controllers\Web\Admin\SettingsController;
 use App\Http\Controllers\Web\Admin\SlideController;
+use App\Http\Controllers\Web\Admin\XPostController;
 use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\FieldWorkController;
 use App\Http\Controllers\Web\JoinController;
@@ -171,6 +172,9 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
         Route::resource('slides', SlideController::class)->except('show');
         Route::patch('slides/{slide}/toggle', [SlideController::class, 'toggle'])->name('slides.toggle');
+        Route::get('x-posts', [XPostController::class, 'index'])->name('x-posts.index');
+        Route::post('x-posts', [XPostController::class, 'store'])->name('x-posts.store');
+        Route::delete('x-posts/{xPost}', [XPostController::class, 'destroy'])->name('x-posts.destroy');
         $staffRoutes();
     });
 });

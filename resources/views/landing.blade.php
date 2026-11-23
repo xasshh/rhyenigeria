@@ -246,6 +246,51 @@
             </section>
         @endif
 
+        {{-- Latest posts on X, chosen by admins (Admin → X posts) --}}
+        @if ($xPosts->isNotEmpty())
+            <section id="x-feed" class="scroll-mt-20 bg-white" aria-labelledby="x-feed-title">
+                <div class="mx-auto max-w-[1440px] px-5 py-16 sm:px-8 lg:px-[66px] lg:py-20">
+                    <div class="flex flex-wrap items-end justify-between gap-4">
+                        <div>
+                            <p class="eyebrow text-action">On X</p>
+                            <h2 id="x-feed-title" class="mt-3 font-headline text-[36px] leading-[1.05] font-extrabold tracking-[-0.03em] text-forest sm:text-[48px]">Latest updates</h2>
+                        </div>
+                        @if ($xHandle)
+                            <a href="https://x.com/{{ $xHandle }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 rounded-full bg-ink px-5 py-3 font-body text-[15px] font-bold text-white hover:bg-black">
+                                <x-icon name="x-logo" class="h-4 w-4" /> Follow {{ '@'.$xHandle }}
+                            </a>
+                        @endif
+                    </div>
+                    {{-- X turns each quote into the real post when its script loads; until then (or if X is blocked) the card below links to it. --}}
+                    <div class="x-feed mt-8 columns-1 gap-6 md:columns-2 lg:columns-3" data-x-feed>
+                        @foreach ($xPosts as $post)
+                            <div class="mb-6 break-inside-avoid">
+                                <blockquote class="twitter-tweet" data-dnt="true" data-conversation="none" data-align="center">
+                                    <a href="{{ $post->url() }}" class="flex items-center justify-between gap-3 rounded-2xl border border-line bg-surface p-5 font-body text-ink hover:border-action">
+                                        <span>
+                                            <span class="block font-bold">Post by {{ '@'.$post->handle }}</span>
+                                            @if ($post->posted_at)<span class="text-sm text-neutral-600">{{ $post->posted_at->setTimezone(config('membership.timezone'))->format('j M Y') }}</span>@endif
+                                        </span>
+                                        <span class="inline-flex items-center gap-1 text-sm font-bold text-action">View on X <x-icon name="arrow-right" class="h-4 w-4" /></span>
+                                    </a>
+                                </blockquote>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </section>
+            <script>
+                // Load X's embed script only when the section is about to scroll into view.
+                (() => {
+                    const feed = document.querySelector('[data-x-feed]');
+                    const load = () => { const s = document.createElement('script'); s.src = 'https://platform.twitter.com/widgets.js'; s.async = true; s.charset = 'utf-8'; document.body.appendChild(s); };
+                    if (!('IntersectionObserver' in window)) { load(); return; }
+                    const io = new IntersectionObserver((entries) => { if (entries.some((e) => e.isIntersecting)) { io.disconnect(); load(); } }, { rootMargin: '600px' });
+                    io.observe(feed);
+                })();
+            </script>
+        @endif
+
         {{-- Members across Nigeria (or across the site's one state) --}}
         <section id="map" class="mx-auto grid max-w-[1440px] items-center gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)] lg:gap-16 lg:px-[66px] lg:py-24" aria-labelledby="map-title">
             <div>

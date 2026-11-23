@@ -16,6 +16,7 @@
             ['admin.team.index', 'Field team', 'users', 'admin.team.*'],
             ['admin.empowerment.index', 'Empowerment', 'gift', 'admin.empowerment.*'],
             ['admin.posts.index', 'News & events', 'megaphone', 'admin.posts.*'],
+            ['admin.x-posts.index', 'X posts', 'share', 'admin.x-posts.*'],
             ['admin.settings.edit', 'Settings', 'cog', 'admin.settings.*'],
         ],
         $user->isCoordinator() => [
