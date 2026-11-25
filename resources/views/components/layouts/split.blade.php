@@ -24,7 +24,7 @@
 
             @if ($stats)
                 <dl class="mt-auto hidden grid-cols-3 gap-4 border-t border-white/15 pt-9 lg:grid">
-                    @foreach ([['5,000+', 'youth empowered'], ['275+', 'events organised'], ['36+', 'states nationwide']] as [$n, $label])
+                    @foreach (config('site.stats') as [$n, $label])
                         <div>
                             <dt class="sr-only">{{ $label }}</dt>
                             <dd class="font-headline text-[30px] leading-none font-bold">{{ $n }}</dd>

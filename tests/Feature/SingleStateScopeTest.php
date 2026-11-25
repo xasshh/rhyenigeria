@@ -87,4 +87,15 @@ class SingleStateScopeTest extends TestCase
         $this->actingAs($member)->post('/membership/canvasser', ['whatsapp_phone' => '08031234567'])->assertNotFound();
         $this->assertNull($member->memberProfile->fresh()->canvasser_status);
     }
+
+    public function test_coordinators_see_no_empowerment_anywhere(): void
+    {
+        $geo = $this->kadunaOnly();
+        $coordinator = User::factory()->coordinator($geo['state'])->create(['must_change_password' => false]);
+
+        $this->actingAs($coordinator)->followingRedirects()->get('/coordinator')->assertOk()->assertDontSee('Empowerment')->assertDontSee('empowered');
+        $this->actingAs($coordinator)->get('/coordinator/empowerment')->assertNotFound();
+        auth()->logout();
+        $this->get('/login')->assertOk()->assertDontSee('youth empowered')->assertSee('local governments');
+    }
 }

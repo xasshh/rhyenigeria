@@ -46,7 +46,7 @@
         </section>
     @endif
 
-    @if ($member->empowermentReports->isNotEmpty())
+    @if (site_feature('empowerment') && $member->empowermentReports->isNotEmpty())
         <section class="panel mt-4 p-5">
             <h2 class="font-display font-bold">Empowerment</h2>
             <div class="mt-3 grid gap-3 sm:grid-cols-2">
