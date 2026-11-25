@@ -9,7 +9,7 @@
             <button class="btn-primary">Search</button>
         </div>
         <div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-            @if ($isAdmin)
+            @if ($isAdmin && ! site_state_code())
                 <select name="state_id" class="field py-2 text-sm" x-on:change="$el.form.lga_id && ($el.form.lga_id.value = ''); $el.form.ward_id && ($el.form.ward_id.value = ''); $el.form.submit()">
                     <option value="">All states</option>
                     @foreach ($states as $s)<option value="{{ $s->id }}" @selected(($filters['state_id'] ?? null) == $s->id)>{{ $s->name }}</option>@endforeach

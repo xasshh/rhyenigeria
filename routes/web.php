@@ -122,15 +122,16 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('field/activities/{activity}/photo', [FieldWorkController::class, 'photo'])->name('field.activities.photo');
 
     // Pages coordinators and super admins share. Every query is scoped to the viewer.
+    // 'site.state': on a single-state site, super admins see only that state on these pages.
     $staffRoutes = function () {
-        Route::get('members', [MemberController::class, 'index'])->name('members.index');
-        Route::get('members/map', [MemberMapController::class, 'index'])->name('members.map');
-        Route::get('members/map/pins', [MemberMapController::class, 'pins'])->middleware('throttle:30,1')->name('members.map.pins');
+        Route::get('members', [MemberController::class, 'index'])->middleware('site.state')->name('members.index');
+        Route::get('members/map', [MemberMapController::class, 'index'])->middleware('site.state')->name('members.map');
+        Route::get('members/map/pins', [MemberMapController::class, 'pins'])->middleware('throttle:30,1')->middleware('site.state')->name('members.map.pins');
         Route::get('leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard');
         Route::get('calendar', [CalendarController::class, 'index'])->name('calendar');
-        Route::get('members/export', [MemberController::class, 'export'])->middleware('throttle:10,1')->name('members.export');
+        Route::get('members/export', [MemberController::class, 'export'])->middleware('throttle:10,1')->middleware('site.state')->name('members.export');
         Route::get('members/{member}', [MemberController::class, 'show'])->name('members.show');
-        Route::get('canvassers', [CanvasserController::class, 'index'])->name('canvassers.index');
+        Route::get('canvassers', [CanvasserController::class, 'index'])->middleware('site.state')->name('canvassers.index');
         Route::post('canvassers/{member}', [CanvasserController::class, 'decide'])->name('canvassers.decide');
         Route::get('empowerment', [EmpowermentController::class, 'index'])->name('empowerment.index');
         Route::get('posts', [PostController::class, 'index'])->name('posts.index');
@@ -139,13 +140,13 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::put('posts/news/{news}', [PostController::class, 'updateNews'])->name('news.update');
         Route::delete('posts/news/{news}/photos/{photo}', [PostController::class, 'destroyPhoto'])->name('news.photos.destroy');
         Route::get('map/lgas', [MapController::class, 'lgas'])->name('map.lgas');
-        Route::get('live', [LiveMapController::class, 'index'])->name('live');
-        Route::get('live/feed', [LiveMapController::class, 'feed'])->name('live.feed');
+        Route::get('live', [LiveMapController::class, 'index'])->middleware('site.state')->name('live');
+        Route::get('live/feed', [LiveMapController::class, 'feed'])->middleware('site.state')->name('live.feed');
         Route::get('live/{member}/trail', [LiveMapController::class, 'trail'])->name('live.trail');
         Route::delete('posts/events/{event}', [PostController::class, 'destroyEvent'])->name('events.destroy');
         Route::post('posts/news', [PostController::class, 'storeNews'])->name('news.store');
-        Route::get('team', [TeamController::class, 'index'])->name('team.index');
-        Route::post('team', [TeamController::class, 'store'])->name('team.store');
+        Route::get('team', [TeamController::class, 'index'])->middleware('site.state')->name('team.index');
+        Route::post('team', [TeamController::class, 'store'])->middleware('site.state')->name('team.store');
         Route::patch('team/{person}', [TeamController::class, 'update'])->name('team.update');
         Route::post('team/{person}/password', [TeamController::class, 'resetPassword'])->name('team.password');
         Route::delete('posts/news/{news}', [PostController::class, 'destroyNews'])->name('news.destroy');

@@ -128,7 +128,7 @@ class MemberController extends Controller
         $stateId = $viewer->isSuperAdmin() ? ($filters['state_id'] ?? null) : $viewer->state_id;
 
         return [
-            'states' => $viewer->isSuperAdmin() ? State::orderBy('name')->get(['id', 'name']) : collect(),
+            'states' => $viewer->isSuperAdmin() && ! site_state_code() ? State::orderBy('name')->get(['id', 'name']) : collect(),
             'lgas' => $stateId ? Lga::where('state_id', $stateId)
                 ->when($viewer->lga_id && ! $viewer->isSuperAdmin(), fn ($q) => $q->whereKey($viewer->lga_id))
                 ->orderBy('name')->get(['id', 'name']) : collect(),

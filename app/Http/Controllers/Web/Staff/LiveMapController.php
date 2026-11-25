@@ -26,7 +26,7 @@ class LiveMapController extends Controller
         return view('staff.live', [
             'stateId' => $stateId,
             'stateName' => LiveOperations::stateName($stateId),
-            'states' => $viewer->isSuperAdmin() ? State::orderBy('name')->get(['id', 'name']) : collect(),
+            'states' => $viewer->isSuperAdmin() && ! site_state_code() ? State::orderBy('name')->get(['id', 'name']) : collect(),
             'config' => [
                 'feed' => staff_route('live.feed', array_filter(['state_id' => $viewer->isSuperAdmin() ? $stateId : null])),
                 'trail' => staff_route('live.trail', '__ID__'),

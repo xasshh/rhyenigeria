@@ -40,7 +40,7 @@ class CanvasserController extends Controller
             'applications' => $applications,
             'status' => $status,
             'stateId' => $stateId,
-            'states' => $viewer->isSuperAdmin() ? State::orderBy('name')->get(['id', 'name']) : collect(),
+            'states' => $viewer->isSuperAdmin() && ! site_state_code() ? State::orderBy('name')->get(['id', 'name']) : collect(),
             'counts' => $directory->summary($scoped()),
             'canReview' => MemberController::canReviewCanvassers($viewer),
         ]);

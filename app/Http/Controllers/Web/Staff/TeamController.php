@@ -61,7 +61,7 @@ class TeamController extends Controller
             'types' => self::TYPES,
             'type' => $type,
             'stateId' => $stateId,
-            'states' => $viewer->isSuperAdmin() ? State::orderBy('name')->get(['id', 'name']) : collect(),
+            'states' => $viewer->isSuperAdmin() && ! site_state_code() ? State::orderBy('name')->get(['id', 'name']) : collect(),
             'lgas' => $stateId ? Lga::where('state_id', $stateId)->orderBy('name')->get(['id', 'name']) : collect(),
             'canSms' => $credentials->canSms(),
         ]);

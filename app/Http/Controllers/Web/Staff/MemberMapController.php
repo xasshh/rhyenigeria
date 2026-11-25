@@ -30,7 +30,7 @@ class MemberMapController extends Controller
         return view('staff.members-map', [
             'stateId' => $stateId,
             'stateName' => LiveOperations::stateName($stateId),
-            'states' => $viewer->isSuperAdmin() ? State::orderBy('name')->get(['id', 'name']) : collect(),
+            'states' => $viewer->isSuperAdmin() && ! site_state_code() ? State::orderBy('name')->get(['id', 'name']) : collect(),
             'total' => (clone $members)->count(),
             'pinned' => (clone $members)->whereNotNull('mp.signup_lat')->whereNotNull('mp.signup_lng')->count(),
             'config' => [

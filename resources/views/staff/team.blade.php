@@ -25,7 +25,7 @@
 
     <div class="mt-4 flex flex-wrap items-center gap-3">
         <form method="GET" class="flex flex-wrap gap-2">
-            @if ($isAdmin)
+            @if ($isAdmin && ! site_state_code())
                 <select name="state_id" class="field py-2 text-sm" aria-label="State" onchange="this.form.submit()">
                     <option value="">All states</option>
                     @foreach ($states as $s)<option value="{{ $s->id }}" @selected($stateId === $s->id)>{{ $s->name }}</option>@endforeach
