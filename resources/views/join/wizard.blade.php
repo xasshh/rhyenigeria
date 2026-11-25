@@ -71,6 +71,7 @@
                     <h1 class="font-headline text-[36px] leading-[1.05] font-extrabold tracking-[-0.03em] sm:text-[46px]">Create your account</h1>
                     <p class="mt-3 text-lg text-neutral-600">You'll be connected to your ward team.</p>
                 </div>
+                @if (site_feature('agent_signup'))
                 <fieldset>
                     <legend class="label text-base font-semibold">Joining as</legend>
                     <div class="grid grid-cols-2 gap-1 rounded-2xl bg-[#f1f3f1] p-1.5">
@@ -82,6 +83,7 @@
                         @endforeach
                     </div>
                 </fieldset>
+                @endif
                 <div>
                     <label class="label text-base font-semibold" for="email">Email address</label>
                     <input id="email" type="email" class="field-lg" autocomplete="email" inputmode="email" placeholder="you@example.com" x-model.trim="form.email" :aria-invalid="!!err('email')">

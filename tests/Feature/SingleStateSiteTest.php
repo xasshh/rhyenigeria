@@ -41,15 +41,16 @@ class SingleStateSiteTest extends TestCase
         $this->artisan('site:setup', ['--force' => true])->assertSuccessful();
 
         $this->get('/')->assertOk()
-            ->assertSee('Uba Sani 2027 Movement')->assertSee('Tinubu, Uba Sau Biyu ne!')
+            ->assertSee('Tinubu &amp; Uba Sani 2027', false)->assertSee('Tinubu, Uba Sau Biyu ne!')
             ->assertSee('The movement across Kaduna State')->assertDontSee('Renewed Hope Youth Engagement')
             ->assertDontSee('State coordinators');
 
-        $this->get('/join?as=canvasser')->assertOk()->assertSee('Join as a Polling unit agent')->assertDontSee('I can help with');
+        // Members only: asking to join as an agent shows the member form.
+        $this->get('/join?as=canvasser')->assertOk()->assertSee('Join as a Member')->assertDontSee('Join as a Polling unit agent');
         $this->getJson('/map/lgas.json')->assertOk()->assertJsonStructure(['counts', 'total']);
     }
 
-    public function test_volunteers_join_as_polling_unit_agents_from_this_state_only(): void
+    public function test_sign_ups_are_members_from_this_state_only(): void
     {
         $geo = $this->kaduna();
 
@@ -59,7 +60,8 @@ class SingleStateSiteTest extends TestCase
         $this->postJson('/join', $this->answers($geo))->assertCreated();
 
         $profile = User::where('email', 'ada@example.com')->firstOrFail()->memberProfile;
-        $this->assertSame(['polling_unit_agent'], $profile->canvasser_roles);
+        // Even a request to join as an agent makes a plain member; agents are added by coordinators.
+        $this->assertNull($profile->canvasser_status);
         $this->assertStringStartsWith('US27-KD-', $profile->member_number);
         $this->assertSame('Member', $profile->roleLabel());
     }

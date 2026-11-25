@@ -27,7 +27,8 @@ $brands = [
             ['images/logo-apc.png', 200, 182, 'APC', 'h-[38px] sm:h-[45.5px]'],
         ],
         // Optional parts of the site this brand uses.
-        'features' => ['empowerment' => true],
+        // agent_signup: people can apply to be a canvasser/agent while signing up (otherwise members only).
+        'features' => ['empowerment' => true, 'agent_signup' => true],
         // null: every state; a state code (e.g. KD): the whole site is about that one state.
         'state_code' => null,
         // What approved field volunteers are called.
@@ -63,12 +64,12 @@ $brands = [
 
     // ubasani2027.com: Kaduna State governorship campaign.
     'us27' => [
-        'name' => 'Uba Sani 2027 Movement',
+        'name' => 'Tinubu & Uba Sani 2027',
         'short' => 'US27',
         'member_prefix' => 'US27',
         'slogan' => 'Tinubu, Uba Sau Biyu ne!',
-        'tagline' => 'Uba Sani 2027 Movement · Kaduna State',
-        'description' => 'Join the Uba Sani 2027 Movement in Kaduna State. Get your digital membership card and updates from your ward.',
+        'tagline' => 'Tinubu & Uba Sani 2027 · Kaduna State',
+        'description' => 'Join Tinubu & Uba Sani 2027 in Kaduna State. Get your digital membership card and updates from your ward.',
         'logo' => ['images/logo-us27.webp', 480, 480],
         // Header logo height classes when the default (40px / 56px) is too small for the logo.
         'logo_size' => 'h-[52px] sm:h-[72px]',
@@ -81,7 +82,7 @@ $brands = [
         'partner_logos' => [
             ['images/logo-apc.png', 200, 182, 'APC', 'h-[38px] sm:h-[52px]'],
         ],
-        'features' => ['empowerment' => false],
+        'features' => ['empowerment' => false, 'agent_signup' => false],
         'state_code' => 'KD',
         'canvasser' => 'polling unit agent',
         'canvassers' => 'polling unit agents',

@@ -68,4 +68,12 @@ class SingleStateScopeTest extends TestCase
         $this->actingAs($member)->get('/membership/campaign-dp')->assertOk()
             ->assertSee('I will vote')->assertSee('Tinubu and Uba Sani 2027')->assertDontSee('Choose your message');
     }
+
+    public function test_sign_up_is_for_members_only(): void
+    {
+        $this->kadunaOnly();
+
+        $this->get('/join')->assertOk()->assertDontSee('How would you like to take part?')->assertDontSee('name="joining_as"', false);
+        $this->get('/join?as=canvasser')->assertOk()->assertSee('Join as a Member', false)->assertDontSee('name="joining_as"', false);
+    }
 }
