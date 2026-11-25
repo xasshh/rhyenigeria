@@ -14,7 +14,7 @@
             ['admin.coordinators.index', 'Coordinators', 'user-plus', 'admin.coordinators.*'],
             ['admin.admins.index', 'Admins', 'shield', 'admin.admins.*'],
             ['admin.team.index', 'Field team', 'users', 'admin.team.*'],
-            ['admin.empowerment.index', 'Empowerment', 'gift', 'admin.empowerment.*'],
+            site_feature('empowerment') ? ['admin.empowerment.index', 'Empowerment', 'gift', 'admin.empowerment.*'] : null,
             ['admin.posts.index', 'News & events', 'megaphone', 'admin.posts.*'],
             ['admin.x-posts.index', 'X posts', 'share', 'admin.x-posts.*'],
             ['admin.settings.edit', 'Settings', 'cog', 'admin.settings.*'],
@@ -28,7 +28,7 @@
             ['coordinator.calendar', 'Calendar', 'calendar', 'coordinator.calendar'],
             ['coordinator.canvassers.index', site_term('Canvassers'), 'badge', 'coordinator.canvassers.*'],
             ...(\App\Http\Controllers\Web\Staff\TeamController::canManage($user) ? [['coordinator.team.index', 'Field team', 'user-plus', 'coordinator.team.*']] : []),
-            ['coordinator.empowerment.index', 'Empowerment', 'gift', 'coordinator.empowerment.*'],
+            site_feature('empowerment') ? ['coordinator.empowerment.index', 'Empowerment', 'gift', 'coordinator.empowerment.*'] : null,
             ['coordinator.posts.index', 'News & events', 'megaphone', 'coordinator.posts.*'],
         ],
         default => array_values(array_filter([
@@ -37,10 +37,11 @@
             $user->isApprovedCanvasser() ? ['membership.field.show', 'Field work', 'pin', 'membership.field.*'] : null,
             ['membership.incidents', 'Report incident', 'alert', 'membership.incidents*'],
             ['membership.events', 'Events & news', 'calendar', 'membership.events'],
-            ['membership.empowerment', 'Empowerment', 'gift', 'membership.empowerment'],
+            site_feature('empowerment') ? ['membership.empowerment', 'Empowerment', 'gift', 'membership.empowerment'] : null,
             ['membership.dp', 'Campaign DP', 'camera', 'membership.dp'],
         ])),
     };
+    $nav = array_values(array_filter($nav));
     // A canvasser with a shift running, on any other page: tracking only runs on the Field work page.
     $shiftRunning = $user->isMember() && ! request()->routeIs('membership.field.*') && $user->activeShift()->exists();
     $isMember = $user->isMember();

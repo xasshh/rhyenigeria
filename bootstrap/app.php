@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnsureMemberSetup;
 use App\Http\Middleware\EnsurePasswordChanged;
 use App\Http\Middleware\EnsureRole;
+use App\Http\Middleware\EnsureSiteFeature;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\ScopeToSiteState;
 use Illuminate\Foundation\Application;
@@ -32,6 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'member.setup' => EnsureMemberSetup::class,
             'password.changed' => EnsurePasswordChanged::class,
             'site.state' => ScopeToSiteState::class,
+            'feature' => EnsureSiteFeature::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

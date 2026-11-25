@@ -26,6 +26,8 @@ $brands = [
             ['images/logo-renewed-hope.png', 285, 150, 'Renewed Hope', 'h-[30px] sm:h-[37.5px]'],
             ['images/logo-apc.png', 200, 182, 'APC', 'h-[38px] sm:h-[45.5px]'],
         ],
+        // Optional parts of the site this brand uses.
+        'features' => ['empowerment' => true],
         // null: every state; a state code (e.g. KD): the whole site is about that one state.
         'state_code' => null,
         // What approved field volunteers are called.
@@ -79,6 +81,7 @@ $brands = [
         'partner_logos' => [
             ['images/logo-apc.png', 200, 182, 'APC', 'h-[38px] sm:h-[52px]'],
         ],
+        'features' => ['empowerment' => false],
         'state_code' => 'KD',
         'canvasser' => 'polling unit agent',
         'canvassers' => 'polling unit agents',
@@ -90,9 +93,7 @@ $brands = [
             'x' => env('SOCIAL_X_URL', 'https://x.com/ubasanius'),
         ],
         'dp_messages' => [
-            ['kicker' => 'I am a proud member of the', 'headline' => 'Uba Sani 2027 Movement'],
-            ['kicker' => 'Kaduna State', 'headline' => 'Tinubu, Uba Sau Biyu ne!'],
-            ['kicker' => 'Uba Sani 2027 Movement', 'headline' => 'Every ward. Every polling unit.'],
+            ['kicker' => 'I will vote', 'headline' => 'Tinubu and Uba Sani 2027'],
         ],
         'sample_card' => ['Aisha Bello', 'Kaduna', 'Kaduna North · Ward 04'],
         'stats' => [['23', 'local governments'], ['255', 'wards'], ['8,000+', 'polling units']],

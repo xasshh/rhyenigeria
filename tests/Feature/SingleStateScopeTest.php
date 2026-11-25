@@ -52,4 +52,20 @@ class SingleStateScopeTest extends TestCase
 
         $this->assertDatabaseHas('users', ['name' => 'Lami Lga', 'state_id' => $geo['state']->id, 'lga_id' => $geo['lga']->id]);
     }
+
+    public function test_empowerment_is_switched_off_and_the_flyer_caption_is_the_campaign_line(): void
+    {
+        $geo = $this->kadunaOnly();
+        $member = User::factory()->member($geo['wardA'])->create();
+        MemberProfile::factory()->for($member)->create();
+
+        $this->get('/')->assertOk()->assertDontSee(route('empowerment'), false);
+        $this->actingAs($member)->get('/empowerment')->assertNotFound();
+        $this->actingAs($member)->get('/membership/empowerment')->assertNotFound();
+        $this->actingAs($member)->get('/membership')->assertOk()->assertDontSee('Empowerment');
+        $this->actingAs(User::factory()->superAdmin()->create())->get('/admin/empowerment')->assertNotFound();
+
+        $this->actingAs($member)->get('/membership/campaign-dp')->assertOk()
+            ->assertSee('I will vote')->assertSee('Tinubu and Uba Sani 2027')->assertDontSee('Choose your message');
+    }
 }

@@ -34,3 +34,11 @@ if (! function_exists('site_state_code')) {
         return config('site.state_code') ? strtoupper((string) config('site.state_code')) : null;
     }
 }
+
+if (! function_exists('site_feature')) {
+    /** Whether this site uses an optional feature (config/site.php `features`). On unless switched off. */
+    function site_feature(string $feature): bool
+    {
+        return (bool) config("site.features.{$feature}", true);
+    }
+}

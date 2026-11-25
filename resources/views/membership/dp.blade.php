@@ -22,7 +22,7 @@
                 </label>
             </section>
             <section class="panel p-5">
-                <h2 class="font-display font-bold">2. Choose your message</h2>
+                <h2 class="font-display font-bold">{{ count($messages) > 1 ? "2. Choose your message" : "2. Your message" }}</h2>
                 <div class="mt-3 space-y-2">
                     <template x-for="(m, i) in messages" :key="i">
                         <label class="block cursor-pointer rounded-xl border px-4 py-3 transition" :class="choice === i ? 'border-brand bg-brand/5 ring-1 ring-brand' : 'border-line hover:border-brand/50'">

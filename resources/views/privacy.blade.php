@@ -14,7 +14,7 @@
             <li>Whether you have a PVC and, if you give them, your VIN and NIN. These are encrypted when stored and are never shown in full.</li>
             <li>One location pin, only if you allow it when you join or tap "Pin my location" on your dashboard (see <a href="#member-pin">below</a>).</li>
             <li>If you apply to be a {{ site_term('canvasser') }}: how you would like to help and your WhatsApp number.</li>
-            <li>If you report an empowerment programme: the details and the photo you upload.</li>
+            @if (site_feature('empowerment'))<li>If you report an empowerment programme: the details and the photo you upload.</li>@endif
         </ul>
 
         <h2>Why we use it</h2>

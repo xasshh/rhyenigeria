@@ -71,7 +71,7 @@
                                         @if ($slide->button_label && $slide->button_url)
                                             <a href="{{ $slide->button_url }}" class="rounded-[10px] px-6 py-3 text-lg leading-6 font-bold transition-colors {{ $yellow }}">{{ $slide->button_label }}</a>
                                         @endif
-                                        <a href="{{ route('empowerment') }}" @class(['rounded-[10px] border px-9 py-3 text-lg leading-6 font-bold transition-colors', 'border-brand text-brand hover:bg-brand/10' => $light, 'border-white/60 text-white hover:bg-white/10' => ! $light])>Empowerment</a>
+                                        @if (site_feature('empowerment'))<a href="{{ route('empowerment') }}" @class(['rounded-[10px] border px-9 py-3 text-lg leading-6 font-bold transition-colors', 'border-brand text-brand hover:bg-brand/10' => $light, 'border-white/60 text-white hover:bg-white/10' => ! $light])>Empowerment</a>@endif
                                     </div>
                                 </div>
 
@@ -116,7 +116,7 @@
                                         @if ($slide->button_label && $slide->button_url)
                                             <a href="{{ $slide->button_url }}" class="inline-flex min-h-[52px] items-center gap-2 rounded-xl px-6 text-[17px] font-bold transition-colors {{ $yellow }}">{{ $slide->button_label }} <x-icon name="arrow-right" class="h-4 w-4" /></a>
                                         @endif
-                                        <a href="{{ route('empowerment') }}" @class(['inline-flex min-h-[52px] items-center gap-2 rounded-xl border px-6 text-[17px] font-bold transition-colors', 'border-action/40 text-action hover:bg-action/10' => $light, 'border-white/50 text-white hover:bg-white/10' => ! $light])><x-icon name="gift" class="h-5 w-5" /> Empowerment</a>
+                                        @if (site_feature('empowerment'))<a href="{{ route('empowerment') }}" @class(['inline-flex min-h-[52px] items-center gap-2 rounded-xl border px-6 text-[17px] font-bold transition-colors', 'border-action/40 text-action hover:bg-action/10' => $light, 'border-white/50 text-white hover:bg-white/10' => ! $light])><x-icon name="gift" class="h-5 w-5" /> Empowerment</a>@endif
                                     </div>
                                 </div>
                                 <div class="order-1 lg:order-2">
@@ -156,7 +156,7 @@
                             <h2 class="font-headline text-[44px] leading-[1.02] font-extrabold tracking-[-0.03em] sm:text-[64px]">{{ $slogan }}</h2>
                             <div class="mt-8 flex flex-wrap gap-3">
                                 <a href="{{ route('join') }}" class="inline-flex min-h-[52px] items-center rounded-xl px-6 text-[17px] font-bold {{ $yellow }}">Join the Movement</a>
-                                <a href="{{ route('empowerment') }}" class="inline-flex min-h-[52px] items-center gap-2 rounded-xl border border-white/50 px-6 text-[17px] font-bold text-white hover:bg-white/10"><x-icon name="gift" class="h-5 w-5" /> Empowerment</a>
+                                @if (site_feature('empowerment'))<a href="{{ route('empowerment') }}" class="inline-flex min-h-[52px] items-center gap-2 rounded-xl border border-white/50 px-6 text-[17px] font-bold text-white hover:bg-white/10"><x-icon name="gift" class="h-5 w-5" /> Empowerment</a>@endif
                             </div>
                         </div>
                     </article>

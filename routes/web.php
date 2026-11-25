@@ -72,10 +72,10 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::put('account/password', [AccountPasswordController::class, 'update'])->name('account.password.update');
 
     // The homepage "Empowerment" button. Guests are sent to sign in first and come back here.
-    Route::get('empowerment', [PublicController::class, 'empowerment'])->name('empowerment');
+    Route::get('empowerment', [PublicController::class, 'empowerment'])->middleware('feature:empowerment')->name('empowerment');
 
     // Empowerment photos: the member themselves, or staff who can see that member.
-    Route::get('empowerment/{report}/photo', [EmpowermentController::class, 'photo'])->name('empowerment.photo');
+    Route::get('empowerment/{report}/photo', [EmpowermentController::class, 'photo'])->middleware('feature:empowerment')->name('empowerment.photo');
 
     // Members (including canvassers).
     // Imported members land here first: own password, gender, age range and consent.
@@ -95,8 +95,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('events', 'events')->name('events');
         Route::put('location', 'updateLocation')->middleware('throttle:20,1')->name('location.update');
         Route::delete('location', 'destroyLocation')->name('location.destroy');
-        Route::get('empowerment', 'empowerment')->name('empowerment');
-        Route::post('empowerment', 'storeEmpowerment')->middleware('throttle:20,60')->name('empowerment.store');
+        Route::get('empowerment', 'empowerment')->middleware('feature:empowerment')->name('empowerment');
+        Route::post('empowerment', 'storeEmpowerment')->middleware(['feature:empowerment', 'throttle:20,60'])->name('empowerment.store');
         Route::get('campaign-dp', 'dp')->name('dp');
     });
 
@@ -133,7 +133,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('members/{member}', [MemberController::class, 'show'])->name('members.show');
         Route::get('canvassers', [CanvasserController::class, 'index'])->middleware('site.state')->name('canvassers.index');
         Route::post('canvassers/{member}', [CanvasserController::class, 'decide'])->name('canvassers.decide');
-        Route::get('empowerment', [EmpowermentController::class, 'index'])->name('empowerment.index');
+        Route::get('empowerment', [EmpowermentController::class, 'index'])->middleware('feature:empowerment')->name('empowerment.index');
         Route::get('posts', [PostController::class, 'index'])->name('posts.index');
         Route::post('posts/events', [PostController::class, 'storeEvent'])->name('events.store');
         Route::put('posts/events/{event}', [PostController::class, 'updateEvent'])->name('events.update');

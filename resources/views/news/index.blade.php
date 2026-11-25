@@ -4,7 +4,7 @@
         <div class="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 lg:px-[66px] lg:py-20">
             <p class="eyebrow text-mint">News &amp; gallery</p>
             <h1 class="mt-3 font-headline text-[40px] leading-[1.02] font-extrabold tracking-[-0.03em] sm:text-[60px]">From the field</h1>
-            <p class="mt-4 max-w-[640px] font-body text-lg leading-relaxed text-white/80 sm:text-xl">Events, empowerment programmes and the young Nigerians behind them, state by state.</p>
+            <p class="mt-4 max-w-[640px] font-body text-lg leading-relaxed text-white/80 sm:text-xl">{{ site_feature('empowerment') ? 'Events, empowerment programmes and the young Nigerians behind them, state by state.' : (site_state_code() ? 'Events and news from the campaign across the state.' : 'Events and news from the campaign, state by state.') }}</p>
         </div>
     </section>
     <section class="mx-auto max-w-[1440px] px-5 py-12 sm:px-8 lg:px-[66px] lg:py-16">
