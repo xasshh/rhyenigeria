@@ -76,4 +76,15 @@ class SingleStateScopeTest extends TestCase
         $this->get('/join')->assertOk()->assertDontSee('How would you like to take part?')->assertDontSee('name="joining_as"', false);
         $this->get('/join?as=canvasser')->assertOk()->assertSee('Join as a Member', false)->assertDontSee('name="joining_as"', false);
     }
+
+    public function test_members_cannot_apply_to_be_agents_from_the_dashboard(): void
+    {
+        $geo = $this->kadunaOnly();
+        $member = User::factory()->member($geo['wardA'])->create();
+        MemberProfile::factory()->for($member)->create();
+
+        $this->actingAs($member)->get('/membership')->assertOk()->assertDontSee('Want to do more?');
+        $this->actingAs($member)->post('/membership/canvasser', ['whatsapp_phone' => '08031234567'])->assertNotFound();
+        $this->assertNull($member->memberProfile->fresh()->canvasser_status);
+    }
 }

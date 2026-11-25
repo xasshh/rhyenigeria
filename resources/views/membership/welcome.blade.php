@@ -112,7 +112,7 @@
                     </ul>
                     <div class="mt-7 border-t border-line pt-7">
                         <a href="{{ route('membership.home') }}" class="btn-action w-full text-[17px]">Go to my dashboard <x-icon name="arrow-right" class="h-4 w-4" /></a>
-                        @if ($profile->canvasser_status === null)
+                        @if ($profile->canvasser_status === null && site_feature('agent_signup'))
                             <a href="{{ route('membership.home') }}#canvass" class="mt-5 flex items-center justify-center gap-2 text-[16px] font-semibold text-action hover:underline"><x-icon name="shield" class="h-4 w-4" /> Want to do more? Apply as a canvasser</a>
                         @endif
                     </div>

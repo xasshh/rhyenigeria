@@ -91,7 +91,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::put('card/details', 'updateDetails')->name('details.update');
         Route::put('card/identity', 'updateIdentity')->name('identity.update');
         Route::put('card/password', 'updatePassword')->name('password.update');
-        Route::post('canvasser', 'applyCanvasser')->name('canvasser.apply');
+        Route::post('canvasser', 'applyCanvasser')->middleware('feature:agent_signup')->name('canvasser.apply');
         Route::get('events', 'events')->name('events');
         Route::put('location', 'updateLocation')->middleware('throttle:20,1')->name('location.update');
         Route::delete('location', 'destroyLocation')->name('location.destroy');

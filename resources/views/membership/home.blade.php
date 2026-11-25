@@ -73,7 +73,8 @@
         </a>
     @endif
 
-    {{-- Canvassing --}}
+    {{-- Canvassing. Where members cannot apply (agents are added by coordinators), only approved or pending agents see this. --}}
+    @if (site_feature('agent_signup') || in_array($profile->canvasser_status?->value, ['approved', 'pending'], true))
     <section id="canvass" class="panel mt-4 scroll-mt-24 p-5">
         @switch($profile->canvasser_status?->value)
             @case('approved')
@@ -116,6 +117,7 @@
                 </div>
         @endswitch
     </section>
+    @endif
 
     {{-- Updates --}}
     <section class="mt-6">
