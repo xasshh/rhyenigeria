@@ -136,6 +136,8 @@ class PhoneLineTest extends TestCase
         $this->post('/api/webhooks/voice/secret-token', ['sessionId' => 'ATVId_test', 'isActive' => '1', 'direction' => 'Outbound'])
             ->assertOk()->assertSee('<Say>', false)->assertDontSee('<Dial', false);
         $this->post('/api/webhooks/voice/secret-token', ['sessionId' => 'ATVId_test', 'isActive' => '0', 'durationInSeconds' => '9']);
+        // A repeated end-of-call report keeps it completed.
+        $this->post('/api/webhooks/voice/secret-token', ['sessionId' => 'ATVId_test', 'isActive' => '0', 'durationInSeconds' => '9']);
 
         $this->assertDatabaseHas('voice_calls', ['session_id' => 'ATVId_test', 'status' => 'completed', 'contact_phone' => '+2348030000001']);
     }

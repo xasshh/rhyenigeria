@@ -87,7 +87,8 @@ class VoiceWebhookController extends Controller
         $recording = $request->input('recordingUrl') ?: null;
 
         $status = match (true) {
-            $call->note === VoiceTestCall::NOTE => $call->status === 'connected' ? 'completed' : 'no_answer',
+            // AT can send the end-of-call report more than once; a repeat must not undo "completed".
+            $call->note === VoiceTestCall::NOTE => in_array($call->status, ['connected', 'completed'], true) ? 'completed' : 'no_answer',
             $call->direction === VoiceCall::OUTBOUND && $call->status === 'ringing' => 'failed', // the operator never picked up
             $call->direction === VoiceCall::OUTBOUND => ($dialled ?? 0) > 0 ? 'completed' : 'no_answer',
             ($dialled ?? 0) > 0 => 'completed',
