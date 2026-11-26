@@ -16,9 +16,9 @@ final class WebImage
     public static function storeWithWebp(UploadedFile $file, string $directory, int $maxWidth = 1600, int $quality = 80): array
     {
         $name = Str::uuid()->toString();
-        $original = $file->storeAs($directory, $name.'.'.strtolower($file->extension()), 'public');
+        $extension = strtolower($file->extension());
 
-        $source = match (strtolower($file->extension())) {
+        $source = match ($extension) {
             'jpg', 'jpeg' => imagecreatefromjpeg($file->getRealPath()),
             'png' => imagecreatefrompng($file->getRealPath()),
             'webp' => imagecreatefromwebp($file->getRealPath()),
@@ -29,25 +29,49 @@ final class WebImage
             throw new RuntimeException('Could not read that image.');
         }
 
-        $width = imagesx($source);
-        if ($width > $maxWidth) {
-            $scaled = imagescale($source, $maxWidth, -1, IMG_BICUBIC);
-            imagedestroy($source);
-            $source = $scaled;
-        }
         imagepalettetotruecolor($source);
         imagealphablending($source, true);
         imagesavealpha($source, true);
 
+        // Full-size display copy, re-encoded through GD so no EXIF/GPS metadata survives the upload.
+        $original = $directory.'/'.$name.'.'.($extension === 'jpeg' ? 'jpg' : $extension);
+        Storage::disk('public')->put($original, self::encode($source, $extension, 92));
+
+        // Smaller WebP for fast loading; metadata is dropped here too. The full-size image is freed
+        // as soon as the scaled copy exists, so two large bitmaps are never held at once.
+        $scaled = imagesx($source) > $maxWidth ? imagescale($source, $maxWidth, -1, IMG_BICUBIC) : false;
+        if ($scaled !== false) {
+            imagedestroy($source);
+            $web = $scaled;
+            imagepalettetotruecolor($web);
+            imagealphablending($web, true);
+            imagesavealpha($web, true);
+        } else {
+            $web = $source;
+        }
+
         ob_start();
-        imagewebp($source, null, $quality);
+        imagewebp($web, null, $quality);
         $webp = (string) ob_get_clean();
-        imagedestroy($source);
+        imagedestroy($web);
 
         $webpPath = $directory.'/'.$name.'-web.webp';
         Storage::disk('public')->put($webpPath, $webp);
 
         return [$original, $webpPath];
+    }
+
+    /** Encode a GD image to the given format, dropping any metadata. */
+    private static function encode(\GdImage $image, string $extension, int $quality): string
+    {
+        ob_start();
+        match ($extension) {
+            'png' => imagepng($image),
+            'webp' => imagewebp($image, null, $quality),
+            default => imagejpeg($image, null, $quality),
+        };
+
+        return (string) ob_get_clean();
     }
 
     /**
