@@ -508,7 +508,7 @@
                     <div>
                         <p class="cc-label">☏ Phone line <span x-show="waiting" x-cloak class="ml-2 rounded bg-[var(--amber)]/20 px-1.5 py-0.5 text-[var(--amber)]" x-text="waiting + ' to follow up'"></span></p>
                         @if ($line['enabled'])
-                            <p class="mt-1 text-xs text-[var(--dim)]">Campaign number <span class="cc-mono text-[var(--glow)]">{{ $line['number'] }}</span>. Press <span class="text-[var(--glow)]">Call</span> next to anyone and the command centre phone@if ($line['deskPhone']) <span class="cc-mono text-[var(--glow)]">({{ $line['deskPhone'] }})</span>@endif rings — pick it up and you are connected. When someone calls the campaign number it rings that same phone and shows here. Every call is recorded.</p>
+                            <p class="mt-1 text-xs text-[var(--dim)]">Campaign number <span class="cc-mono text-[var(--glow)]">{{ $line['number'] }}</span>. Press <span class="text-[var(--glow)]">Call</span> next to anyone and the command centre phone <span class="cc-mono text-[var(--glow)]">{{ $line['deskPhone'] ?? '' }}</span> rings — pick it up and you are connected. When someone calls the campaign number it rings that same phone and shows here. Every call is recorded.</p>
                         @else
                             <p class="mt-1 text-xs text-[var(--amber)]">The campaign phone line is not connected yet. Until it is, Call uses your own phone and the call is logged here, so mark how it went when you hang up. When the hotline phone rings, log the call with <span class="text-[var(--glow)]">+ Log incoming call</span>.</p>
                         @endif
