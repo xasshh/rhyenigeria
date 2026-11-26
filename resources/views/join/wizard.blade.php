@@ -5,6 +5,7 @@
         'state' => $preselectedStateId,
         'states' => $states->map(fn ($s) => ['id' => $s->id, 'name' => $s->name])->values(),
         'csrf' => csrf_token(),
+        'turnstile' => $turnstile,
         'urls' => [
             'check' => route('join.check', '__STEP__'),
             'store' => route('join.store'),
@@ -296,6 +297,12 @@
                     <x-icon name="shield" class="mt-0.5" />
                     <span>You'll become a member straight away. Your {{ site_term('canvasser') }} application goes to your @if (site_state_code())<strong>coordinator</strong>@else<strong x-text="(card.stateName ? card.stateName + ' ' : '') + 'state coordinator'">state coordinator</strong>@endif for review.</span>
                 </p>
+                @if ($turnstile['enabled'])
+                    <div class="pt-1">
+                        <div class="cf-turnstile" data-sitekey="{{ $turnstile['siteKey'] }}" data-appearance="interaction-only" data-refresh-expired="auto"></div>
+                        <p class="error mt-2" x-show="err('cf-turnstile-response')" x-text="err('cf-turnstile-response')"></p>
+                    </div>
+                @endif
             </div>
 
             <div class="mt-8 flex gap-3">
@@ -309,4 +316,7 @@
         </form>
     </div>
     <noscript><p class="mt-6 rounded-2xl border border-line p-5 text-sm">Please turn on JavaScript in your browser to join.</p></noscript>
+@if ($turnstile['enabled'])
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+@endif
 </x-layouts.split>

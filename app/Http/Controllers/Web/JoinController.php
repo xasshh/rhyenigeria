@@ -9,11 +9,14 @@ use App\Http\Controllers\Controller;
 use App\Models\State;
 use App\Services\Membership\JoinForm;
 use App\Services\Membership\MemberRegistrar;
+use App\Services\Security\Turnstile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class JoinController extends Controller
@@ -44,6 +47,7 @@ class JoinController extends Controller
             'genders' => Gender::cases(),
             'ageRanges' => AgeRange::cases(),
             'canvasserRoles' => CanvasserRole::cases(),
+            'turnstile' => ['enabled' => app(Turnstile::class)->enabled(), 'siteKey' => app(Turnstile::class)->siteKey()],
         ]);
     }
 
@@ -57,12 +61,28 @@ class JoinController extends Controller
         return response()->json(['ok' => true]);
     }
 
-    public function store(Request $request, MemberRegistrar $registrar): JsonResponse
+    public function store(Request $request, MemberRegistrar $registrar, Turnstile $turnstile): JsonResponse
     {
         $request->validate(['as' => ['required', Rule::in(['member', 'canvasser'])]]);
         $canvasser = $request->input('as') === 'canvasser' && site_feature('agent_signup');
 
+        // Cheap field validation first, so a single-use Turnstile token is only spent once the rest is valid.
         $data = JoinForm::validate($request->all(), JoinForm::STEPS, $canvasser);
+
+        // A single referral code may only bring in so many sign-ups an hour (stops one code being farmed).
+        if (filled($data['referrer'] ?? null)) {
+            $max = (int) config('membership.signups_per_referrer_per_hour');
+            $key = 'referral-signup:'.$data['referrer'];
+            if ($max > 0 && RateLimiter::tooManyAttempts($key, $max)) {
+                throw ValidationException::withMessages(['referrer' => 'This invite link has reached its limit for now. Please try again later.']);
+            }
+            RateLimiter::hit($key, 3600);
+        }
+
+        if (! $turnstile->verify($request->input('cf-turnstile-response'), $request->ip())) {
+            throw ValidationException::withMessages(['cf-turnstile-response' => 'Please complete the "I am human" check and try again.']);
+        }
+
         $user = $registrar->register($data, $canvasser);
 
         Auth::login($user, remember: true);

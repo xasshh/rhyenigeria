@@ -16,9 +16,12 @@ return [
     // phones behind one address, so keep this generous for rallies.
     // At a rally hundreds of phones can share one IP (venue Wi-Fi, carrier NAT), so these are per IP and generous.
     // One sign-up makes about 4 step checks and 3 dropdown lookups.
-    'join_rate_limit_per_minute' => (int) env('JOIN_RATE_LIMIT_PER_MINUTE', 120),
-    'join_check_rate_limit_per_minute' => (int) env('JOIN_CHECK_RATE_LIMIT_PER_MINUTE', 600),
-    'geo_rate_limit_per_minute' => (int) env('GEO_RATE_LIMIT_PER_MINUTE', 1200),
+    'join_rate_limit_per_minute' => (int) env('JOIN_RATE_LIMIT_PER_MINUTE', 30),
+    'join_check_rate_limit_per_minute' => (int) env('JOIN_CHECK_RATE_LIMIT_PER_MINUTE', 90),
+    'geo_rate_limit_per_minute' => (int) env('GEO_RATE_LIMIT_PER_MINUTE', 600),
+
+    // Most sign-ups one referral code may bring in an hour, to stop a single code being farmed by a script.
+    'signups_per_referrer_per_hour' => (int) env('SIGNUPS_PER_REFERRER_PER_HOUR', 40),
 
     // Members one canvasser can sign up from the field page per hour (people without a smartphone).
     'field_registrations_per_hour' => (int) env('FIELD_REGISTRATIONS_PER_HOUR', 40),

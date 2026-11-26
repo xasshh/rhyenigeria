@@ -190,6 +190,8 @@ export default (config) => ({
         if (this.sameWhatsapp) delete data.whatsapp_phone;
         if (data.has_pvc !== null) data.has_pvc = data.has_pvc ? 1 : 0;
         data.consent = data.consent ? 1 : 0;
+        const token = document.querySelector('[name="cf-turnstile-response"]');
+        if (token && token.value) data['cf-turnstile-response'] = token.value;
         Object.keys(data).forEach((k) => (data[k] === null || data[k] === '') && delete data[k]);
         return data;
     },
@@ -211,6 +213,7 @@ export default (config) => ({
             const last = this.step === STEPS.length - 1;
             const { status, body } = await this.post(last ? config.urls.store : config.urls.check.replace('__STEP__', this.stepName));
 
+            if (last && status !== 201) { try { window.turnstile?.reset(); } catch { /* ignore */ } }
             if (status === 422) {
                 this.errors = body.errors || {};
                 const steps = Object.keys(this.errors).map((f) => FIELD_STEP[f.split('.')[0]] ?? 3);

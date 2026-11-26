@@ -25,11 +25,11 @@ class ContentSecurityPolicy
 
         $policy = implode('; ', [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://platform.twitter.com https://cdn.syndication.twimg.com",
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://platform.twitter.com https://cdn.syndication.twimg.com https://challenges.cloudflare.com",
             "style-src 'self' 'unsafe-inline'",
             "img-src 'self' data: blob: https://*.twimg.com https://tiles.openfreemap.org",
             "font-src 'self' data:",
-            "connect-src 'self' https://tiles.openfreemap.org https://cdn.syndication.twimg.com https://syndication.twitter.com wss:",
+            "connect-src 'self' https://tiles.openfreemap.org https://cdn.syndication.twimg.com https://syndication.twitter.com https://challenges.cloudflare.com wss:",
             "worker-src 'self' blob:",
             'frame-src https://platform.twitter.com https://syndication.twitter.com https://twitter.com https://x.com',
             "frame-ancestors 'self'",
