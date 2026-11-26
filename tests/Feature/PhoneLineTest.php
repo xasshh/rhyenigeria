@@ -127,4 +127,16 @@ class PhoneLineTest extends TestCase
         $this->actingAs($admin)->postJson('/admin/command/calls/incoming', ['phone' => '12345', 'answered' => true])->assertUnprocessable();
         $this->actingAs(User::factory()->coordinator()->create())->postJson('/admin/command/calls/incoming', ['phone' => '08035556666', 'answered' => true])->assertForbidden();
     }
+
+    public function test_a_line_test_call_plays_a_message(): void
+    {
+        Http::fake(['voice.africastalking.com/call' => Http::response(['entries' => [['status' => 'Queued', 'sessionId' => 'ATVId_test']]])]);
+
+        $this->artisan('voice:test', ['phone' => '0803 000 0001'])->assertSuccessful();
+        $this->post('/api/webhooks/voice/secret-token', ['sessionId' => 'ATVId_test', 'isActive' => '1', 'direction' => 'Outbound'])
+            ->assertOk()->assertSee('<Say>', false)->assertDontSee('<Dial', false);
+        $this->post('/api/webhooks/voice/secret-token', ['sessionId' => 'ATVId_test', 'isActive' => '0', 'durationInSeconds' => '9']);
+
+        $this->assertDatabaseHas('voice_calls', ['session_id' => 'ATVId_test', 'status' => 'completed', 'contact_phone' => '+2348030000001']);
+    }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Webhooks;
 
+use App\Console\Commands\VoiceTestCall;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\VoiceCall;
@@ -32,6 +33,13 @@ class VoiceWebhookController extends Controller
             $this->finish($call, $request);
 
             return $this->xml('<?xml version="1.0" encoding="UTF-8"?><Response/>');
+        }
+
+        // A test call (php artisan voice:test): say the line works.
+        if ($call?->direction === VoiceCall::OUTBOUND && $call->operator_id === null && $call->note === VoiceTestCall::NOTE) {
+            $call->forceFill(['status' => 'connected', 'answered_at' => now()])->save();
+
+            return $this->xml(AfricasTalkingVoice::say('Hello. This is a test call from the '.config('site.name').' command centre. The campaign phone line is working. Thank you, goodbye.'));
         }
 
         // The operator picked up: put them through to the person they asked to call.
@@ -79,6 +87,7 @@ class VoiceWebhookController extends Controller
         $recording = $request->input('recordingUrl') ?: null;
 
         $status = match (true) {
+            $call->note === VoiceTestCall::NOTE => $call->status === 'connected' ? 'completed' : 'no_answer',
             $call->direction === VoiceCall::OUTBOUND && $call->status === 'ringing' => 'failed', // the operator never picked up
             $call->direction === VoiceCall::OUTBOUND => ($dialled ?? 0) > 0 ? 'completed' : 'no_answer',
             ($dialled ?? 0) > 0 => 'completed',
