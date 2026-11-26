@@ -141,4 +141,17 @@ class PhoneLineTest extends TestCase
 
         $this->assertDatabaseHas('voice_calls', ['session_id' => 'ATVId_test', 'status' => 'completed', 'contact_phone' => '+2348030000001']);
     }
+
+    public function test_a_voice_message_stays_a_voice_message_when_the_report_repeats(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $this->post('/api/webhooks/voice/secret-token', ['sessionId' => 'ATVId_vm', 'isActive' => '1', 'direction' => 'Inbound', 'callerNumber' => '+2348099990000']);
+        $this->post('/api/webhooks/voice/secret-token', ['sessionId' => 'ATVId_vm', 'isActive' => '0', 'durationInSeconds' => '39', 'recordingUrl' => 'https://rec.example/vm.mp3']);
+        $this->post('/api/webhooks/voice/secret-token', ['sessionId' => 'ATVId_vm', 'isActive' => '0', 'durationInSeconds' => '39']);
+
+        $this->actingAs($admin)->getJson('/admin/command/calls')
+            ->assertJsonPath('calls.0.status', 'voicemail')
+            ->assertJsonPath('calls.0.recording', 'https://rec.example/vm.mp3')
+            ->assertJsonPath('calls.0.needs_call_back', true);
+    }
 }

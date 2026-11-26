@@ -81,13 +81,15 @@ class VoiceWebhookController extends Controller
         ]);
     }
 
+    /** How much a final status says happened; used so a repeated report cannot downgrade a call. */
+    private const RANK = ['failed' => 1, 'missed' => 1, 'no_answer' => 1, 'voicemail' => 2, 'completed' => 3];
+
     private function finish(VoiceCall $call, Request $request): void
     {
         $dialled = $request->filled('dialDurationInSeconds') ? (int) $request->input('dialDurationInSeconds') : null;
-        $recording = $request->input('recordingUrl') ?: null;
+        $recording = $request->input('recordingUrl') ?: $call->recording_url;
 
         $status = match (true) {
-            // AT can send the end-of-call report more than once; a repeat must not undo "completed".
             $call->note === VoiceTestCall::NOTE => in_array($call->status, ['connected', 'completed'], true) ? 'completed' : 'no_answer',
             $call->direction === VoiceCall::OUTBOUND && $call->status === 'ringing' => 'failed', // the operator never picked up
             $call->direction === VoiceCall::OUTBOUND => ($dialled ?? 0) > 0 ? 'completed' : 'no_answer',
@@ -96,13 +98,18 @@ class VoiceWebhookController extends Controller
             default => 'missed',
         };
 
+        // AT can send the end-of-call report more than once, sometimes with less in it: a repeat never downgrades the call.
+        if ($call->ended_at !== null && (self::RANK[$status] ?? 0) < (self::RANK[$call->status] ?? 0)) {
+            $status = $call->status;
+        }
+
         $call->forceFill([
             'status' => $status,
-            'duration_seconds' => $dialled ?? ($request->filled('durationInSeconds') ? (int) $request->input('durationInSeconds') : null),
-            'recording_url' => $recording ? mb_substr((string) $recording, 0, 500) : $call->recording_url,
+            'duration_seconds' => $dialled ?? ($request->filled('durationInSeconds') ? (int) $request->input('durationInSeconds') : $call->duration_seconds),
+            'recording_url' => $recording ? mb_substr((string) $recording, 0, 500) : null,
             'cost' => is_numeric($request->input('amount')) ? $request->input('amount') : $call->cost,
             'currency' => $request->input('currencyCode') ? mb_substr((string) $request->input('currencyCode'), 0, 3) : $call->currency,
-            'hangup_cause' => $request->input('hangupCause') ? mb_substr((string) $request->input('hangupCause'), 0, 100) : null,
+            'hangup_cause' => $request->input('hangupCause') ? mb_substr((string) $request->input('hangupCause'), 0, 100) : $call->hangup_cause,
             'answered_at' => $call->answered_at ?? ($status === 'completed' ? now()->subSeconds((int) $dialled) : null),
             'ended_at' => now(),
         ])->save();

@@ -561,7 +561,12 @@
                                 <button type="button" @click="setOutcome(c, 'call_later')" class="rounded-lg border border-[var(--line)] px-2.5 py-1.5 text-[var(--text)] hover:border-[var(--amber)]">Call later</button>
                             </div>
                             <div class="flex w-full items-center gap-2 sm:w-auto" x-show="c.recording || c.needs_call_back">
-                                <template x-if="c.recording"><audio :src="c.recording" controls preload="none" class="h-8 w-full max-w-[220px]"></audio></template>
+                                <template x-if="c.recording">
+                                    <div class="flex w-full items-center gap-2 sm:w-auto">
+                                        <span class="cc-mono shrink-0 text-[11px] font-bold tracking-wider text-[var(--amber)] uppercase" x-text="c.direction === 'inbound' && c.status !== 'completed' ? '🎙 Voice message' : '● Recording'"></span>
+                                        <audio :src="c.recording" controls preload="none" class="h-9 w-full min-w-[200px] sm:w-[260px]"></audio>
+                                    </div>
+                                </template>
                                 <button type="button" x-show="enabled && c.needs_call_back" @click="callBack(c)" :disabled="busy" class="cc-mono shrink-0 rounded-lg bg-[var(--glow)] px-3 py-1.5 text-xs font-bold text-[#04140c] hover:brightness-110 disabled:opacity-50">☎ Call back</button>
                                 <a x-show="!enabled && c.needs_call_back && c.phone.startsWith('+')" :href="`tel:${c.phone}`" @click="dialled({ call_id: c.id })" class="cc-mono shrink-0 rounded-lg bg-[var(--glow)] px-3 py-1.5 text-xs font-bold text-[#04140c] hover:brightness-110">☎ Call back</a>
                                 <button type="button" x-show="c.needs_call_back" @click="markHandled(c)" class="cc-mono shrink-0 rounded-lg border border-[var(--line)] px-2.5 py-1.5 text-[11px] text-[var(--dim)] hover:text-white">Done</button>
