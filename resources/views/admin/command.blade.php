@@ -576,7 +576,7 @@
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <p class="cc-label">☎ Call desk · direct line to the field</p>
-                        <p class="mt-1 hidden text-xs text-[var(--dim)] sm:block">Tap <span class="text-[var(--glow)]">Call</span> to ring from this device (on a computer it opens your phone or calling app) or <span class="text-[var(--glow)]">WhatsApp</span> to message. Click an {{ $areaNoun }} on the map to see its people.</p>
+                        <p class="mt-1 hidden text-xs text-[var(--dim)] sm:block">@if ($line['enabled'])Press <span class="text-[var(--glow)]">Call</span> and the command centre phone rings — pick it up to be connected. @else Tap <span class="text-[var(--glow)]">Call</span> to ring from this device. @endif<span class="text-[var(--glow)]">WhatsApp</span> opens a chat. Click an {{ $areaNoun }} on the map to see its people.</p>
                     </div>
                     <div class="cc-mono flex w-full flex-col gap-2 text-sm sm:w-auto sm:flex-row sm:items-center">
                         @if ($state)
