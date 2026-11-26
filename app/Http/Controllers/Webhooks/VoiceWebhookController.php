@@ -10,6 +10,7 @@ use App\Services\Voice\AfricasTalkingVoice;
 use App\Support\NigerianPhone;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Africa's Talking calls this whenever something happens on the phone line: a call is answered
@@ -27,6 +28,12 @@ class VoiceWebhookController extends Controller
         abort_if($sessionId === '', 422);
 
         $call = VoiceCall::where('session_id', $sessionId)->first();
+
+        // What AT reported (status fields only, no numbers), to see how calls unfold.
+        Log::channel('single')->info('voice webhook', $request->only([
+            'isActive', 'direction', 'callSessionState', 'status', 'hangupCause', 'durationInSeconds',
+            'dialDurationInSeconds', 'dialStartTime', 'lastBridgeHangupCause',
+        ]) + ['call' => $call?->id, 'call_status' => $call?->status, 'forwarded' => $call?->operator_phone !== null, 'has_recording' => $request->filled('recordingUrl'), 'has_dial_destination' => $request->filled('dialDestinationNumber')]);
 
         if ($request->input('isActive') === '0' || $request->input('isActive') === 0) {
             $call ??= $this->inbound($request, $sessionId);
@@ -62,6 +69,13 @@ class VoiceWebhookController extends Controller
             return $this->xml(AfricasTalkingVoice::say('Thank you. Your message has been received and the team will call you back. Goodbye.'));
         }
 
+        $leaveMessage = 'Please leave your name, your ward and your message after the beep, then press the hash key. We will call you back.';
+
+        // We already tried to put this caller through and AT is asking what next: nobody picked up, so take a message.
+        if ($call?->direction === VoiceCall::INBOUND && $call->operator_phone !== null) {
+            return $this->xml(AfricasTalkingVoice::voicemail('Sorry, nobody could take your call right now. '.$leaveMessage));
+        }
+
         // Someone rang the line.
         $call ??= $this->inbound($request, $sessionId);
         $greeting = config('services.africastalking.greeting') ?: 'Thank you for calling the '.config('site.name').' command centre.';
@@ -69,9 +83,14 @@ class VoiceWebhookController extends Controller
             ->map(fn ($n) => NigerianPhone::normalise(trim($n)) ?? (str_starts_with(trim($n), '+') ? trim($n) : null))
             ->filter()->values()->all();
 
-        return $this->xml($forward
-            ? AfricasTalkingVoice::dial($forward, $greeting.' Please hold while we connect you.')
-            : AfricasTalkingVoice::voicemail($greeting.' Please leave your name, your ward and your message after the beep, then press the hash key. We will call you back.'));
+        if ($forward) {
+            // Remember who it went to; a later "what next?" from AT means nobody answered.
+            $call->forceFill(['operator_phone' => $forward[0]])->save();
+
+            return $this->xml(AfricasTalkingVoice::dial($forward, $greeting.' Please hold while we connect you.', 'Sorry, nobody could take your call right now. '.$leaveMessage));
+        }
+
+        return $this->xml(AfricasTalkingVoice::voicemail($greeting.' '.$leaveMessage));
     }
 
     private function inbound(Request $request, string $sessionId): VoiceCall

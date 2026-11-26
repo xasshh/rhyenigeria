@@ -71,7 +71,13 @@ class PhoneLineTest extends TestCase
         config(['services.africastalking.forward_to' => '08030000009, +2348030000008']);
 
         $this->post('/api/webhooks/voice/secret-token', ['sessionId' => 'ATVId_fw', 'isActive' => '1', 'direction' => 'Inbound', 'callerNumber' => '+2348099990000'])
-            ->assertOk()->assertSee('phoneNumbers="+2348030000009,+2348030000008"', false);
+            ->assertOk()->assertSee('phoneNumbers="+2348030000009,+2348030000008"', false)
+            // A voice-message prompt follows, for when nobody picks up.
+            ->assertSee('<Record', false);
+
+        // If AT comes back while the call is still open, nobody answered: take a message instead of ringing again.
+        $this->post('/api/webhooks/voice/secret-token', ['sessionId' => 'ATVId_fw', 'isActive' => '1', 'direction' => 'Inbound', 'callerNumber' => '+2348099990000'])
+            ->assertOk()->assertSee('nobody could take your call')->assertSee('<Record', false)->assertDontSee('<Dial', false);
     }
 
     public function test_the_webhook_needs_the_secret_and_only_super_admins_use_the_line(): void

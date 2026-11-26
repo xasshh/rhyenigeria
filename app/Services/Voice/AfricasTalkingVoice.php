@@ -57,21 +57,29 @@ class AfricasTalkingVoice
         return (string) $entry['sessionId'];
     }
 
-    /** The XML that tells AT to connect the current call to these numbers. */
-    public static function dial(array $numbers, ?string $say = null): string
+    /**
+     * The XML that tells AT to connect the current call to these numbers. With $fallback, a voice-message
+     * prompt follows the Dial, for when nobody picks up and AT carries on to the next action.
+     */
+    public static function dial(array $numbers, ?string $say = null, ?string $fallback = null): string
     {
         $attrs = 'phoneNumbers="'.e(implode(',', $numbers)).'" record="true" sequential="true"';
         if ($callerId = config('services.africastalking.voice_number')) {
             $attrs .= ' callerId="'.e($callerId).'"';
         }
 
-        return self::response(($say ? '<Say>'.e($say).'</Say>' : '').'<Dial '.$attrs.'/>');
+        return self::response(($say ? '<Say>'.e($say).'</Say>' : '').'<Dial '.$attrs.'/>'.($fallback ? self::record($fallback) : ''));
     }
 
     /** The XML that takes a voice message. */
     public static function voicemail(string $say): string
     {
-        return self::response('<Record finishOnKey="#" maxLength="90" trimSilence="true" playBeep="true"><Say>'.e($say).'</Say></Record>');
+        return self::response(self::record($say));
+    }
+
+    private static function record(string $say): string
+    {
+        return '<Record finishOnKey="#" maxLength="90" trimSilence="true" playBeep="true"><Say>'.e($say).'</Say></Record>';
     }
 
     public static function say(string $say): string
