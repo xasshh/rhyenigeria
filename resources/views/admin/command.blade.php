@@ -508,18 +508,12 @@
                     <div>
                         <p class="cc-label">☏ Phone line <span x-show="waiting" x-cloak class="ml-2 rounded bg-[var(--amber)]/20 px-1.5 py-0.5 text-[var(--amber)]" x-text="waiting + ' to follow up'"></span></p>
                         @if ($line['enabled'])
-                            <p class="mt-1 text-xs text-[var(--dim)]">Campaign number <span class="cc-mono text-[var(--glow)]">{{ $line['number'] }}</span>. When you press Call, your phone rings first. Answer it and we connect you. Calls are recorded. Calls to this number show here as they ring.</p>
+                            <p class="mt-1 text-xs text-[var(--dim)]">Campaign number <span class="cc-mono text-[var(--glow)]">{{ $line['number'] }}</span>. Press <span class="text-[var(--glow)]">Call</span> next to anyone and the command centre phone@if ($line['deskPhone']) <span class="cc-mono text-[var(--glow)]">({{ $line['deskPhone'] }})</span>@endif rings — pick it up and you are connected. When someone calls the campaign number it rings that same phone and shows here. Every call is recorded.</p>
                         @else
                             <p class="mt-1 text-xs text-[var(--amber)]">The campaign phone line is not connected yet. Until it is, Call uses your own phone and the call is logged here, so mark how it went when you hang up. When the hotline phone rings, log the call with <span class="text-[var(--glow)]">+ Log incoming call</span>.</p>
                         @endif
                     </div>
-                    <button type="button" @click="logOpen = !logOpen" class="cc-mono w-full shrink-0 rounded-lg border border-[var(--glow)]/50 px-3 py-2 text-xs font-bold text-[var(--glow)] hover:bg-[var(--glow)]/10 sm:w-auto" :aria-expanded="logOpen">+ Log incoming call</button>
-                    @if ($line['enabled'])
-                        <label class="cc-mono flex w-full flex-col gap-1 text-[11px] tracking-wider text-[var(--dim)] uppercase sm:w-auto">
-                            Ring me on
-                            <input type="tel" x-model="ringMe" @change="saveRingMe()" placeholder="0803 000 0000" class="w-full rounded-lg border border-[var(--line)] bg-black/40 px-3 py-2 text-sm tracking-normal text-[var(--text)] normal-case placeholder:text-[var(--dim)] focus:border-[var(--glow)] focus:outline-none sm:w-48">
-                        </label>
-                    @endif
+                    @unless ($line['enabled'])<button type="button" @click="logOpen = !logOpen" class="cc-mono w-full shrink-0 rounded-lg border border-[var(--glow)]/50 px-3 py-2 text-xs font-bold text-[var(--glow)] hover:bg-[var(--glow)]/10 sm:w-auto" :aria-expanded="logOpen">+ Log incoming call</button>@endunless
                 </div>
 
                 <form x-show="logOpen" x-cloak x-transition @submit.prevent="logIncoming()" class="mt-4 grid gap-3 rounded-xl border border-[var(--line)] bg-black/25 p-4 sm:grid-cols-[12rem_auto_1fr_auto] sm:items-end">
@@ -619,7 +613,6 @@
                             </div>
                             @if ($line['enabled'])
                                 <button type="button" @click="$dispatch('cc-ring', { payload: { user_id: c.id }, name: c.name })" class="cc-mono inline-flex flex-1 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[var(--glow)] px-3 py-2.5 sm:flex-none sm:py-2 text-xs font-bold text-[#04140c] shadow-[0_0_14px_rgba(46,229,157,.45)] hover:brightness-110" :aria-label="`Call ${c.name} on the campaign line`">☎ Call</button>
-                                <a :href="`tel:${c.phone}`" @click="$dispatch('cc-dial', { payload: { user_id: c.id } })" class="cc-mono inline-flex shrink-0 items-center justify-center rounded-lg border border-[var(--line)] px-2.5 py-2.5 sm:py-2 text-xs text-[var(--dim)] hover:text-white" title="Call from this device instead" :aria-label="`Call ${c.name} from this device`">📱</a>
                             @else
                                 <a :href="`tel:${c.phone}`" @click="$dispatch('cc-dial', { payload: { user_id: c.id } })" class="cc-mono inline-flex flex-1 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[var(--glow)] px-3 py-2.5 sm:flex-none sm:py-2 text-xs font-bold text-[#04140c] shadow-[0_0_14px_rgba(46,229,157,.45)] hover:brightness-110" :aria-label="`Call ${c.name}`">☎ Call</a>
                             @endif

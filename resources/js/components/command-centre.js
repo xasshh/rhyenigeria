@@ -421,12 +421,12 @@ export const callDesk = ({ url, kinds }) => ({
  * line shows while it rings; places calls by ringing the operator first. The call desk asks
  * for a call with a `cc-ring` window event.
  */
-export const phoneLine = ({ enabled, number, url, store, handledUrl, outcomeUrl, directUrl, incomingUrl, csrf, operatorPhone }) => ({
+export const phoneLine = ({ enabled, number, deskPhone, url, store, handledUrl, outcomeUrl, directUrl, incomingUrl, csrf }) => ({
     enabled,
     number,
+    deskPhone,
     calls: [],
     waiting: 0,
-    ringMe: '',
     notice: '',
     noticeError: false,
     busy: false,
@@ -436,25 +436,12 @@ export const phoneLine = ({ enabled, number, url, store, handledUrl, outcomeUrl,
     logError: '',
 
     init() {
-        try {
-            this.ringMe = localStorage.getItem('cc-ring-me') || operatorPhone || '';
-        } catch {
-            this.ringMe = operatorPhone || '';
-        }
         this.load();
         this.timer = setInterval(() => document.hidden || this.load(), 5000);
     },
 
     get live() {
         return this.calls.filter((c) => c.live && c.direction === 'inbound');
-    },
-
-    saveRingMe() {
-        try {
-            localStorage.setItem('cc-ring-me', this.ringMe.trim());
-        } catch {
-            /* private mode: just not remembered */
-        }
     },
 
     async load() {
@@ -471,25 +458,16 @@ export const phoneLine = ({ enabled, number, url, store, handledUrl, outcomeUrl,
 
     async ring(payload, name) {
         if (!this.enabled) return;
-        if (!this.ringMe.trim()) {
-            this.say('Enter the phone number we should ring you on first (top of the Phone line panel).', true);
-            document.getElementById('phone-line')?.scrollIntoView({ behavior: 'smooth' });
-            return;
-        }
         this.busy = true;
-        this.say(`Placing call to ${name}…`);
+        this.say(`Calling ${name}… the command centre phone will ring.`);
         try {
             const res = await fetch(store, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
-                body: JSON.stringify({ ...payload, ring_me: this.ringMe.trim() }),
+                body: JSON.stringify(payload),
             });
             const body = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                const first = body.errors ? Object.values(body.errors)[0]?.[0] : null;
-                throw new Error(first || body.message || 'The call could not be placed.');
-            }
-            this.saveRingMe();
+            if (!res.ok) throw new Error((body.errors ? Object.values(body.errors)[0]?.[0] : null) || body.message || 'The call could not be placed.');
             this.say(body.message);
             this.load();
         } catch (e) {

@@ -48,6 +48,7 @@ class CommandCentreController extends Controller
             'line' => [
                 'enabled' => $voice->isConfigured(),
                 'number' => $voice->number() ? NigerianPhone::format(NigerianPhone::normalise($voice->number()) ?? $voice->number()) : null,
+                'deskPhone' => $voice->deskPhone() ? NigerianPhone::format($voice->deskPhone()) : null,
                 'url' => staff_route('command.calls'),
                 'store' => staff_route('command.calls.store'),
                 'handledUrl' => staff_route('command.calls.handled', '__ID__'),

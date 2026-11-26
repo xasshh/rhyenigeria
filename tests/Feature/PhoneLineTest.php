@@ -26,14 +26,17 @@ class PhoneLineTest extends TestCase
 
     public function test_placing_a_call_rings_the_operator_then_connects_the_contact(): void
     {
+        config(['services.africastalking.forward_to' => '0803 000 0001, 08030000002']); // the command centre desk phone(s)
         Http::fake(['voice.africastalking.com/call' => Http::response(['entries' => [['phoneNumber' => '+2348030000001', 'status' => 'Queued', 'sessionId' => 'ATVId_abc']], 'errorMessage' => 'None'])]);
         $admin = User::factory()->superAdmin()->create();
         $contact = User::factory()->coordinator()->create(['phone' => '+2348031112222']);
 
-        $this->actingAs($admin)->postJson('/admin/command/calls', ['user_id' => $contact->id, 'ring_me' => '0803 000 0001'])
+        // No number is entered — clicking Call just rings the desk phone (first forward_to).
+        $this->actingAs($admin)->postJson('/admin/command/calls', ['user_id' => $contact->id])
             ->assertOk()->assertJsonPath('message', fn ($m) => str_contains($m, 'is ringing'));
 
         Http::assertSent(fn (ClientRequest $r) => $r['to'] === '+2348030000001' && $r['from'] === '+2342017001234' && $r->hasHeader('apiKey', 'test-key'));
+        $this->assertDatabaseHas('voice_calls', ['session_id' => 'ATVId_abc', 'operator_phone' => '+2348030000001']);
         $this->assertDatabaseHas('voice_calls', ['session_id' => 'ATVId_abc', 'direction' => 'outbound', 'status' => 'ringing', 'contact_phone' => '+2348031112222', 'operator_id' => $admin->id]);
         $this->assertDatabaseHas('audit_logs', ['action' => 'command_centre.call_placed', 'user_id' => $admin->id]);
 
@@ -87,7 +90,7 @@ class PhoneLineTest extends TestCase
 
         $coordinator = User::factory()->coordinator()->create();
         $this->actingAs($coordinator)->getJson('/admin/command/calls')->assertForbidden();
-        $this->actingAs($coordinator)->postJson('/admin/command/calls', ['user_id' => $coordinator->id, 'ring_me' => '08030000001'])->assertForbidden();
+        $this->actingAs($coordinator)->postJson('/admin/command/calls', ['user_id' => $coordinator->id])->assertForbidden();
     }
 
     public function test_without_the_line_set_up_the_call_desk_says_so(): void
@@ -96,7 +99,7 @@ class PhoneLineTest extends TestCase
         $admin = User::factory()->superAdmin()->create();
 
         $this->actingAs($admin)->get('/admin/command')->assertSee('not connected yet');
-        $this->actingAs($admin)->postJson('/admin/command/calls', ['user_id' => 1, 'ring_me' => '08030000001'])->assertStatus(503);
+        $this->actingAs($admin)->postJson('/admin/command/calls', ['user_id' => 1])->assertStatus(503);
     }
 
     public function test_a_call_from_the_operators_own_phone_is_logged_and_its_outcome_kept(): void

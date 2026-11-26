@@ -2,6 +2,7 @@
 
 namespace App\Services\Voice;
 
+use App\Support\NigerianPhone;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
@@ -23,6 +24,20 @@ class AfricasTalkingVoice
     public function number(): ?string
     {
         return config('services.africastalking.voice_number');
+    }
+
+    /** The command centre's own phones (AT_VOICE_FORWARD_TO): they ring for incoming calls and for click-to-call. */
+    public function commandCentrePhones(): array
+    {
+        return collect(explode(',', (string) config('services.africastalking.forward_to')))
+            ->map(fn ($n) => NigerianPhone::normalise(trim($n)) ?? (str_starts_with(trim($n), '+') ? trim($n) : null))
+            ->filter()->values()->all();
+    }
+
+    /** The phone that rings when an operator clicks Call (the primary desk phone). */
+    public function deskPhone(): ?string
+    {
+        return $this->commandCentrePhones()[0] ?? null;
     }
 
     /**

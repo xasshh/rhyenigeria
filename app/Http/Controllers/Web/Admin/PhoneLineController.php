@@ -63,17 +63,20 @@ class PhoneLineController extends Controller
             return response()->json(['message' => 'The phone line is not set up yet. Use your own phone for now.'], 503);
         }
 
-        $request->merge(['ring_me' => NigerianPhone::normalise($request->input('ring_me')) ?? $request->input('ring_me')]);
+        $desk = $voice->deskPhone();
+        if ($desk === null) {
+            return response()->json(['message' => 'No command centre phone is set up yet.'], 503);
+        }
+
         $data = $request->validate([
             'user_id' => ['required_without:call_id', 'nullable', 'integer'],
             'call_id' => ['required_without:user_id', 'nullable', 'integer'],
-            'ring_me' => ['required', 'regex:/^\+234[789][01]\d{8}$/'],
-        ], ['ring_me.required' => 'Enter the phone number we should ring you on.', 'ring_me.regex' => 'Enter a Nigerian mobile number to ring you on.']);
+        ]);
 
         [$phone, $contactId] = isset($data['user_id']) ? $this->contact($request, (int) $data['user_id']) : $this->caller($request, (int) $data['call_id']);
 
         try {
-            $sessionId = $voice->call($data['ring_me']);
+            $sessionId = $voice->call($desk);
         } catch (RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 502);
         }
@@ -85,14 +88,14 @@ class PhoneLineController extends Controller
             'contact_phone' => $phone,
             'contact_user_id' => $contactId,
             'operator_id' => $request->user()->id,
-            'operator_phone' => $data['ring_me'],
+            'operator_phone' => $desk,
         ]);
 
         $this->resolve($request, $data['call_id'] ?? null);
 
         $audit->record($request, AuditLogger::COMMAND_CALL_PLACED, $call, ['to' => NigerianPhone::mask($phone)]);
 
-        return response()->json(['message' => 'Your phone ('.NigerianPhone::format($data['ring_me']).') is ringing. Answer it and we will connect the call.', 'id' => $call->id]);
+        return response()->json(['message' => 'The command centre phone ('.NigerianPhone::format($desk).') is ringing — pick it up and you will be connected.', 'id' => $call->id]);
     }
 
     /** The operator is about to call from their own phone (the call desk's tel: link): log it. */
