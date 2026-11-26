@@ -22,6 +22,7 @@ export default (config) => ({
     showPassword: false,
     sameWhatsapp: true,
     busy: false,
+    turnstileId: null,
     errors: {},
     general: '',
     lgas: [], wards: [], units: [],
@@ -58,7 +59,9 @@ export default (config) => ({
         // On reaching the location step, ask the phone once for a map pin (the person can still decline or remove it).
         this.$watch('step', (step) => {
             if (step === 2 && this.geo.status === 'idle' && this.form.latitude === null) this.locate();
+            if (step === STEPS.length - 1) this.renderTurnstile();
         });
+        if (this.step === STEPS.length - 1) this.renderTurnstile();
         // ?state= from the homepage map, unless the person already chose one.
         if (!this.form.state_id && config.state) {
             this.form.state_id = String(config.state);
@@ -184,14 +187,34 @@ export default (config) => ({
         this.geo = { status: 'idle', message: '' };
     },
 
+    // Explicit render: the widget is hidden until the final step, so auto-render would miss it.
+    renderTurnstile() {
+        if (!config.turnstile || !config.turnstile.enabled || this.turnstileId !== null) return;
+        if (!window.turnstile || !this.$refs.turnstile) { setTimeout(() => this.renderTurnstile(), 300); return; }
+        try {
+            this.turnstileId = window.turnstile.render(this.$refs.turnstile, {
+                sitekey: config.turnstile.siteKey,
+                appearance: 'interaction-only',
+                'refresh-expired': 'auto',
+            });
+        } catch { /* already rendered */ }
+    },
+
+    turnstileToken() {
+        try {
+            if (window.turnstile && this.turnstileId !== null) return window.turnstile.getResponse(this.turnstileId) || '';
+        } catch { /* fall through */ }
+        return document.querySelector('[name="cf-turnstile-response"]')?.value || '';
+    },
+
     payload() {
         const data = { ...this.form, canvasser: this.canvasser ? 1 : 0, as: this.canvasser ? 'canvasser' : 'member' };
         if (!this.canvasser) { delete data.canvasser_roles; delete data.whatsapp_phone; }
         if (this.sameWhatsapp) delete data.whatsapp_phone;
         if (data.has_pvc !== null) data.has_pvc = data.has_pvc ? 1 : 0;
         data.consent = data.consent ? 1 : 0;
-        const token = document.querySelector('[name="cf-turnstile-response"]');
-        if (token && token.value) data['cf-turnstile-response'] = token.value;
+        const token = this.turnstileToken();
+        if (token) data['cf-turnstile-response'] = token;
         Object.keys(data).forEach((k) => (data[k] === null || data[k] === '') && delete data[k]);
         return data;
     },
@@ -213,7 +236,7 @@ export default (config) => ({
             const last = this.step === STEPS.length - 1;
             const { status, body } = await this.post(last ? config.urls.store : config.urls.check.replace('__STEP__', this.stepName));
 
-            if (last && status !== 201) { try { window.turnstile?.reset(); } catch { /* ignore */ } }
+            if (last && status !== 201 && this.turnstileId !== null) { try { window.turnstile?.reset(this.turnstileId); } catch { /* ignore */ } }
             if (status === 422) {
                 this.errors = body.errors || {};
                 const steps = Object.keys(this.errors).map((f) => FIELD_STEP[f.split('.')[0]] ?? 3);

@@ -299,7 +299,7 @@
                 </p>
                 @if ($turnstile['enabled'])
                     <div class="pt-1">
-                        <div class="cf-turnstile" data-sitekey="{{ $turnstile['siteKey'] }}" data-appearance="interaction-only" data-refresh-expired="auto"></div>
+                        <div x-ref="turnstile"></div>
                         <p class="error mt-2" x-show="err('cf-turnstile-response')" x-text="err('cf-turnstile-response')"></p>
                     </div>
                 @endif
@@ -317,6 +317,6 @@
     </div>
     <noscript><p class="mt-6 rounded-2xl border border-line p-5 text-sm">Please turn on JavaScript in your browser to join.</p></noscript>
 @if ($turnstile['enabled'])
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 @endif
 </x-layouts.split>
