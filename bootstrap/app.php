@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\ContentSecurityPolicy;
 use App\Http\Middleware\EnsureMemberSetup;
 use App\Http\Middleware\EnsurePasswordChanged;
 use App\Http\Middleware\EnsureRole;
@@ -27,6 +28,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectUsersTo(fn (Request $request) => $request->user()?->homeRoute() ?? '/');
+
+        // Content-Security-Policy in report-only mode on every HTML page.
+        $middleware->appendToGroup('web', ContentSecurityPolicy::class);
 
         $middleware->alias([
             'role' => EnsureRole::class,

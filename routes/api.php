@@ -10,11 +10,14 @@ use App\Http\Controllers\Api\MapController;
 use App\Http\Controllers\Api\ShiftController;
 use App\Http\Controllers\Api\SubmissionController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\CspReportController;
 use App\Http\Controllers\Webhooks\VoiceWebhookController;
 use Illuminate\Support\Facades\Route;
 
 // Africa's Talking voice callbacks (secret token in the URL; AT does not sign requests).
 Route::post('webhooks/voice/{token}', VoiceWebhookController::class)->middleware('throttle:300,1')->name('webhooks.voice');
+// Browser CSP violation reports (report-only phase).
+Route::post('csp-report', CspReportController::class)->middleware('throttle:120,1')->name('csp.report');
 
 Route::post('auth/login', [AuthController::class, 'login'])->middleware('throttle:login');
 
