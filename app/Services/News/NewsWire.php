@@ -20,10 +20,14 @@ class NewsWire
 
     private const MAX_ITEMS = 40;
 
-    /** @return array{items: list<array{title: string, source: ?string, url: string, published_at: string, topic: string}>, fetched_at: ?string} */
-    public function headlines(): array
+    /**
+     * @param  array<string, string>|null  $topics  label => search; the site's own topics when null
+     * @return array{items: list<array{title: string, source: ?string, url: string, published_at: string, topic: string}>, fetched_at: ?string}
+     */
+    public function headlines(?array $topics = null): array
     {
-        $key = 'newswire:'.config('site.key');
+        $topics ??= config('site.news_topics') ?? ['Nigeria election' => 'INEC OR "Nigeria election" when:7d'];
+        $key = 'newswire:'.config('site.key').':'.md5(json_encode($topics));
         $cached = Cache::get($key);
 
         if ($cached && CarbonImmutable::parse($cached['fetched_at'])->diffInSeconds(now(), true) < self::FRESH_SECONDS) {
@@ -37,7 +41,7 @@ class NewsWire
         }
 
         try {
-            $items = $this->fetchAll();
+            $items = $this->fetchAll($topics);
             if ($items === [] && $cached) {
                 return $cached;
             }
@@ -51,9 +55,9 @@ class NewsWire
     }
 
     /** @return list<array{title: string, source: ?string, url: string, published_at: string, topic: string}> */
-    private function fetchAll(): array
+    /** @param  array<string, string>  $topics */
+    private function fetchAll(array $topics): array
     {
-        $topics = config('site.news_topics') ?? ['Nigeria election' => 'INEC OR "Nigeria election" when:7d'];
         $items = [];
 
         foreach ($topics as $topic => $query) {

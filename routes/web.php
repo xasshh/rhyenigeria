@@ -152,17 +152,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::delete('posts/news/{news}', [PostController::class, 'destroyNews'])->name('news.destroy');
     };
 
-    Route::middleware(['role:coordinator', 'password.changed'])->prefix('coordinator')->name('coordinator.')->group(function () use ($staffRoutes) {
-        Route::get('/', [DashboardController::class, 'coordinator'])->name('dashboard');
-        $staffRoutes();
-    });
-
-    Route::middleware(['role:super_admin', 'password.changed'])->prefix('admin')->name('admin.')->group(function () use ($staffRoutes) {
-        Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
-        Route::get('states/{state}', [DashboardController::class, 'state'])->name('states.show');
-        Route::get('coordinators', [CoordinatorController::class, 'index'])->name('coordinators.index');
-        Route::post('coordinators', [CoordinatorController::class, 'store'])->name('coordinators.store');
-        Route::patch('coordinators/{coordinator}', [CoordinatorController::class, 'update'])->name('coordinators.update');
+    // The election command centre: super admins (whole site) and state coordinators (their state).
+    $commandRoutes = function () {
         Route::get('command', [CommandCentreController::class, 'index'])->name('command');
         Route::get('command/feed', [CommandCentreController::class, 'feed'])->middleware('throttle:30,1')->name('command.feed');
         Route::get('command/contacts', [CommandCentreController::class, 'contacts'])->middleware('throttle:60,1')->name('command.contacts');
@@ -179,6 +170,21 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('command/calls/incoming', [PhoneLineController::class, 'incoming'])->middleware('throttle:60,1')->name('command.calls.incoming');
         Route::patch('command/calls/{call}/outcome', [PhoneLineController::class, 'outcome'])->name('command.calls.outcome');
         Route::patch('command/calls/{call}/handled', [PhoneLineController::class, 'handled'])->name('command.calls.handled');
+    };
+
+    Route::middleware(['role:coordinator', 'password.changed'])->prefix('coordinator')->name('coordinator.')->group(function () use ($staffRoutes, $commandRoutes) {
+        Route::get('/', [DashboardController::class, 'coordinator'])->name('dashboard');
+        $staffRoutes();
+        Route::middleware('state.coordinator')->group($commandRoutes);
+    });
+
+    Route::middleware(['role:super_admin', 'password.changed'])->prefix('admin')->name('admin.')->group(function () use ($staffRoutes, $commandRoutes) {
+        Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::get('states/{state}', [DashboardController::class, 'state'])->name('states.show');
+        Route::get('coordinators', [CoordinatorController::class, 'index'])->name('coordinators.index');
+        Route::post('coordinators', [CoordinatorController::class, 'store'])->name('coordinators.store');
+        Route::patch('coordinators/{coordinator}', [CoordinatorController::class, 'update'])->name('coordinators.update');
+        $commandRoutes();
         Route::get('admins', [AdminController::class, 'index'])->name('admins.index');
         Route::post('admins', [AdminController::class, 'store'])->name('admins.store');
         Route::patch('admins/{admin}', [AdminController::class, 'update'])->name('admins.update');

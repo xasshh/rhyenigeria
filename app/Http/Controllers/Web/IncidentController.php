@@ -101,7 +101,11 @@ class IncidentController extends Controller
     public function photo(Request $request, IncidentPhoto $photo): StreamedResponse
     {
         $viewer = $request->user();
-        abort_unless($viewer->isSuperAdmin() || $photo->incident->user_id === $viewer->id, 404);
+        $incident = $photo->incident;
+        abort_unless(
+            $viewer->isSuperAdmin() || $incident->user_id === $viewer->id || ($viewer->isStateCoordinator() && $viewer->state_id === $incident->state_id),
+            404,
+        );
         abort_unless(Storage::disk('local')->exists($photo->path), 404);
 
         return Storage::disk('local')->response($photo->path, null, ['Cache-Control' => 'private, max-age=86400']);

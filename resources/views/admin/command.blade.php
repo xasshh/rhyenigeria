@@ -88,9 +88,9 @@
                     <span class="inline-flex items-center gap-2 rounded-full border border-[var(--red)]/50 bg-[var(--red)]/10 px-3 py-1 font-bold tracking-[0.2em] text-[var(--red)]"><span class="cc-live h-2 w-2 rounded-full bg-[var(--red)]"></span>LIVE</span>
                     <span class="rounded-full border border-[var(--line)] px-3 py-1 text-[var(--dim)]">WAT <span class="text-white" x-text="clock">--:--:--</span></span>
                     <span class="hidden rounded-full border border-[var(--line)] px-3 py-1 text-[var(--dim)] md:inline">SYNC <span :class="error ? 'text-[var(--red)]' : 'text-[var(--glow)]'" x-text="error ? 'LOST' : (syncedAgo ?? '…')"></span></span>
-                    <span class="hidden rounded-full border border-[var(--amber)]/40 px-3 py-1 text-[var(--amber)] lg:inline">CLEARANCE · SUPER ADMIN</span>
+                    <span class="hidden rounded-full border border-[var(--amber)]/40 px-3 py-1 text-[var(--amber)] lg:inline">CLEARANCE · {{ strtoupper($config['clearance']) }}</span>
                     <button type="button" @click="fullscreen()" class="hidden rounded-full sm:inline-block border border-[var(--line)] px-3 py-1 text-[var(--text)] hover:border-[var(--glow)] hover:text-white">⛶ Full screen</button>
-                    <a href="{{ route('admin.dashboard') }}" class="rounded-full border border-[var(--line)] px-3 py-1 text-[var(--dim)] hover:text-white">Exit</a>
+                    <a href="{{ auth()->user()->homeRoute() }}" class="rounded-full border border-[var(--line)] px-3 py-1 text-[var(--dim)] hover:text-white">Exit</a>
                 </div>
             </header>
 
@@ -481,7 +481,7 @@
                                 <span class="w-full truncate text-xs text-[var(--dim)] sm:ml-auto sm:w-auto" x-text="a.ward"></span>
                             </li>
                         </template>
-                        <li x-show="!(data.activities ?? []).length" class="py-2 text-[var(--dim)]">No field reports yet today. <a href="{{ route('admin.live') }}" class="text-[var(--glow)] underline">Open the live map</a></li>
+                        <li x-show="!(data.activities ?? []).length" class="py-2 text-[var(--dim)]">No field reports yet today. <a href="{{ staff_route('live') }}" class="text-[var(--glow)] underline">Open the live map</a></li>
                     </ul>
                 </section>
             </div>

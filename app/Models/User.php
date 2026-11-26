@@ -129,6 +129,12 @@ class User extends Authenticatable
     }
 
     /** Where to send this user after they sign in on the website. */
+    /** A coordinator for a whole state (not an LGA or ward). */
+    public function isStateCoordinator(): bool
+    {
+        return $this->role === Role::Coordinator && $this->state_id !== null && $this->lga_id === null && $this->ward_id === null;
+    }
+
     public function homeRoute(): string
     {
         return match ($this->role) {

@@ -8,8 +8,10 @@ use App\Models\User;
 use App\Models\VoiceCall;
 use App\Services\Audit\AuditLogger;
 use App\Services\Voice\AfricasTalkingVoice;
+use App\Support\CommandScope;
 use App\Support\NigerianPhone;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -25,10 +27,10 @@ use RuntimeException;
  */
 class PhoneLineController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $tz = config('membership.timezone');
-        $calls = VoiceCall::with('contact:id,name,role,lga_id,ward_id', 'contact.lga:id,name', 'contact.ward:id,name', 'operator:id,name')
+        $calls = $this->visible($request)->with('contact:id,name,role,lga_id,ward_id', 'contact.lga:id,name', 'contact.ward:id,name', 'operator:id,name')
             ->latest('id')->limit(25)->get();
 
         return response()->json([
@@ -51,7 +53,7 @@ class PhoneLineController extends Controller
                 'time' => CarbonImmutable::parse($c->created_at)->setTimezone($tz)->format('H:i'),
                 'day' => CarbonImmutable::parse($c->created_at)->setTimezone($tz)->isToday() ? null : CarbonImmutable::parse($c->created_at)->setTimezone($tz)->format('j M'),
             ])->values(),
-            'waiting' => VoiceCall::whereIn('status', VoiceCall::FOLLOW_UP)->whereNull('handled_at')->count(),
+            'waiting' => $this->visible($request)->whereIn('status', VoiceCall::FOLLOW_UP)->whereNull('handled_at')->count(),
         ])->setPrivate();
     }
 
@@ -68,7 +70,7 @@ class PhoneLineController extends Controller
             'ring_me' => ['required', 'regex:/^\+234[789][01]\d{8}$/'],
         ], ['ring_me.required' => 'Enter the phone number we should ring you on.', 'ring_me.regex' => 'Enter a Nigerian mobile number to ring you on.']);
 
-        [$phone, $contactId] = isset($data['user_id']) ? $this->contact((int) $data['user_id']) : $this->caller((int) $data['call_id']);
+        [$phone, $contactId] = isset($data['user_id']) ? $this->contact($request, (int) $data['user_id']) : $this->caller($request, (int) $data['call_id']);
 
         try {
             $sessionId = $voice->call($data['ring_me']);
@@ -100,7 +102,7 @@ class PhoneLineController extends Controller
             'user_id' => ['required_without:call_id', 'nullable', 'integer'],
             'call_id' => ['required_without:user_id', 'nullable', 'integer'],
         ]);
-        [$phone, $contactId] = isset($data['user_id']) ? $this->contact((int) $data['user_id']) : $this->caller((int) $data['call_id']);
+        [$phone, $contactId] = isset($data['user_id']) ? $this->contact($request, (int) $data['user_id']) : $this->caller($request, (int) $data['call_id']);
 
         $call = VoiceCall::create([
             'direction' => VoiceCall::OUTBOUND,
@@ -119,7 +121,7 @@ class PhoneLineController extends Controller
     /** How an own-phone call went. */
     public function outcome(Request $request, VoiceCall $call): JsonResponse
     {
-        abort_unless($call->channel === VoiceCall::PHONE && $call->direction === VoiceCall::OUTBOUND, 404);
+        abort_unless($call->channel === VoiceCall::PHONE && $call->direction === VoiceCall::OUTBOUND && $this->canSee($request, $call), 404);
         $data = $request->validate([
             'outcome' => ['required', Rule::in(array_keys(VoiceCall::OUTCOMES))],
             'note' => ['nullable', 'string', 'max:255'],
@@ -159,6 +161,7 @@ class PhoneLineController extends Controller
 
     public function handled(Request $request, VoiceCall $call): JsonResponse
     {
+        abort_unless($this->canSee($request, $call), 404);
         $call->forceFill(['handled_at' => now(), 'handled_by' => $request->user()->id])->save();
 
         return response()->json(['ok' => true]);
@@ -168,16 +171,17 @@ class PhoneLineController extends Controller
     private function resolve(Request $request, ?int $callId): void
     {
         if ($callId) {
-            VoiceCall::whereKey($callId)->whereNull('handled_at')->update(['handled_at' => now(), 'handled_by' => $request->user()->id]);
+            $this->visible($request)->whereKey($callId)->whereNull('handled_at')->update(['handled_at' => now(), 'handled_by' => $request->user()->id]);
         }
     }
 
     /** @return array{0: string, 1: int} Someone the call desk lists (same scope as the contacts search). */
-    private function contact(int $id): array
+    private function contact(Request $request, int $id): array
     {
+        $state = CommandScope::state($request->user());
         $user = User::query()->whereKey($id)->where('is_active', true)->whereNotNull('phone')
             ->whereIn('role', [Role::Coordinator->value, Role::Member->value])
-            ->when(site_state_code(), fn ($q) => $q->whereHas('state', fn ($s) => $s->where('code', site_state_code())))
+            ->when($state, fn ($q) => $q->where('state_id', $state->id))
             ->first();
 
         if (! $user) {
@@ -188,13 +192,34 @@ class PhoneLineController extends Controller
     }
 
     /** @return array{0: string, 1: ?int} The other person on an earlier call. */
-    private function caller(int $id): array
+    private function caller(Request $request, int $id): array
     {
-        $call = VoiceCall::find($id);
+        $call = $this->visible($request)->find($id);
         if (! $call || ! str_starts_with($call->contact_phone, '+')) {
             throw ValidationException::withMessages(['call_id' => 'That caller cannot be called back.']);
         }
 
         return [$call->contact_phone, $call->contact_user_id];
+    }
+
+    /**
+     * The calls this viewer may see. Super admins: all of them. A state coordinator: calls they made or
+     * logged, and calls with people from their state (unknown callers into the line stay with super admins).
+     */
+    private function visible(Request $request): Builder
+    {
+        $viewer = $request->user();
+        if ($viewer->isSuperAdmin()) {
+            return VoiceCall::query();
+        }
+
+        return VoiceCall::query()->where(fn (Builder $q) => $q
+            ->where('operator_id', $viewer->id)
+            ->orWhereIn('contact_user_id', User::select('id')->where('state_id', $viewer->state_id)));
+    }
+
+    private function canSee(Request $request, VoiceCall $call): bool
+    {
+        return $this->visible($request)->whereKey($call->id)->exists();
     }
 }

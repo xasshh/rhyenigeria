@@ -21,6 +21,7 @@
         ],
         $user->isCoordinator() => [
             ['coordinator.dashboard', 'Dashboard', 'chart', 'coordinator.dashboard'],
+            $user->isStateCoordinator() ? ['coordinator.command', 'Command centre', 'flag', 'coordinator.command'] : null,
             ['coordinator.leaderboard', 'Leaderboard', 'trophy', 'coordinator.leaderboard'],
             ['coordinator.live', 'Live map', 'map', 'coordinator.live'],
             ['coordinator.members.index', 'Members', 'users', 'coordinator.members.index|coordinator.members.show'],

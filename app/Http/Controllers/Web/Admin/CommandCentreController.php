@@ -14,6 +14,7 @@ use App\Services\Membership\MemberDirectory;
 use App\Services\News\NewsWire;
 use App\Services\Tracking\LiveOperations;
 use App\Services\Voice\AfricasTalkingVoice;
+use App\Support\CommandScope;
 use App\Support\NigerianPhone;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
@@ -25,14 +26,15 @@ use Illuminate\View\View;
 
 /**
  * The election command centre: one full-screen, live view of the campaign for the
- * leadership. Super admins only (route group); every opening is audit-logged.
+ * leadership and each state coordinator. Super admins see the whole site; a state coordinator
+ * sees only their own state. Every opening is audit-logged.
  * A single-state site watches its LGAs; the national site watches the states.
  */
 class CommandCentreController extends Controller
 {
     public function index(Request $request, AreaMap $map, AuditLogger $audit, AfricasTalkingVoice $voice): View
     {
-        $state = $this->state();
+        $state = $this->state($request);
         $shapes = $state ? $map->lgas($state) : $map->states();
         $audit->record($request, AuditLogger::COMMAND_CENTRE_OPENED);
 
@@ -46,30 +48,31 @@ class CommandCentreController extends Controller
             'line' => [
                 'enabled' => $voice->isConfigured(),
                 'number' => $voice->number() ? NigerianPhone::format(NigerianPhone::normalise($voice->number()) ?? $voice->number()) : null,
-                'url' => route('admin.command.calls'),
-                'store' => route('admin.command.calls.store'),
-                'handledUrl' => route('admin.command.calls.handled', '__ID__'),
-                'outcomeUrl' => route('admin.command.calls.outcome', '__ID__'),
-                'directUrl' => route('admin.command.calls.direct'),
-                'incomingUrl' => route('admin.command.calls.incoming'),
+                'url' => staff_route('command.calls'),
+                'store' => staff_route('command.calls.store'),
+                'handledUrl' => staff_route('command.calls.handled', '__ID__'),
+                'outcomeUrl' => staff_route('command.calls.outcome', '__ID__'),
+                'directUrl' => staff_route('command.calls.direct'),
+                'incomingUrl' => staff_route('command.calls.incoming'),
                 'csrf' => csrf_token(),
                 'operatorPhone' => $request->user()->phone,
             ],
             'config' => [
-                'feed' => route('admin.command.feed'),
-                'contacts' => route('admin.command.contacts'),
-                'geo' => route('admin.command.geo'),
-                'live' => route('admin.command.live'),
-                'area' => route('admin.command.area', '__ID__'),
-                'news' => route('admin.command.news'),
-                'incidents' => route('admin.command.incidents'),
-                'incidentShow' => route('admin.command.incidents.show', '__ID__'),
-                'pins' => route('admin.members.map.pins', array_filter(['state_id' => $state?->id])),
+                'feed' => staff_route('command.feed'),
+                'contacts' => staff_route('command.contacts'),
+                'geo' => staff_route('command.geo'),
+                'live' => staff_route('command.live'),
+                'area' => staff_route('command.area', '__ID__'),
+                'news' => staff_route('command.news'),
+                'incidents' => staff_route('command.incidents'),
+                'incidentShow' => staff_route('command.incidents.show', '__ID__'),
+                'pins' => staff_route('members.map.pins', array_filter(['state_id' => $request->user()->isSuperAdmin() ? $state?->id : null])),
                 'style' => config('tracking.command_map_style_url'),
                 'areaNoun' => $state ? 'LGA' : 'state',
                 'areaList' => collect($shapes['areas'])->map(fn ($a) => ['id' => $a['id'], 'name' => $a['name']])->values(),
                 'refreshSeconds' => 30,
                 'operator' => $request->user()->name,
+                'clearance' => $request->user()->isSuperAdmin() ? 'Super admin' : 'State coordinator',
                 'scope' => $state ? $state->name.' State' : 'Nigeria',
                 'areasTotal' => count($shapes['areas']),
             ],
@@ -79,7 +82,7 @@ class CommandCentreController extends Controller
     public function feed(Request $request, MemberDirectory $directory, LiveOperations $live): JsonResponse
     {
         $viewer = $request->user();
-        $state = $this->state();
+        $state = $this->state($request);
         $members = $directory->query($viewer)->when($state, fn ($q) => $q->where('users.state_id', $state->id));
 
         $areas = $directory->byArea($members, $state ? 'lga' : 'state')->filter(fn ($a) => $a->id !== null)->values();
@@ -124,15 +127,15 @@ class CommandCentreController extends Controller
     }
 
     /** The live map's shapes: one feature per {$areaNoun}, plus label points. */
-    public function geo(AreaMap $map): JsonResponse
+    public function geo(Request $request, AreaMap $map): JsonResponse
     {
-        return response()->json($map->geojson($this->state()))->setPrivate()->setMaxAge(3600);
+        return response()->json($map->geojson($this->state($request)))->setPrivate()->setMaxAge(3600);
     }
 
     /** Where the field team is right now, and what they reported today, for the live map. */
     public function live(Request $request, LiveOperations $live): JsonResponse
     {
-        $feed = $live->feed($request->user(), $this->state()?->id);
+        $feed = $live->feed($request->user(), $this->state($request)?->id);
         $placed = array_values(array_filter($feed['canvassers'], fn ($c) => $c['position'] !== null));
         $phones = User::whereIn('id', array_column($placed, 'id'))->pluck('phone', 'id');
 
@@ -154,7 +157,7 @@ class CommandCentreController extends Controller
     /** One {$areaNoun} up close: its wards (or, nationally, a state's LGAs) by members. */
     public function area(Request $request, int $id, MemberDirectory $directory): JsonResponse
     {
-        $state = $this->state();
+        $state = $this->state($request);
         $members = $directory->query($request->user());
         if ($state) {
             abort_unless(DB::table('lgas')->where('id', $id)->where('state_id', $state->id)->exists(), 404);
@@ -173,9 +176,17 @@ class CommandCentreController extends Controller
         ])->setPrivate();
     }
 
-    public function news(NewsWire $wire): JsonResponse
+    public function news(Request $request, NewsWire $wire): JsonResponse
     {
-        return response()->json($wire->headlines())->setPrivate();
+        // A state coordinator on the national site gets news about their own state.
+        $state = $this->state($request);
+        $topics = $state && ! site_state_code() ? [
+            $state->name => "\"{$state->name} State\" when:3d",
+            'Elections' => "{$state->name} (INEC OR election OR PVC OR \"voter registration\") when:7d",
+            'National' => 'INEC OR "2027 election" when:3d',
+        ] : null;
+
+        return response()->json($wire->headlines($topics))->setPrivate();
     }
 
     /** Who each kind of contact is; the SQL decides the kind once so filters, counts and labels agree. */
@@ -213,7 +224,7 @@ class CommandCentreController extends Controller
             'q' => ['nullable', 'string', 'max:80'],
             'page' => ['nullable', 'integer', 'min:1', 'max:500'],
         ]);
-        $state = $this->state();
+        $state = $this->state($request);
         $perPage = 30;
         $page = (int) ($data['page'] ?? 1);
 
@@ -275,13 +286,13 @@ class CommandCentreController extends Controller
                 'phone_display' => NigerianPhone::format($r->phone),
                 'whatsapp' => ltrim($r->whatsapp_phone ?: $r->phone, '+'),
                 'on_shift' => (bool) $r->on_shift,
-                'profile' => $r->role === Role::Member ? route('admin.members.show', $r->id) : null,
+                'profile' => $r->role === Role::Member ? staff_route('members.show', $r->id) : null,
             ])->values(),
         ])->setPrivate();
     }
 
-    private function state(): ?State
+    private function state(Request $request): ?State
     {
-        return site_state_code() ? State::where('code', site_state_code())->first() : null;
+        return CommandScope::state($request->user());
     }
 }

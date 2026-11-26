@@ -27,7 +27,7 @@ export default (config) => ({
             this.bootLines = [
                 '> ESTABLISHING SECURE LINK ............ OK',
                 `> OPERATOR: ${config.operator.toUpperCase()}`,
-                '> CLEARANCE LEVEL ...................... SUPER ADMIN',
+                `> CLEARANCE LEVEL ...................... ${config.clearance.toUpperCase()}`,
                 `> THEATRE: ${config.scope.toUpperCase()}`,
                 '> SYNCING FIELD INTELLIGENCE ........... OK',
             ];

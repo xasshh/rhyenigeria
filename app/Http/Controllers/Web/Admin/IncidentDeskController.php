@@ -8,6 +8,7 @@ use App\Models\Incident;
 use App\Models\IncidentPhoto;
 use App\Models\IncidentUpdate;
 use App\Services\Audit\AuditLogger;
+use App\Support\CommandScope;
 use App\Support\NigerianPhone;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,14 +18,16 @@ use Illuminate\Validation\Rule;
 
 /**
  * The command centre's incident desk: reports from members and agents as they come in,
- * with photos, the reporter's number, the place, and the follow-ups. Super admins only.
+ * with photos, the reporter's number, the place, and the follow-ups. Super admins see the whole
+ * site; a state coordinator sees their own state's incidents.
  */
 class IncidentDeskController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
         $data = $request->validate(['filter' => ['nullable', Rule::in(['open', 'all'])]]);
-        $scoped = Incident::query()->when(site_state_code(), fn (Builder $q) => $q->whereHas('state', fn ($s) => $s->where('code', site_state_code())));
+        $state = CommandScope::state($request->user());
+        $scoped = Incident::query()->when($state, fn (Builder $q) => $q->where('state_id', $state->id));
 
         $incidents = (clone $scoped)
             ->when(($data['filter'] ?? 'open') === 'open', fn (Builder $q) => $q->whereIn('status', ['new', 'seen']))
@@ -81,7 +84,7 @@ class IncidentDeskController extends Controller
                 'phone' => $reporter->phone,
                 'phone_display' => NigerianPhone::format($reporter->phone),
                 'whatsapp' => ltrim((string) ($profile?->whatsapp_phone ?: $reporter->phone), '+'),
-                'profile' => $reporter->role === Role::Member ? route('admin.members.show', $reporter->id) : null,
+                'profile' => $reporter->role === Role::Member ? staff_route('members.show', $reporter->id) : null,
             ],
             'handler' => $incident->handler?->name,
             'timeline' => $incident->updates->map(fn (IncidentUpdate $u) => [
@@ -155,6 +158,7 @@ class IncidentDeskController extends Controller
 
     private function inScope(Incident $incident): void
     {
-        abort_if(site_state_code() && $incident->state?->code !== site_state_code(), 404);
+        $state = CommandScope::state(request()->user());
+        abort_if($state && $incident->state_id !== $state->id, 404);
     }
 }
