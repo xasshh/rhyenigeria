@@ -154,4 +154,21 @@ class PhoneLineTest extends TestCase
             ->assertJsonPath('calls.0.recording', 'https://rec.example/vm.mp3')
             ->assertJsonPath('calls.0.needs_call_back', true);
     }
+
+    public function test_the_recording_sent_mid_call_is_kept_and_the_caller_is_thanked(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $this->post('/api/webhooks/voice/secret-token', ['sessionId' => 'ATVId_mid', 'isActive' => '1', 'direction' => 'Inbound', 'callerNumber' => '+2348099990000'])
+            ->assertSee('<Record', false);
+        // After the beep and #, AT reports the recording while the call is still active.
+        $this->post('/api/webhooks/voice/secret-token', ['sessionId' => 'ATVId_mid', 'isActive' => '1', 'direction' => 'Inbound', 'callerNumber' => '+2348099990000', 'recordingUrl' => 'https://rec.example/mid.mp3'])
+            ->assertSee('Your message has been received')->assertDontSee('<Record', false);
+        // Then the end-of-call report, without the recording.
+        $this->post('/api/webhooks/voice/secret-token', ['sessionId' => 'ATVId_mid', 'isActive' => '0', 'durationInSeconds' => '52', 'dialDurationInSeconds' => '1']);
+
+        $this->actingAs($admin)->getJson('/admin/command/calls')
+            ->assertJsonPath('calls.0.status', 'voicemail')
+            ->assertJsonPath('calls.0.recording', 'https://rec.example/mid.mp3')
+            ->assertJsonPath('calls.0.duration', 52);
+    }
 }

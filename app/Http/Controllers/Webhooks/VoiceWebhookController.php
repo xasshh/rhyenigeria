@@ -55,6 +55,13 @@ class VoiceWebhookController extends Controller
             return $this->xml(AfricasTalkingVoice::say('This call has ended.'));
         }
 
+        // The caller finished their voice message: AT sends the recording while the call is still open.
+        if ($call?->direction === VoiceCall::INBOUND && $request->filled('recordingUrl')) {
+            $call->forceFill(['status' => 'voicemail', 'recording_url' => mb_substr((string) $request->input('recordingUrl'), 0, 500)])->save();
+
+            return $this->xml(AfricasTalkingVoice::say('Thank you. Your message has been received and the team will call you back. Goodbye.'));
+        }
+
         // Someone rang the line.
         $call ??= $this->inbound($request, $sessionId);
         $greeting = config('services.africastalking.greeting') ?: 'Thank you for calling the '.config('site.name').' command centre.';
@@ -93,7 +100,8 @@ class VoiceWebhookController extends Controller
             $call->note === VoiceTestCall::NOTE => in_array($call->status, ['connected', 'completed'], true) ? 'completed' : 'no_answer',
             $call->direction === VoiceCall::OUTBOUND && $call->status === 'ringing' => 'failed', // the operator never picked up
             $call->direction === VoiceCall::OUTBOUND => ($dialled ?? 0) > 0 ? 'completed' : 'no_answer',
-            ($dialled ?? 0) > 0 => 'completed',
+            // A call into the line was answered only if it was put through to one of the team's phones.
+            ($dialled ?? 0) > 0 && $request->filled('dialDestinationNumber') => 'completed',
             $recording !== null => 'voicemail',
             default => 'missed',
         };
@@ -105,7 +113,10 @@ class VoiceWebhookController extends Controller
 
         $call->forceFill([
             'status' => $status,
-            'duration_seconds' => $dialled ?? ($request->filled('durationInSeconds') ? (int) $request->input('durationInSeconds') : $call->duration_seconds),
+            // Talk time once put through to someone; otherwise how long the whole call lasted.
+            'duration_seconds' => ($dialled !== null && ($call->direction === VoiceCall::OUTBOUND || $request->filled('dialDestinationNumber')))
+                ? $dialled
+                : ($request->filled('durationInSeconds') ? (int) $request->input('durationInSeconds') : $call->duration_seconds),
             'recording_url' => $recording ? mb_substr((string) $recording, 0, 500) : null,
             'cost' => is_numeric($request->input('amount')) ? $request->input('amount') : $call->cost,
             'currency' => $request->input('currencyCode') ? mb_substr((string) $request->input('currencyCode'), 0, 3) : $call->currency,
