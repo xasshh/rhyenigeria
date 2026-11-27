@@ -10,6 +10,7 @@ use App\Services\Voice\AfricasTalkingVoice;
 use App\Support\NigerianPhone;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -35,7 +36,12 @@ class VoiceWebhookController extends Controller
             'dialDurationInSeconds', 'dialStartTime', 'lastBridgeHangupCause',
         ]) + ['call' => $call?->id, 'call_status' => $call?->status, 'forwarded' => $call?->operator_phone !== null, 'has_recording' => $request->filled('recordingUrl'), 'has_dial_destination' => $request->filled('dialDestinationNumber')]);
 
+        $fromBrowser = AfricasTalkingVoice::staffIdFromClient($request->input('callerNumber')) !== null;
+
         if ($request->input('isActive') === '0' || $request->input('isActive') === 0) {
+            if ($call === null && ($fromBrowser || Cache::has('voice:refused:'.$sessionId))) {
+                return $this->xml('<?xml version="1.0" encoding="UTF-8"?><Response/>'); // a browser call we turned away
+            }
             $call ??= $this->inbound($request, $sessionId);
             $this->finish($call, $request);
 
@@ -47,6 +53,11 @@ class VoiceWebhookController extends Controller
             $call->forceFill(['status' => 'connected', 'answered_at' => now()])->save();
 
             return $this->xml(AfricasTalkingVoice::say('Hello. This is a test call from the '.config('site.name').' command centre. The campaign phone line is working. Thank you, goodbye.'));
+        }
+
+        // A staff member pressed Call on the command centre computer (browser softphone).
+        if ($call === null && $fromBrowser) {
+            return $this->xml($this->fromBrowser($request, $sessionId));
         }
 
         // The operator picked up: put them through to the person they asked to call.
@@ -79,18 +90,66 @@ class VoiceWebhookController extends Controller
         // Someone rang the line.
         $call ??= $this->inbound($request, $sessionId);
         $greeting = config('services.africastalking.greeting') ?: 'Thank you for calling the '.config('site.name').' command centre.';
-        $forward = collect(explode(',', (string) config('services.africastalking.forward_to')))
-            ->map(fn ($n) => NigerianPhone::normalise(trim($n)) ?? (str_starts_with(trim($n), '+') ? trim($n) : null))
-            ->filter()->values()->all();
+        $voice = app(AfricasTalkingVoice::class);
+        $forward = $voice->commandCentrePhones();
+        $browsers = $this->softphonesFor($call, $voice);
+        $ring = [...array_map(fn (int $id) => $voice->clientAddress($id), $browsers), ...$forward];
 
-        if ($forward) {
+        if ($ring) {
             // Remember who it went to; a later "what next?" from AT means nobody answered.
-            $call->forceFill(['operator_phone' => $forward[0]])->save();
+            $call->forceFill(['operator_phone' => $forward[0] ?? VoiceCall::BROWSER])->save();
 
-            return $this->xml(AfricasTalkingVoice::dial($forward, $greeting.' Please hold while we connect you.', 'Sorry, nobody could take your call right now. '.$leaveMessage));
+            // With computers taking calls, everyone rings at once and the first to answer gets it.
+            return $this->xml(AfricasTalkingVoice::dial($ring, $greeting.' Please hold while we connect you.', 'Sorry, nobody could take your call right now. '.$leaveMessage, sequential: $browsers === []));
         }
 
         return $this->xml(AfricasTalkingVoice::voicemail($greeting.' '.$leaveMessage));
+    }
+
+    /**
+     * Connect a call a staff member started from their browser. Only a call they asked for in the last two
+     * minutes (Call on the call desk, which checks they may call that person) is put through: a browser
+     * token alone cannot ring any number it likes.
+     */
+    private function fromBrowser(Request $request, string $sessionId): string
+    {
+        $staffId = AfricasTalkingVoice::staffIdFromClient($request->input('callerNumber'));
+        $to = NigerianPhone::normalise((string) $request->input('clientDialedNumber'));
+
+        $call = $to === null ? null : VoiceCall::query()
+            ->where('direction', VoiceCall::OUTBOUND)->where('operator_id', $staffId)->where('operator_phone', VoiceCall::BROWSER)
+            ->whereNull('session_id')->where('contact_phone', $to)->where('created_at', '>=', now()->subMinutes(2))
+            ->latest('id')->first();
+
+        if ($call === null) {
+            Cache::put('voice:refused:'.$sessionId, true, now()->addHour());
+            Log::channel('single')->warning('voice webhook: browser call refused', ['staff' => $staffId, 'fields' => array_keys($request->all())]);
+
+            return AfricasTalkingVoice::reject();
+        }
+
+        $call->forceFill(['session_id' => $sessionId, 'status' => 'connected', 'answered_at' => now()])->save();
+
+        return AfricasTalkingVoice::dial([$to]);
+    }
+
+    /**
+     * Staff with the command centre open in a browser who should hear this call ring: super admins, and
+     * the state coordinator of the caller's state when the caller is a known member.
+     *
+     * @return list<int>
+     */
+    private function softphonesFor(VoiceCall $call, AfricasTalkingVoice $voice): array
+    {
+        $online = $voice->onlineStaffIds();
+        if ($online === []) {
+            return [];
+        }
+        $callerState = $call->contact_user_id ? User::whereKey($call->contact_user_id)->value('state_id') : null;
+
+        return User::query()->whereIn('id', $online)->where('is_active', true)->get()
+            ->filter(fn (User $u) => $u->isSuperAdmin() || ($callerState !== null && $u->isStateCoordinator() && $u->state_id === $callerState))
+            ->pluck('id')->values()->all();
     }
 
     private function inbound(Request $request, string $sessionId): VoiceCall
@@ -130,8 +189,12 @@ class VoiceWebhookController extends Controller
             $status = $call->status;
         }
 
+        // Answered on a command centre computer: credit whoever picked it up.
+        $answeredBy = $call->operator_id ?? AfricasTalkingVoice::staffIdFromClient($request->input('dialDestinationNumber'));
+
         $call->forceFill([
             'status' => $status,
+            'operator_id' => $answeredBy && User::whereKey($answeredBy)->exists() ? $answeredBy : null,
             // Talk time once put through to someone; otherwise how long the whole call lasted.
             'duration_seconds' => ($dialled !== null && ($call->direction === VoiceCall::OUTBOUND || $request->filled('dialDestinationNumber')))
                 ? $dialled

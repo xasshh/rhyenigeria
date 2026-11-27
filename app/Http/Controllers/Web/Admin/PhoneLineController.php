@@ -29,6 +29,11 @@ class PhoneLineController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        // A headset call the line never connected (closed tab, refused, no signal) stops showing as ringing.
+        VoiceCall::query()->where('operator_phone', VoiceCall::BROWSER)->where('direction', VoiceCall::OUTBOUND)
+            ->whereNull('session_id')->where('status', 'ringing')->where('created_at', '<', now()->subMinutes(2))
+            ->update(['status' => 'failed', 'ended_at' => now()]);
+
         $tz = config('membership.timezone');
         $calls = $this->visible($request)->with('contact:id,name,role,lga_id,ward_id', 'contact.lga:id,name', 'contact.ward:id,name', 'operator:id,name')
             ->latest('id')->limit(25)->get();
@@ -57,23 +62,64 @@ class PhoneLineController extends Controller
         ])->setPrivate();
     }
 
+    /** A token that lets this staff member's browser make and take calls on the campaign line (headset calling). */
+    public function token(Request $request, AfricasTalkingVoice $voice): JsonResponse
+    {
+        if (! $voice->isConfigured()) {
+            return response()->json(['message' => 'The phone line is not set up yet.'], 503);
+        }
+
+        try {
+            $token = $voice->capabilityToken($request->user());
+        } catch (RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 502);
+        }
+
+        return response()->json(['token' => $token])->setPrivate();
+    }
+
+    /** The browser softphone checks in while it is ready, so calls into the line ring it (and stop when it closes). */
+    public function presence(Request $request, AfricasTalkingVoice $voice): JsonResponse
+    {
+        $voice->markOnline($request->user()->id, $request->boolean('online', true));
+
+        return response()->json(['ok' => true]);
+    }
+
     public function store(Request $request, AfricasTalkingVoice $voice, AuditLogger $audit): JsonResponse
     {
         if (! $voice->isConfigured()) {
             return response()->json(['message' => 'The phone line is not set up yet. Use your own phone for now.'], 503);
         }
 
+        $data = $request->validate([
+            'user_id' => ['required_without:call_id', 'nullable', 'integer'],
+            'call_id' => ['required_without:user_id', 'nullable', 'integer'],
+            'browser' => ['sometimes', 'boolean'],
+        ]);
+
+        [$phone, $contactId] = isset($data['user_id']) ? $this->contact($request, (int) $data['user_id']) : $this->caller($request, (int) $data['call_id']);
+
+        // Headset calling: the browser dials the number itself; the line only connects it if this record exists.
+        if ($request->boolean('browser')) {
+            $call = VoiceCall::create([
+                'direction' => VoiceCall::OUTBOUND,
+                'status' => 'ringing',
+                'contact_phone' => $phone,
+                'contact_user_id' => $contactId,
+                'operator_id' => $request->user()->id,
+                'operator_phone' => VoiceCall::BROWSER,
+            ]);
+            $this->resolve($request, $data['call_id'] ?? null);
+            $audit->record($request, AuditLogger::COMMAND_CALL_PLACED, $call, ['to' => NigerianPhone::mask($phone), 'channel' => VoiceCall::BROWSER]);
+
+            return response()->json(['id' => $call->id, 'dial' => $phone]);
+        }
+
         $desk = $voice->deskPhone();
         if ($desk === null) {
             return response()->json(['message' => 'No command centre phone is set up yet.'], 503);
         }
-
-        $data = $request->validate([
-            'user_id' => ['required_without:call_id', 'nullable', 'integer'],
-            'call_id' => ['required_without:user_id', 'nullable', 'integer'],
-        ]);
-
-        [$phone, $contactId] = isset($data['user_id']) ? $this->contact($request, (int) $data['user_id']) : $this->caller($request, (int) $data['call_id']);
 
         try {
             $sessionId = $voice->call($desk);

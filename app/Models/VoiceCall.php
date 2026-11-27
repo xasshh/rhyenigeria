@@ -22,6 +22,9 @@ class VoiceCall extends Model
     /** Through Africa's Talking. */
     public const LINE = 'line';
 
+    /** operator_phone for a call made or taken on a command centre computer (browser softphone). */
+    public const BROWSER = 'browser';
+
     /** From an operator's own phone, or typed in by whoever answered the hotline. */
     public const PHONE = 'phone';
 

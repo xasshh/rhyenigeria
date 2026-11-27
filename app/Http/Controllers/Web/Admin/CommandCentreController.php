@@ -54,6 +54,8 @@ class CommandCentreController extends Controller
                 'handledUrl' => staff_route('command.calls.handled', '__ID__'),
                 'outcomeUrl' => staff_route('command.calls.outcome', '__ID__'),
                 'directUrl' => staff_route('command.calls.direct'),
+                'tokenUrl' => staff_route('command.calls.token'),
+                'presenceUrl' => staff_route('command.calls.presence'),
                 'incomingUrl' => staff_route('command.calls.incoming'),
                 'csrf' => csrf_token(),
                 'operatorPhone' => $request->user()->phone,

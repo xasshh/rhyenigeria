@@ -421,10 +421,19 @@ export const callDesk = ({ url, kinds }) => ({
  * line shows while it rings; places calls by ringing the operator first. The call desk asks
  * for a call with a `cc-ring` window event.
  */
-export const phoneLine = ({ enabled, number, deskPhone, url, store, handledUrl, outcomeUrl, directUrl, incomingUrl, csrf }) => ({
+export const phoneLine = ({ enabled, number, deskPhone, url, store, handledUrl, outcomeUrl, directUrl, incomingUrl, tokenUrl, presenceUrl, csrf }) => ({
     enabled,
     number,
     deskPhone,
+    // Headset calling (browser softphone): off · starting · ready · calling · oncall · incoming
+    soft: 'off',
+    softWho: '',
+    softError: '',
+    muted: false,
+    talkSeconds: 0,
+    client: null,
+    heartbeat: null,
+    talkTimer: null,
     calls: [],
     waiting: 0,
     notice: '',
@@ -456,10 +465,145 @@ export const phoneLine = ({ enabled, number, deskPhone, url, store, handledUrl, 
         }
     },
 
+    get softBusy() {
+        return ['calling', 'oncall', 'incoming'].includes(this.soft);
+    },
+
+    /** Turn on headset calling: microphone permission, a token from our server, then connect to Africa's Talking. */
+    async startSoftphone() {
+        if (this.soft !== 'off') return;
+        this.soft = 'starting';
+        this.softError = '';
+        try {
+            const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mic.getTracks().forEach((t) => t.stop());
+        } catch {
+            this.soft = 'off';
+            this.softError = 'The microphone is blocked. Click the camera/microphone icon in the address bar, choose Allow, then press Start again.';
+            return;
+        }
+        try {
+            const [{ default: Africastalking }, body] = await Promise.all([import('africastalking-client'), this.send(tokenUrl, 'POST', {})]);
+            this.client = new Africastalking.Client(body.token);
+            this.wireSoftphone();
+        } catch (e) {
+            this.soft = 'off';
+            this.softError = e.message || 'Computer calling could not start. Try again.';
+        }
+    },
+
+    wireSoftphone() {
+        const c = this.client;
+        c.on('ready', () => {
+            this.soft = 'ready';
+            this.checkIn(true);
+            clearInterval(this.heartbeat);
+            this.heartbeat = setInterval(() => this.checkIn(true), 30000);
+        });
+        c.on('notready', () => this.soft === 'ready' && (this.soft = 'starting'));
+        c.on('calling', () => (this.soft = 'calling'));
+        c.on('incomingcall', () => {
+            this.soft = 'incoming';
+            this.load();
+        });
+        c.on('callaccepted', () => {
+            this.soft = 'oncall';
+            this.muted = false;
+            this.talkSeconds = 0;
+            clearInterval(this.talkTimer);
+            this.talkTimer = setInterval(() => this.talkSeconds++, 1000);
+        });
+        const ended = () => {
+            clearInterval(this.talkTimer);
+            if (this.client) this.soft = 'ready';
+            this.softWho = '';
+            this.muted = false;
+            setTimeout(() => this.load(), 1500);
+        };
+        c.on('hangup', ended);
+        c.on('missedcall', ended);
+        // The token ran out (after a few hours) or the connection dropped: start again quietly.
+        c.on('offline', () => this.restartSoftphone());
+        c.on('closed', () => this.restartSoftphone());
+        window.addEventListener('pagehide', () => this.checkIn(false), { once: true });
+    },
+
+    restartSoftphone() {
+        if (!this.client) return;
+        this.teardown();
+        setTimeout(() => this.startSoftphone(), 3000);
+    },
+
+    stopSoftphone() {
+        this.checkIn(false);
+        this.teardown();
+    },
+
+    teardown() {
+        clearInterval(this.heartbeat);
+        clearInterval(this.talkTimer);
+        try {
+            this.client?.destroy();
+        } catch {
+            /* already gone */
+        }
+        this.client = null;
+        this.soft = 'off';
+    },
+
+    checkIn(online) {
+        fetch(presenceUrl, {
+            method: 'POST',
+            keepalive: true,
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
+            body: JSON.stringify({ online }),
+        }).catch(() => {});
+    },
+
+    answer() {
+        this.client?.answer();
+    },
+
+    hangUp() {
+        this.client?.hangup();
+    },
+
+    toggleMute() {
+        if (!this.client) return;
+        this.muted ? this.client.unmute() : this.client.mute();
+        this.muted = !this.muted;
+    },
+
+    /** Who is ringing in, from the live call list (the line shows them while they ring). */
+    get incomingName() {
+        const c = this.live[0];
+        return c ? `${c.name || 'Unknown caller'} · ${c.phone_display}` : 'Someone is calling the campaign line';
+    },
+
     async ring(payload, name) {
         if (!this.enabled) return;
+        if (this.softBusy) {
+            this.say('Finish the call you are on first.', true);
+            return;
+        }
+        // Headset calling is on: this computer makes the call itself.
+        if (this.soft === 'ready') {
+            this.busy = true;
+            try {
+                const body = await this.send(store, 'POST', { ...payload, browser: true });
+                this.softWho = name;
+                this.soft = 'calling';
+                this.client.call(body.dial);
+                this.load();
+            } catch (e) {
+                this.say(e.message, true);
+            } finally {
+                this.busy = false;
+            }
+            return;
+        }
         this.busy = true;
-        this.say(`Calling ${name}… the command centre phone will ring.`);
+        this.say(`Calling ${name}… the command centre phone will ring. (Tip: press “Start taking calls” to call from this computer with a headset.)`);
         try {
             const res = await fetch(store, {
                 method: 'POST',

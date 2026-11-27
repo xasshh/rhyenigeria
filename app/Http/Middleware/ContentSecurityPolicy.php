@@ -29,6 +29,8 @@ class ContentSecurityPolicy
             "style-src 'self' 'unsafe-inline'",
             "img-src 'self' data: blob: https://*.twimg.com https://tiles.openfreemap.org",
             "font-src 'self' data:",
+            // Recordings of calls (Africa's Talking) and the headset-calling ring tones.
+            "media-src 'self' blob: https:",
             "connect-src 'self' https://tiles.openfreemap.org https://cdn.syndication.twimg.com https://syndication.twitter.com https://challenges.cloudflare.com wss:",
             "worker-src 'self' blob:",
             'frame-src https://platform.twitter.com https://syndication.twitter.com https://twitter.com https://x.com',

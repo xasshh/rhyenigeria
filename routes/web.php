@@ -166,6 +166,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::patch('command/incidents/{incident}', [IncidentDeskController::class, 'update'])->name('command.incidents.update');
         Route::get('command/calls', [PhoneLineController::class, 'index'])->middleware('throttle:120,1')->name('command.calls');
         Route::post('command/calls', [PhoneLineController::class, 'store'])->middleware('throttle:20,1')->name('command.calls.store');
+        Route::post('command/calls/token', [PhoneLineController::class, 'token'])->middleware('throttle:10,1')->name('command.calls.token');
+        Route::post('command/calls/presence', [PhoneLineController::class, 'presence'])->middleware('throttle:12,1')->name('command.calls.presence');
         Route::post('command/calls/direct', [PhoneLineController::class, 'direct'])->middleware('throttle:60,1')->name('command.calls.direct');
         Route::post('command/calls/incoming', [PhoneLineController::class, 'incoming'])->middleware('throttle:60,1')->name('command.calls.incoming');
         Route::patch('command/calls/{call}/outcome', [PhoneLineController::class, 'outcome'])->name('command.calls.outcome');

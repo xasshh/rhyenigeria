@@ -508,13 +508,51 @@
                     <div>
                         <p class="cc-label">☏ Phone line <span x-show="waiting" x-cloak class="ml-2 rounded bg-[var(--amber)]/20 px-1.5 py-0.5 text-[var(--amber)]" x-text="waiting + ' to follow up'"></span></p>
                         @if ($line['enabled'])
-                            <p class="mt-1 text-xs text-[var(--dim)]">Campaign number <span class="cc-mono text-[var(--glow)]">{{ $line['number'] }}</span>. Press <span class="text-[var(--glow)]">Call</span> next to anyone and the command centre phone <span class="cc-mono text-[var(--glow)]">{{ $line['deskPhone'] ?? '' }}</span> rings — pick it up and you are connected. When someone calls the campaign number it rings that same phone and shows here. Every call is recorded.</p>
+                            <p class="mt-1 text-xs text-[var(--dim)]">Campaign number <span class="cc-mono text-[var(--glow)]">{{ $line['number'] }}</span>. With headset calling on, Call rings the person straight from this computer. Otherwise the command centre phone <span class="cc-mono text-[var(--glow)]">{{ $line['deskPhone'] ?? '' }}</span> rings first — pick it up and you are connected. Calls to the campaign number ring here and on that phone. Every call is recorded.</p>
                         @else
                             <p class="mt-1 text-xs text-[var(--amber)]">The campaign phone line is not connected yet. Until it is, Call uses your own phone and the call is logged here, so mark how it went when you hang up. When the hotline phone rings, log the call with <span class="text-[var(--glow)]">+ Log incoming call</span>.</p>
                         @endif
                     </div>
                     @unless ($line['enabled'])<button type="button" @click="logOpen = !logOpen" class="cc-mono w-full shrink-0 rounded-lg border border-[var(--glow)]/50 px-3 py-2 text-xs font-bold text-[var(--glow)] hover:bg-[var(--glow)]/10 sm:w-auto" :aria-expanded="logOpen">+ Log incoming call</button>@endunless
                 </div>
+
+                @if ($line['enabled'])
+                    {{-- Headset calling: this computer makes and takes calls on the campaign number --}}
+                    <div class="mt-4 rounded-xl border p-4" :class="soft === 'off' ? 'border-[var(--line)] bg-black/25' : 'border-[var(--glow)]/60 bg-[var(--glow)]/5'">
+                        <div x-show="soft === 'off'" class="flex flex-wrap items-center justify-between gap-3">
+                            <p class="text-sm text-[var(--text)]">🎧 <span class="font-semibold text-white">Call from this computer.</span> Plug in a headset, press Start, then press <span class="text-[var(--glow)]">Call</span> next to anyone. Calls to the campaign number will ring here too.</p>
+                            <button type="button" @click="startSoftphone()" class="cc-mono w-full shrink-0 rounded-lg bg-[var(--glow)] px-4 py-2.5 text-sm font-bold text-[#04140c] hover:brightness-110 sm:w-auto">▶ Start taking calls</button>
+                        </div>
+                        <p x-show="soft === 'starting'" x-cloak class="cc-mono text-sm text-[var(--glow)]">Connecting… if the browser asks to use the microphone, press Allow.</p>
+                        <div x-show="soft === 'ready'" x-cloak class="flex flex-wrap items-center justify-between gap-3">
+                            <p class="flex items-center gap-2 text-sm text-white"><span class="relative flex h-3 w-3"><span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--glow)] opacity-60"></span><span class="relative inline-flex h-3 w-3 rounded-full bg-[var(--glow)]"></span></span> <span><span class="font-semibold">Ready.</span> Press Call next to anyone. Keep this page open so incoming calls ring here.</span></p>
+                            <button type="button" @click="stopSoftphone()" class="cc-mono shrink-0 rounded-lg border border-[var(--line)] px-3 py-1.5 text-xs text-[var(--dim)] hover:text-white">Stop</button>
+                        </div>
+                        <div x-show="soft === 'calling' || soft === 'oncall'" x-cloak class="flex flex-wrap items-center justify-between gap-3">
+                            <div class="min-w-0">
+                                <p class="cc-mono text-[11px] font-bold tracking-[0.2em] uppercase" :class="soft === 'oncall' ? 'text-[var(--glow)]' : 'text-[var(--amber)]'" x-text="soft === 'oncall' ? 'On call · ' + duration(talkSeconds || 1) : 'Ringing…'"></p>
+                                <p class="truncate font-semibold text-white" x-text="softWho || incomingName"></p>
+                            </div>
+                            <div class="flex w-full gap-2 sm:w-auto">
+                                <button type="button" x-show="soft === 'oncall'" @click="toggleMute()" class="cc-mono flex-1 rounded-lg border px-4 py-2.5 text-sm font-bold sm:flex-none" :class="muted ? 'border-[var(--amber)] bg-[var(--amber)]/20 text-[var(--amber)]' : 'border-[var(--line)] text-white'" x-text="muted ? '🔇 Unmute' : '🎙 Mute'"></button>
+                                <button type="button" @click="hangUp()" class="cc-mono flex-1 rounded-lg bg-[var(--red)] px-5 py-2.5 text-sm font-bold text-white hover:brightness-110 sm:flex-none">✕ Hang up</button>
+                            </div>
+                        </div>
+                        <p x-show="softError" x-cloak x-text="softError" class="cc-mono mt-2 text-sm text-[var(--red)]"></p>
+                    </div>
+
+                    {{-- A call is ringing on this computer --}}
+                    <template x-teleport="#cc-root">
+                        <div x-show="soft === 'incoming'" x-cloak x-transition class="fixed inset-x-3 bottom-4 z-50 mx-auto max-w-md rounded-2xl border border-[var(--glow)] bg-[#03140c]/95 p-5 shadow-[0_0_50px_rgba(0,255,156,.35)] backdrop-blur" role="alertdialog" aria-label="Incoming call">
+                            <p class="cc-mono text-[11px] font-bold tracking-[0.2em] text-[var(--glow)] uppercase">☎ Incoming call</p>
+                            <p class="mt-1 truncate text-lg font-semibold text-white" x-text="incomingName"></p>
+                            <div class="mt-4 grid grid-cols-2 gap-3">
+                                <button type="button" @click="answer()" class="cc-mono rounded-xl bg-[var(--glow)] py-3 text-base font-bold text-[#04140c] hover:brightness-110">✓ Answer</button>
+                                <button type="button" @click="hangUp()" class="cc-mono rounded-xl bg-[var(--red)] py-3 text-base font-bold text-white hover:brightness-110">✕ Decline</button>
+                            </div>
+                        </div>
+                    </template>
+                @endif
 
                 <form x-show="logOpen" x-cloak x-transition @submit.prevent="logIncoming()" class="mt-4 grid gap-3 rounded-xl border border-[var(--line)] bg-black/25 p-4 sm:grid-cols-[12rem_auto_1fr_auto] sm:items-end">
                     <label class="cc-mono flex flex-col gap-1 text-[11px] tracking-wider text-[var(--dim)] uppercase">
@@ -576,7 +614,7 @@
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <p class="cc-label">☎ Call desk · direct line to the field</p>
-                        <p class="mt-1 hidden text-xs text-[var(--dim)] sm:block">@if ($line['enabled'])Press <span class="text-[var(--glow)]">Call</span> and the command centre phone rings — pick it up to be connected. @else Tap <span class="text-[var(--glow)]">Call</span> to ring from this device. @endif<span class="text-[var(--glow)]">WhatsApp</span> opens a chat. Click an {{ $areaNoun }} on the map to see its people.</p>
+                        <p class="mt-1 hidden text-xs text-[var(--dim)] sm:block">@if ($line['enabled'])Press <span class="text-[var(--glow)]">Call</span> — with headset calling on it rings from this computer, otherwise the command centre phone rings first. @else Tap <span class="text-[var(--glow)]">Call</span> to ring from this device. @endif<span class="text-[var(--glow)]">WhatsApp</span> opens a chat. Click an {{ $areaNoun }} on the map to see its people.</p>
                     </div>
                     <div class="cc-mono flex w-full flex-col gap-2 text-sm sm:w-auto sm:flex-row sm:items-center">
                         @if ($state)
